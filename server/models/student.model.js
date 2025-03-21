@@ -43,16 +43,27 @@ const studentSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  refreshToken:{
-    type:String
+  hackathonsParticipated: [
+    {
+      hackathon: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Hackathon"
+      },
+      submission: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Submission"
+      },
+      status: {
+        type: String,
+        enum: ["Registered", "Submitted", "Reviewed", "Shortlisted"],
+        default: "Registered"
+      }
+    }
+  ],
+  refreshToken: {
+    type: String,
+    default: ""
   }
-  //hackathonRegistered: [
-  //{
-  //type:mongoose.Schema.Types.ObjectId,
-  //ref:"Hackathon",
-  //default:[]
-  //}
-  //]
 });
 studentSchema.pre('save', async function (next) {
     if (!this.isModified('password')) {
