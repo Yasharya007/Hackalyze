@@ -1,10 +1,8 @@
 import { Route, Routes } from "react-router-dom";
 import SamplePage from "./pages/SamplePage.jsx";
-import LoginAdminPage from "./pages/LoginAdminPage.jsx";
-import LoginStudentPage from "./pages/LoginStudentPage.jsx";
-import LoginTeacherPage from "./pages/LoginTeacherPage.jsx";
+import LoginPage from "./pages/LoginPage.jsx";
 import RegisterStudentPage from "./pages/RegisterStudentPage.jsx";
-import RegisterTeacher from "./pages/RegisterTeacher.jsx";
+import FAQPage from "./pages/FAQPage.jsx";
 function App() {
   
 
@@ -13,11 +11,9 @@ function App() {
       <div id="origin" className="flex">
         <Routes>
             <Route path="/" element={<SamplePage/>}/>
-            <Route path="/admin/login" element={<LoginAdminPage/>}/>
-            <Route path="/student/login" element={<LoginStudentPage/>}/>
-            <Route path="/teacher/login" element={<LoginTeacherPage/>}/>
+            <Route path="/login" element={<LoginPage/>}/>
             <Route path="/student/register" element={<RegisterStudentPage/>}/>
-            <Route path="/teacher/register" element={<RegisterTeacher/>}/>
+            <Route path="/faq" element={<FAQPage/>}/>
         </Routes>
       </div>
     </>
