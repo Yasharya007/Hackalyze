@@ -3,11 +3,13 @@ import mongoose from "mongoose"
 import cors from "cors"
 import dotenv from "dotenv"
 import cookieParser from "cookie-parser";
+import authRouter from "./routes/authRoutes.js"
 
-// CONFIGURATION
 dotenv.config({
     path:'./.env'
 })
+
+
 const app=express();
 app.use(cookieParser())
 app.use(cors({
@@ -20,7 +22,7 @@ app.use(express.urlencoded({extended:false}))
 app.use(express.static("public"))
 
 // ROUTES
-
+app.use('/api/auth', authRouter);
 // MONGOOSE SETUP
 
 //Connect database function
@@ -34,15 +36,13 @@ const connectDB=async()=>{
     }
 }
 
+
+
 // starting server
 const PORT=process.env.PORT || 8000
 connectDB()
 .then(()=>{
     app.listen(PORT,()=>console.log(`Server has started on Port: ${PORT}`))
 
-    // User.insertMany(dataUser);
-    // Product.insertMany(dataProduct);
-    // ProductStat.insertMany(dataProductStat);
-    // Transection.insertMany(dataTransaction);
-    // OverallStat.insertMany(dataOverallStat);
+
 }).catch((error)=>console.log(`${error} did not connect`))
