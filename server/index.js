@@ -4,6 +4,11 @@ import cors from "cors"
 import dotenv from "dotenv"
 import cookieParser from "cookie-parser";
 import authRouter from "./routes/authRoutes.js"
+import allhackathon from "./routes/allhackathonRoutes.js"
+import FAQ from "./routes/FAQ.routers.js"
+import hackathon from "./routes/hackathonRoutes.js"
+import review from "./routes/reviewRoutes.js"
+import seacrh from "./routes/searchRoutes.js"
 
 dotenv.config({
     path:'./.env'
@@ -23,6 +28,11 @@ app.use(express.static("public"))
 
 // ROUTES
 app.use('/api/auth', authRouter);
+app.use('/api/allhackathon', allhackathon);
+app.use('/api/FAQ', FAQ);
+app.use('/api/hackathon', hackathon);
+app.use('/api/review', review);
+app.use('/api/search', seacrh);
 // MONGOOSE SETUP
 
 //Connect database function
