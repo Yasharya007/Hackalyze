@@ -11,9 +11,22 @@ const SamplePage = () => {
     { id: 1, name: "AI Hackathon", date: "2025-04-15" },
     { id: 2, name: "Blockchain Hackathon", date: "2025-05-10" },
   ];
-
+const fx={
+  title: "Cybersecurity Challenge",
+  description: "Solve real-world cybersecurity challenges.",
+  startDate: new Date("2025-06-15"),
+  endDate: new Date("2025-06-17"),
+  startTime: "08:30 AM",
+  endTime: "04:30 PM",
+  criteria: ["Threat Detection", "Incident Response", "Encryption"],
+  allowedFormats: ["File", "Video"],
+  teachersAssigned: ["65f1a6b9e1c3d5b4a3f9c8e2"],
+  registeredStudents: ["65f1a6b9e1c3d5b4a3f9c8d5"],
+  submissions: [],
+  createdBy: "65f1a6b9e1c3d5b4a3f9c8d2",
+}
   const handleClick = (hackathon) => {
-    dispatch(setHackathon(hackathon));
+    dispatch(setHackathon(fx));
     navigate("/hackathon");
   };
 

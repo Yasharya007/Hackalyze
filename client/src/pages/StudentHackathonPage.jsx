@@ -1,17 +1,231 @@
-import React from "react";
-import { useSelector } from "react-redux";
+import { useEffect, useState } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { clearHackathon } from "../slices/hackathonSlice.js";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import toast from "react-hot-toast";
+import { FaTachometerAlt, FaUserGraduate, FaCog, FaSignOutAlt, FaMedal, FaCalendarAlt, FaClock, FaGraduationCap, FaChalkboardTeacher, FaFileAlt } from "react-icons/fa";
+
+const Sidebar = () => {
+  return (
+    <div className="w-64 h-screen bg-white shadow-lg flex flex-col justify-between p-6">
+      {/* Profile Section */}
+      <div>
+        <div className="flex items-center space-x-3">
+          <div className="w-12 h-12 bg-gray-300 rounded-full"></div>
+          <h2 className="text-lg font-semibold text-gray-800">Student Portal</h2>
+        </div>
+
+        {/* Navigation */}
+        <nav className="mt-6">
+          <ul className="space-y-4">
+            <li className="flex items-center space-x-3 text-blue-600 font-medium">
+              <FaTachometerAlt /> <span>Dashboard</span>
+            </li>
+            <li className="flex items-center space-x-3 text-gray-700 hover:text-blue-600 cursor-pointer">
+              <FaMedal /> <span>Enrolled Hackathons</span>
+            </li>
+            <li className="flex items-center space-x-3 text-gray-700 hover:text-blue-600 cursor-pointer">
+              <FaCog /> <span>Settings</span>
+            </li>
+          </ul>
+        </nav>
+      </div>
+
+      {/* Logout */}
+      <button className="flex items-center space-x-3 text-red-600 font-medium hover:text-red-800">
+        <FaSignOutAlt /> <span>Logout</span>
+      </button>
+    </div>
+  );
+};
 
 const StudentHackathonPage = () => {
-  const hackathon = useSelector((state) => state.hackathon.selectedHackathon);
+  const hackathon = useSelector((state) => state.hackathon.selectedHackathon); // Get hackathon from Redux
+  console.log(hackathon);
+  const [selectedFormat, setSelectedFormat] = useState("");
+  const [file, setFile] = useState(null);
+  const [isRegistered, setIsRegistered] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const studentId = "YOUR_LOGGED_IN_STUDENT_ID"; // Get student ID from auth state
+  const handleFileChange = (e) => {
+    setFile(e.target.files[0]);
+  };
+  const handleRegisterClick = () => {
+    setShowForm(true);
+  };
+  const handleRegister = async () => {
+    if (!selectedFormat || !file) {
+      toast.error("Please fill all fields and upload a file!");
+      return;
+    }
+  
+    const formData = new FormData();
+    formData.append("format", selectedFormat);
+    formData.append("file", file); // File to be uploaded
+  
+    // try {
+    //   const response = await axios.post(`/api/hackathon/${hackathon._id}/register`, formData, {
+    //     headers: { "Content-Type": "multipart/form-data" },
+    //   });
+  
+    //   if (response.status === 200) {
+    //     toast.success("Registration Successful!");
+    //     setShowForm(false);
+    //     setIsRegistered(true);
+    //   }
+    // } catch (error) {
+    //   toast.error("Registration failed. Try again.");
+    // }
+  };
 
-  if (!hackathon) {
-    return <h2 className="text-xl text-red-500">No Hackathon Selected</h2>;
-  }
+  if (!hackathon) return null;
 
   return (
-    <div className="p-6 bg-white shadow-md rounded-lg">
-      <h2 className="text-2xl font-bold">{hackathon.name}</h2>
-      <p className="text-gray-600">Date: {hackathon.date}</p>
+    <div className="flex gap-6 p-6 w-screen">
+      {/* Sidebar */}
+      <Sidebar />
+
+      {/* Main Content */}
+      <div className="flex flex-col w-full bg-white p-6 rounded-xl shadow-lg">
+        {/* Title */}
+        <div className="mb-4 border-b pb-4">
+          <h1 className="text-3xl font-bold text-blue-600">Cybersecurity Challenge</h1>
+          <p className="text-gray-600">Solve real-world cybersecurity challenges.</p>
+        </div>
+
+        {/* Dates & Time */}
+        <div className="grid grid-cols-2 gap-6 bg-gray-100 p-4 rounded-lg">
+          <div className="flex items-center gap-2">
+            <FaCalendarAlt className="text-blue-500" />
+            <span><b>Start Date:</b> 6/15/2025</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <FaCalendarAlt className="text-green-500" />
+            <span><b>End Date:</b> 6/17/2025</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <FaClock className="text-red-500" />
+            <span><b>Start Time:</b> 08:30 AM</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <FaClock className="text-gray-700" />
+            <span><b>End Time:</b> 04:30 PM</span>
+          </div>
+        </div>
+
+        {/* Details Section */}
+        <div className="grid grid-cols-2 gap-6 mt-6">
+          <div>
+            <h2 className="text-xl font-semibold text-gray-700">🔹 Criteria</h2>
+            <ul className="list-disc pl-6 text-gray-600">
+              <li>Threat Detection</li>
+              <li>Incident Response</li>
+              <li>Encryption</li>
+            </ul>
+          </div>
+
+          <div>
+            <h2 className="text-xl font-semibold text-gray-700">📁 Allowed Formats</h2>
+            <ul className="list-disc pl-6 text-gray-600">
+              <li>File</li>
+              <li>Video</li>
+            </ul>
+          </div>
+        </div>
+
+        {/* Teachers & Students */}
+        <div className="grid grid-cols-2 gap-6 mt-6">
+          <div className="bg-gray-100 p-4 rounded-lg">
+            <h2 className="text-xl font-semibold text-gray-700 flex items-center gap-2">
+              <FaChalkboardTeacher className="text-orange-500" /> Teachers Assigned
+            </h2>
+            <p className="text-gray-600 mt-2">65f1a6b9e1c3d5b4a3f9c8e2</p>
+          </div>
+
+          <div className="bg-gray-100 p-4 rounded-lg">
+            <h2 className="text-xl font-semibold text-gray-700 flex items-center gap-2">
+              <FaGraduationCap className="text-purple-500" /> Registered Students
+            </h2>
+            <p className="text-gray-600 mt-2">65f1a6b9e1c3d5b4a3f9c8d5</p>
+          </div>
+        </div>
+
+        {/* Register Button */}
+        <div className="mt-8 text-center">
+          {isRegistered && (
+            <button className="bg-gray-400 text-white px-6 py-3 rounded-lg cursor-not-allowed">
+              ✅ Already Registered
+            </button>
+          )
+        //   :(
+        //     <button
+        //       onClick={handleRegisterClick}
+        //       className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg shadow-md transition"
+        //     >
+        //       📝 Register Now
+        //     </button>
+        //   )
+          }
+        </div>
+      </div>
+        {showForm ? (
+  <div className="mt-6 p-6 bg-gray-100 rounded-lg shadow-md w-full">
+    <h2 className="text-xl font-semibold text-gray-700">📋 Registration Form</h2>
+    
+    {/* Name Input
+    <input type="text" placeholder="Full Name" className="w-full p-2 border rounded-lg mt-2" /> */}
+    
+    {/* Email Input */}
+    {/* <input type="email" placeholder="Email" className="w-full p-2 border rounded-lg mt-2" /> */}
+    
+    {/* File Format Dropdown */}
+    <select
+      value={selectedFormat}
+      onChange={(e) => setSelectedFormat(e.target.value)}
+      className="w-full p-2 border rounded-lg mt-2"
+    >
+      <option value="" disabled>Select File Format</option>
+      <option value="Audio">Audio</option>
+      <option value="Video">Video</option>
+      <option value="File">File</option>
+      <option value="Image">Image</option>
+    </select>
+    
+    {/* File Upload */}
+    {selectedFormat && (
+      <input
+        type="file"
+        accept={
+          selectedFormat === "Audio" ? "audio/*" :
+          selectedFormat === "Video" ? "video/*" :
+          selectedFormat === "Image" ? "image/*" :
+          "*/*"
+        }
+        onChange={handleFileChange}
+        className="w-full p-2 border rounded-lg mt-2"
+      />
+    )}
+
+    {/* Submit Button */}
+    <button
+      onClick={handleRegister}
+      className="mt-4 bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg"
+    >
+      ✅ Submit Registration
+    </button>
+  </div>
+) : (
+  <button
+    onClick={() => setShowForm(true)}
+    className="bg-blue-600 h-13 w-60 hover:bg-blue-700 text-white px-1 py-1 rounded-lg"
+  >
+    📝 Register Now
+  </button>
+)}
+
     </div>
   );
 };
