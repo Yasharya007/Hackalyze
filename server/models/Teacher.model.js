@@ -13,6 +13,7 @@ const TeacherSchema = new mongoose.Schema({
     expertise: [{ type: String }], // Example: ["AI", "Blockchain"]
     contactNumber: { type: String },
     linkedin: { type: String },
+    refreshToken: {type: String,default: ""},
     assignedHackathons: [{ type: mongoose.Schema.Types.ObjectId, ref: "Hackathon" }],
 }, { timestamps: true });
 
