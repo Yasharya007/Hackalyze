@@ -1,5 +1,13 @@
 import express from "express";
-import {getHackathonDetails,getHackathonSubmissions,getHackathonTeachers,getSubmissionDetails, addEvaluationCriteria, getAllCriteria, getSelectedEvaluationCriteria, updateSelectedCriteria} from "../controllers/hackathon.controller.js";
+import {getHackathonDetails,
+    getHackathonSubmissions,
+    getHackathonTeachers,
+    getSubmissionDetails,
+    getTopSubmissions,
+    addEvaluationCriteria,
+    getAllCriteria,
+    getSelectedEvaluationCriteria,
+    updateSelectedCriteria} from "../controllers/hackathonController.js";
 
 const router = express.Router();
 
@@ -22,7 +30,7 @@ router.get("/:hackathonId/top-submissions", getTopSubmissions);
 router.post("/:hackathonId/add-criteria", addEvaluationCriteria);
 
 // Get criteria listed on which evaluation has been done
-router.get("/:hackathonId/criteria", getEvaluationCriteria);
+router.get("/:hackathonId/criteria", getAllCriteria);
 
 // Get only selected (ticked) criteria
 router.get("/:hackathonId/selected-criteria", getSelectedEvaluationCriteria);
