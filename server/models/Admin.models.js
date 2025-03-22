@@ -32,4 +32,14 @@ const AdminSchema = new mongoose.Schema({
     
 },{timestamps:true});
 
+
+AdminSchema.methods.isPasswordCorrect=async function(password){
+    return await bcrypt.compare(password,this.password)
+}
+AdminSchema.methods.generateAccessToken=async function(){
+    return await jwt.sign({_id:this._id},process.env.ACCESS_TOKEN_SECRET,{expiresIn:process.env.ACCESS_TOKEN_EXPIRY})
+}
+AdminSchema.methods.generateRefreshToken=async function(){
+    return await jwt.sign({_id:this._id},process.env.REFRESH_TOKEN_SECRET,{expiresIn:process.env.REFRESH_TOKEN_EXPIRY})
+}
 export const Admin=mongoose.model("Admin", AdminSchema);
