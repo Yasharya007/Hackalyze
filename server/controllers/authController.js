@@ -1,69 +1,74 @@
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-import User from '../models/User.js';
+import Teacher from "../models/Teacher.model.js";
+import Student from "../models/Student.js";
+import Admin from "../models/Admin.js";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 
-
-export const register = async (req, res) => {
+// Register Teacher (a Judge)
+export const registerTeacher = async (req, res) => {
     try {
-        const { name, email, password, role } = req.body;
+        const { name, email, password, organization, expertise, contactNumber, linkedin } = req.body;
 
-        // Check if user exists
-        const existingUser = await User.findOne({ email });
-        if (existingUser) return res.status(400).json({ message: "User already exists" });
+        const existingTeacher = await Teacher.findOne({ email });
+        if (existingTeacher) return res.status(400).json({ message: "Teacher already exists" });
 
-        // Hash password
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
+        const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Restrict role assignment to prevent unauthorized admin registration
-        let assignedRole = role;
-        if (role === 'admin') return res.status(403).json({ message: "Admin account cannot be created this way" });
+        const newTeacher = new Teacher({
+            name, email, password: hashedPassword, organization, expertise, contactNumber, linkedin
+        });
 
-        // Create new user
-        const newUser = new User({ name, email, password: hashedPassword, role: assignedRole });
-        await newUser.save();
+        await newTeacher.save();
+        res.status(201).json({ message: "Teacher registered successfully" });
 
-        res.status(201).json({ message: `${role} registered successfully` });
     } catch (error) {
-        res.status(500).json({ message: "Error registering user", error });
+        res.status(500).json({ message: "Server error", error: error.message });
     }
 };
 
+// Login User
 
-export const login = async (req, res) => {
+
+export const loginUser = async (req, res) => {
     try {
         const { email, password } = req.body;
-       
-        // Check if user exists
-        const user = await User.findOne({ email });
+
+        let user = null;
+        let role = null;
+
+        // Check Admin First 
+        user = await Admin.findOne({ email }).lean();
+        if (user) {
+            role = "admin";
+        } else {
+            // Check both Teacher & Student in parallel
+            const teacherPromise = Teacher.findOne({ email }).lean();
+            const studentPromise = Student.findOne({ email }).lean();
+            const result = await Promise.allSettled([teacherPromise, studentPromise]);
+
+            if (result[0].status === "fulfilled" && result[0].value) {
+                user = result[0].value;
+                role = "teacher";
+            } else if (result[1].status === "fulfilled" && result[1].value) {
+                user = result[1].value;
+                role = "student";
+            }
+        }
+
         if (!user) return res.status(400).json({ message: "Invalid credentials" });
 
-        // Check password
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
-        
-        // Generate JWT Token
-        
-        const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: "1d" });
-        res.json({ token, user: { id: user._id, name: user.name, email: user.email, role: user.role } });
+
+        const token = jwt.sign({ id: user._id, role }, process.env.JWT_SECRET, { expiresIn: process.env.ACCESS_TOKEN_EXPIRY });
+
+        res.json({
+            token,
+            user: { id: user._id, name: user.name, role },
+        });
+
     } catch (error) {
-        res.status(500).json({ message: "Error logging in", error });
+        res.status(500).json({ message: "Server error", error: error.message });
     }
 };
-
-
-export const getLoggedInUser = async (req, res) => {
-    try {
-        const token = req.header("Authorization")?.split(" ")[1];
-        if (!token) return res.status(401).json({ message: "No token provided" });
-
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        const user = await User.findById(decoded.id).select("-password");
-
-        if (!user) return res.status(404).json({ message: "User not found" });
-
-        res.json(user);
-    } catch (error) {
-        res.status(401).json({ message: "Invalid token" });
-    }
-};
+;
