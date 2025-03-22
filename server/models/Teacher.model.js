@@ -10,8 +10,8 @@ const TeacherSchema = new mongoose.Schema({
     password: { type: String, required: true },
     role: { type: String, default: "Teacher", immutable: true },
     organization: { type: String , default: " PI-JAM", immutable: true  },
-    expertise: [{ type: String }], // Example: ["AI", "Blockchain"]
-    contactNumber: { type: String },
+    expertise: [{ type: String, required:true }], // Example: ["AI", "Blockchain"]
+    contactNumber: { type: String, required:true },
     linkedin: { type: String },
     refreshToken: {type: String,default: ""},
     assignedHackathons: [{ type: mongoose.Schema.Types.ObjectId, ref: "Hackathon" }],
