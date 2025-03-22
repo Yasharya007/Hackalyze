@@ -1,14 +1,27 @@
 import { useState } from "react";
 import { useNavigate,useLocation } from 'react-router-dom';
 import Contact from "./contact.jsx";
-
+import { loginAPI } from "../utils/api.jsx";
+import toast from "react-hot-toast";
 export default function Login() {
   const navigate=useNavigate()
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("student");
   const [isModalOpen, setIsModalOpen] = useState(false);
-
+  const handleLogin=async()=>{
+    if (
+      email === "" || password === "") {
+      toast.error("All fields are required");
+      return;
+    }
+    loginAPI(email,password,role)
+    .then((response)=>{
+      console.log(response);
+      navigate("/dashboard")
+    })
+    .catch(()=>{})
+  }
   return (
     <div className="h-screen w-screen flex flex-col bg-gray-100">
       {/* Navbar */}
@@ -64,7 +77,7 @@ export default function Login() {
   </select>
 </div>
 
-      <button className="w-full bg-indigo-500 text-white py-2 rounded-md hover:bg-indigo-600">
+      <button onClick={handleLogin} className="w-full bg-indigo-500 text-white py-2 rounded-md hover:bg-indigo-600">
         Sign in
       </button>
 
