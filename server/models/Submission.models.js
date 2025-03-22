@@ -70,6 +70,7 @@ const SubmissionSchema = new mongoose.Schema({
         default: Date.now,
         required: true
     }, // Stores the exact time of submission
+    needsReview: { type: Boolean, default: false } // NEW FIELD
 
     
 },{timestamps:true});
