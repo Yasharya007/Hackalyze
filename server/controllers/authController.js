@@ -1,7 +1,8 @@
 import ApiError from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
-import Teacher from "./models/Teacher.js"; 
-import { Student, Admin } from "./models/index.js";
+import {Teacher} from "../models/Teacher.model.js"; 
+import { Student } from "../models/student.model.js";
+import { Admin } from "../models/Admin.models.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv"

@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import jwt from "jsonwebtoken"
-import bcrypt from "bcrypt"
+import bcrypt from "bcryptjs"
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -38,7 +38,7 @@ TeacherSchema.methods.generateAccessToken=async function(){
 TeacherSchema.methods.generateRefreshToken=async function(){
     return await jwt.sign({_id:this._id},process.env.REFRESH_TOKEN_SECRET,{expiresIn:process.env.REFRESH_TOKEN_EXPIRY})
 }
-export default mongoose.model("Teacher", TeacherSchema);
+export const Teacher= mongoose.model("Teacher", TeacherSchema);
 
 
 
