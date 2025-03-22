@@ -39,8 +39,8 @@ export const registerTeacher = async (req, res, next) => {
     try {
         const { name, email, password, organization, expertise, contactNumber, linkedin } = req.body;
 
-        if (!email || !password) {
-            throw new ApiError(400, "Email and password are required");
+        if (!email || !password||!name||!expertise||!contactNumber) {
+            throw new ApiError(400, "All fields are required");
         }
 
         const existingTeacher = await Teacher.findOne({ email });
@@ -56,6 +56,42 @@ export const registerTeacher = async (req, res, next) => {
 
     } catch (error) {
         next(error); // Pass the error to Express error handler
+    }
+};
+
+export const registerStudent = async (req, res, next) => {
+    try {
+        const { name, email, password, mobileNumber, schoolCollegeName, grade, gender, state, district } = req.body;
+
+        // Validate required fields
+        if (!name || !email || !password || !mobileNumber || !schoolCollegeName || !grade || !gender || !state || !district) {
+            throw new ApiError(400, "All fields are required");
+        }
+
+        // Check if student already exists
+        const existingStudent = await Student.findOne({ email });
+        if (existingStudent) throw new ApiError(400, "Student already exists");
+
+        // Create new student
+        const newStudent = new Student({
+            name,
+            email,
+            password,
+            mobileNumber,
+            schoolCollegeName,
+            grade,
+            gender,
+            state,
+            district
+        });
+
+        // Save student to database
+        await newStudent.save();
+
+        res.status(201).json(new ApiResponse(201, newStudent, "Student registered successfully"));
+
+    } catch (error) {
+        next(error); // Pass error to Express error handler
     }
 };
 
