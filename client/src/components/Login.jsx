@@ -7,7 +7,6 @@ export default function Login() {
   const navigate=useNavigate()
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("student");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const handleLogin=async()=>{
     if (
@@ -15,7 +14,7 @@ export default function Login() {
       toast.error("All fields are required");
       return;
     }
-    loginAPI(email,password,role)
+    loginAPI(email,password)
     .then((response)=>{
       console.log(response);
       navigate("/dashboard")
@@ -63,7 +62,7 @@ export default function Login() {
         onChange={(e) => setPassword(e.target.value)}
       />
 
-<div className="mb-6">
+{/* <div className="mb-6">
   <label htmlFor="role" className="block text-gray-600 mb-2">Login as</label>
   <select
     id="role"
@@ -75,14 +74,14 @@ export default function Login() {
     <option value="teacher">Teacher</option>
     <option value="admin">Admin</option>
   </select>
-</div>
+</div> */}
 
       <button onClick={handleLogin} className="w-full bg-indigo-500 text-white py-2 rounded-md hover:bg-indigo-600">
         Sign in
       </button>
 
       <p className="mt-4 text-gray-600 text-center">
-        Don't have an account? <span onClick={() => navigate("/register")} className="text-indigo-500 hover:cursor-pointer">Sign up</span>
+        Don't have an account? <span onClick={() => navigate("/student/register")} className="text-indigo-500 hover:cursor-pointer">Sign up</span>
       </p>
     </div>
   </div>
