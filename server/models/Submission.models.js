@@ -16,7 +16,7 @@ const SubmissionSchema = new mongoose.Schema({
 
     format: {
         type: String,
-        enum: ["Audio", "Video", "File"],
+        enum: ["Audio", "Video", "File","Image"],
         required: true
     }, // Specifies the format of the submission (text document, audio file, video, etc.)
 
