@@ -61,10 +61,10 @@ export const registerTeacher = async (req, res, next) => {
 
 export const registerStudent = async (req, res, next) => {
     try {
-        const { name, email, password, mobileNumber, schoolCollegeName, grade, gender, state, district } = req.body;
+        const { name, email, password, mobile,college, grade, gender, state, district } = req.body;
 
         // Validate required fields
-        if (!name || !email || !password || !mobileNumber || !schoolCollegeName || !grade || !gender || !state || !district) {
+        if (!name || !email || !password || !mobile || !college || !grade || !gender || !state || !district) {
             throw new ApiError(400, "All fields are required");
         }
 
@@ -77,8 +77,8 @@ export const registerStudent = async (req, res, next) => {
             name,
             email,
             password,
-            mobileNumber,
-            schoolCollegeName,
+            mobileNumber:mobile,
+            schoolCollegeName:college,
             grade,
             gender,
             state,

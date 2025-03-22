@@ -22,3 +22,31 @@ export const logoutAPI = async () => {
     throw error.response?.data || "Logout failed!";
   }
 };
+
+// Student register
+export const StudentRegisterAPI = async (formData) => {
+    const toastId=toast.loading("loading...")
+    try {
+      const response = await API.post("/api/auth/registerStudent", formData);
+      toast.success("Registered Successfully");
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || "Registration failed!";
+    }finally{
+      toast.dismiss(toastId);
+    }
+  };
+
+// teacher register
+export const TeacherRegisterAPI = async (formData) => {
+    const toastId=toast.loading("loading...")
+    try {
+      const response = await API.post("/api/auth/registerTeacher", formData);
+      toast.success("Registered Successfully");
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || "Registration failed!";
+    }finally{
+      toast.dismiss(toastId);
+    }
+  };
