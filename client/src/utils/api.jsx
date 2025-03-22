@@ -1,10 +1,10 @@
 import API from "./axios.jsx";
 import toast from "react-hot-toast";
 // Login API
-export const loginAPI = async (email, password,role) => {
+export const loginAPI = async (email, password) => {
   const toastId=toast.loading("loading...")
   try {
-    const response = await API.post("/api/auth/login", { email, password, role });
+    const response = await API.post("/api/auth/login", { email, password});
     toast.success("Logged in Successfully");
     return response.data;
   } catch (error) {

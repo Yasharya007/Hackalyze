@@ -116,6 +116,14 @@ const TeacherRegister = () => {
             </button>
           )}
         </div>
+        <div className="text-center mt-4">
+          <p className="text-sm">
+            Already registered? <span className="text-blue-600 cursor-pointer" onClick={() => navigate("/login")}>Sign in</span>
+          </p>
+          <p className="text-sm mt-2">
+            Want to register as a Student? <span className="text-green-600 cursor-pointer" onClick={() => navigate("/student/register")}>Register here</span>
+          </p>
+        </div>
       </div>
     </div>
   );

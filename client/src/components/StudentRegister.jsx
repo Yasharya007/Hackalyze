@@ -1,9 +1,10 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { StudentRegisterAPI } from "../utils/api.jsx";
-import { useNavigate,useLocation } from 'react-router-dom';
+
 const StudentRegister = () => {
-  const navigate=useNavigate()
+  const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     name: "",
@@ -36,33 +37,31 @@ const StudentRegister = () => {
     setStep((prev) => prev - 1);
   };
 
-  const handleSubmit=async()=>{
+  const handleSubmit = async () => {
     const { name, email, mobile, college, grade, gender, state, district, password, agree } = formData;
 
-    // Validation check
     if (!name || !email || !mobile || !college || !grade || !gender || !state || !district || !password) {
-        toast.error("All fields are required");
-        return;
+      toast.error("All fields are required");
+      return;
     }
+
     StudentRegisterAPI(formData)
-    .then((response)=>{
-      console.log(response);
-      navigate("/login")
-    })
-    .catch(()=>{})
-  }
+      .then((response) => {
+        console.log(response);
+        navigate("/login");
+      })
+      .catch(() => {});
+  };
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100 w-screen">
-      {/* Background Container */}
       <div 
         style={{ backgroundImage: "url('/HackalyzeBG.webp')" }} 
         className="absolute top-4 left-4 right-4 h-100 bg-cover bg-center rounded-xl shadow-md flex flex-col text-white items-center justify-center"
       />
 
-      {/* Registration Form */}
       <div className="absolute top-1/3 left-1/2 transform -translate-x-1/2 translate-y-10 bg-white p-8 rounded-xl shadow-lg w-full max-w-md">
-        <h2 className="text-center font-bold text-xl mb-4">Register</h2>
+        <h2 className="text-center font-bold text-xl mb-4">Student Registration</h2>
 
         {step === 1 && (
           <>
@@ -122,6 +121,16 @@ const StudentRegister = () => {
               Sign up
             </button>
           )}
+        </div>
+
+        {/* Extra Options */}
+        <div className="text-center mt-4">
+          <p className="text-sm">
+            Already registered? <span className="text-blue-600 cursor-pointer" onClick={() => navigate("/login")}>Sign in</span>
+          </p>
+          <p className="text-sm mt-2">
+            Want to register as a Teacher? <span className="text-green-600 cursor-pointer" onClick={() => navigate("/teacher/register")}>Register here</span>
+          </p>
         </div>
       </div>
     </div>
