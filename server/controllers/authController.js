@@ -46,9 +46,9 @@ export const registerTeacher = async (req, res, next) => {
         const existingTeacher = await Teacher.findOne({ email });
         if (existingTeacher) throw new ApiError(400, "Teacher already exists");
 
-        const hashedPassword = await bcrypt.hash(password, 10);
+        // const hashedPassword = await bcrypt.hash(password, 10);
         const newTeacher = new Teacher({
-            name, email, password: hashedPassword, organization, expertise, contactNumber, linkedin
+            name, email, password, organization, expertise, contactNumber, linkedin
         });
 
         await newTeacher.save();
@@ -88,6 +88,7 @@ export const loginUser = async (req, res) => {
             .cookie("refreshToken", refreshToken, options)
             .json(new ApiResponse(200, { user: loggedInUser, accessToken, refreshToken }, `${role} logged in`));
     } catch (error) {
+        console.log(error)
         return res.status(500).json(new ApiError(500,error.message));
     }
 };

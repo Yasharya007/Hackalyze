@@ -15,7 +15,7 @@ export default function Login() {
       toast.error("All fields are required");
       return;
     }
-    loginAPI(email,password)
+    loginAPI(email,password,role)
     .then((response)=>{
       console.log(response);
       navigate("/dashboard")
