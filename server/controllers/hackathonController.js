@@ -7,38 +7,13 @@ export const getHackathonDetails = async (req, res) => {
         const { hackathonId } = req.params;
 
         const hackathon = await Hackathon.findById(hackathonId)
-            .populate("assignedTeachers", "name email expertise");
-            
-        if (!hackathon) {
-            return res.status(404).json({ message: "Hackathon not found" });
+        .select("title description startDate endDate startTime endTime criteria allowedFormats teachersAssigned registeredStudents submissions createdBy") // Selecting required fields
+        .lean();
+        if (hackathon.length === 0) {
+            return res.status(404).json({ message: "No hackathons found." });
         }
 
-        // Count total registered participants
-        const totalParticipants = await Student.countDocuments({
-            "hackathonsParticipated.hackathon": hackathonId
-        });
-
-        // Count submissions in each format
-        const formatCounts = await Submission.aggregate([
-            { $match: { hackathonId } },
-            { $group: { _id: "$format", count: { $sum: 1 } } }
-        ]);
-
-        const submissionsByFormat = formatCounts.reduce((acc, cur) => {
-            acc[cur._id] = cur.count;
-            return acc;
-        }, {});
-
-        // Count total submissions for the hackathon
-        const totalSubmissions = await Submission.countDocuments({ hackathonId });
-
-        res.json({
-            problemStatement: hackathon.problemStatement,
-            assignedTeachers: hackathon.assignedTeachers,
-            totalParticipants,
-            totalSubmissions, // Added total submission count
-            submissionsByFormat
-        });
+        res.status(200).json(hackathon);
 
     } catch (error) {
         res.status(500).json({ message: "Server error", error: error.message });
