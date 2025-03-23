@@ -159,7 +159,7 @@ export const getRegisteredStudents = async (req, res) => {
     }
 };
 
-export const acceptMedia = async (req, res) => {
+export const acceptFormat = async (req, res) => {
     try {
         const { studentId } = req.body;
         await Student.findByIdAndUpdate(studentId, { mediaAccepted: true });
