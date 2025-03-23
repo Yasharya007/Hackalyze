@@ -141,3 +141,33 @@ export const loginUser = async (req, res) => {
         res.status(404).json({message: error.message})
     }
 };
+export const logoutUser = async (req, res) => {
+    try {
+        if (!req.user || !req.user._id) {
+            throw new ApiError(401, "User not authenticated");
+        }
+
+        // Find the user across all roles
+        const user =
+            (await Student.findById(req.user._id)) ||
+            (await Teacher.findById(req.user._id)) ||
+            (await Admin.findById(req.user._id));
+
+        if (!user) {
+            throw new ApiError(404, "User not found");
+        }
+
+        // Clear refresh token
+        user.refreshToken = "";
+        await user.save({ validateBeforeSave: false });
+
+        // Clear cookies securely
+        res.status(200)
+            .clearCookie("accessToken", { httpOnly: true, secure: true, sameSite: "Strict" })
+            .clearCookie("refreshToken", { httpOnly: true, secure: true, sameSite: "Strict" })
+            .json({ success: true, message: "Logged out successfully" });
+
+    } catch (error) {
+        res.status(error.statusCode || 500).json(new ApiError(error.statusCode || 500, error.message));
+    }
+};
