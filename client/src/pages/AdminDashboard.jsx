@@ -1,7 +1,35 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { setHackathon } from "../slices/hackathonSlice.js";
+import { AllHackathonAPI } from "../utils/api.jsx";
+import { useState,useEffect } from "react";
 
 const AdminDashboard = () => {
+    const dispatch = useDispatch();
+    const navigate = useNavigate();
+    const [hackathons, setHackathons] = useState([]);
+    const formatDate = (isoString) => isoString.split("T")[0];
+    // const hackathons = [
+    //   { id: 1, name: "AI Hackathon", date: "2025-04-15" },
+    //   { id: 2, name: "Blockchain Hackathon", date: "2025-05-10" },
+    // ];
+    useEffect(() => {
+      const fetchHackathons = async () => {
+        AllHackathonAPI()
+        .then((res)=>{
+          setHackathons(res);
+          console.log(res);
+        }).catch(()=>{})
+      };
+  
+      fetchHackathons();
+    }, []);
+    const handleClick = (hackathon) => {
+      dispatch(setHackathon(hackathon));
+      navigate("/admin/hackathon");
+    };
     const statsData = [
         { label: "Total Hackathons", value: "12", change: "+2 from last month" },
         { label: "Active Participants", value: "+573", change: "+201 from last month" },
@@ -9,11 +37,11 @@ const AdminDashboard = () => {
         { label: "Submission Rate", value: "78%", change: "+12% from last month" }
     ];
 
-    const hackathons = [
-        { name: "AI Innovation Challenge 1", date: "May 11, 2023" },
-        { name: "AI Innovation Challenge 2", date: "May 12, 2023" },
-        { name: "AI Innovation Challenge 3", date: "May 13, 2023" }
-    ];
+    // const hackathons = [
+    //     { name: "AI Innovation Challenge 1", date: "May 11, 2023" },
+    //     { name: "AI Innovation Challenge 2", date: "May 12, 2023" },
+    //     { name: "AI Innovation Challenge 3", date: "May 13, 2023" }
+    // ];
 
     const teachers = [
         { name: "Teacher 1", hackathon: "AI Innovation Challenge 1" },
@@ -63,8 +91,8 @@ const AdminDashboard = () => {
                     <ul className="mt-3">
                         {hackathons.map((h, index) => (
                             <li key={index} className='py-2 flex justify-between border-b'>
-                                <span>{h.name} (Created on {h.date})</span>
-                                <Link to={`/admin/hackathon/${index}`} className='bg-gray-200 px-4 py-1 rounded'>View Details</Link>
+                                <span>{h.title} (Created on {formatDate(h.createdAt)})</span>
+                                <button  onClick={() => handleClick(h)} className='bg-gray-200 px-4 py-1 rounded hover:bg-black hover:text-amber-100'>View Details</button>
                             </li>
                         ))}
                     </ul>
