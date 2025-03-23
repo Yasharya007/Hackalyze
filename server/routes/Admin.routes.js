@@ -11,6 +11,8 @@ import { getSubmissionById } from "../controllers/Admin.controllers.js";
 import { shortlistSubmission } from "../controllers/Admin.controllers.js";
 import { getAllHackathons } from "../controllers/Admin.controllers.js";
 import { getHackathonById } from "../controllers/Admin.controllers.js";
+import { notifyStudents } from "../controllers/Admin.controllers.js";
+import { publishFinalResults } from "../controllers/Admin.controllers.js";
 
 const router = express.Router();
 
@@ -29,9 +31,13 @@ router.get('/hackathon/teachers', getAssignedTeachers);
 router.get('/hackathon/:id/students', getRegisteredStudents);
 router.post('/hackathon/accept-media', acceptFormat);
 
-// Submission Review
+// Submission 
 router.get('/submissions', getAllSubmissions);
 router.get('/submissions/:id', getSubmissionById);
 router.put('/submissions/:id/shortlist', shortlistSubmission);
+
+// Notifications & Result Publishing Routes
+router.post('/notify-students', notifyStudents);
+router.post('/publish-results', publishFinalResults);
 
 export default router;
