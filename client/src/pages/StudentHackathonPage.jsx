@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { clearHackathon } from "../slices/hackathonSlice.js";
+import { clearHackathon,setHackathon } from "../slices/hackathonSlice.js";
+import { HackathonAPI,SubmissionStatusAPI } from "../utils/api.jsx";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import toast from "react-hot-toast";
@@ -41,9 +42,11 @@ const Sidebar = () => {
 };
 
 const StudentHackathonPage = () => {
-  const hackathon = useSelector((state) => state.hackathon.selectedHackathon); // Get hackathon from Redux
+  const initialhackthon = useSelector((state) => state.hackathon.selectedHackathon); // Get hackathon from Redux
+  const [hackathon,setHackathonP]=useState(initialhackthon)
+  const [status,setStatus]=useState("Pending");
   const studentId = useSelector((state) => state.student.studentId);
-  console.log(studentId)
+  // console.log(studentId)
   console.log(hackathon);
   const formatDate = (isoString) => isoString.split("T")[0];
   const [selectedFormat, setSelectedFormat] = useState("");
@@ -54,12 +57,35 @@ const StudentHackathonPage = () => {
   const navigate = useNavigate();
   // const studentId = "YOUR_LOGGED_IN_STUDENT_ID"; // Get student ID from auth state
   useEffect(() => {
+    if (!hackathon?._id) return; // Ensure hackathonId exists
+
+    // Fetch latest hackathon details and update Redux store
+    const fetchLatestHackathon = async () => {
+      try {
+        const updatedHackathon = await HackathonAPI(hackathon._id);
+        dispatch(setHackathon(updatedHackathon)); // Update Redux store
+        setHackathonP(updatedHackathon);
+        if(isRegistered){
+          const updatedStatus=await SubmissionStatusAPI(hackathon._id);
+          if(updatedStatus){
+            setStatus(updatedStatus.status)
+            console.log(status)
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching hackathon details:", error);
+      }
+    };
+
+    fetchLatestHackathon();
+  }, [isRegistered])
+  useEffect(() => {
     for(let x=0;x<hackathon.registeredStudents.length;x++){
       if(hackathon.registeredStudents[x]===studentId){
         setIsRegistered(true);
       }
     }
-    }, [isRegistered]);
+    }, [hackathon]);
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
   };
@@ -87,7 +113,7 @@ const StudentHackathonPage = () => {
         console.log(response);
         setShowForm(false);
         setIsRegistered(true);
-        navigate("/student/dashboard");
+        // navigate("/hackathon");
       })
       .catch((error)=>{
         toast.error("Something went wrong")
@@ -191,7 +217,7 @@ const StudentHackathonPage = () => {
         </div>
       </div>
       {
-        isRegistered? (<div>Status : Pending</div>):
+        isRegistered? (<div>Status : {status}</div>):
         (
           showForm ? (
             <div className="mt-6 p-6 bg-gray-100 rounded-lg shadow-md w-full">
@@ -210,10 +236,10 @@ const StudentHackathonPage = () => {
                 className="w-full p-2 border rounded-lg mt-2"
               >
                 <option value="" disabled>Select File Format</option>
-                <option value="Audio">Audio</option>
-                <option value="Video">Video</option>
-                <option value="File">File</option>
-                <option value="Image">Image</option>
+                {hackathon.allowedFormats.map((item, index) => (
+                <option key={index} value={item}>{item}</option>
+              ))}
+                
               </select>
               
               {/* File Upload */}

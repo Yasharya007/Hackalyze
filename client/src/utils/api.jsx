@@ -64,3 +64,32 @@ export const TeacherRegisterAPI = async (formData) => {
       toast.dismiss(toastId);
     }
   };
+
+  // Get Perticular Hackathon
+  export const HackathonAPI= async (hackathonId) => {
+    const toastId=toast.loading("loading...")
+    try {
+      const response = await API.get(`/api/hackathon/${hackathonId}`);
+      // toast.success("Registered Successfully");
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || "Loading of hackathons failed!";
+    }finally{
+      toast.dismiss(toastId);
+    }
+  };
+
+  // submission status for student
+
+  export const SubmissionStatusAPI= async (hackathonId) => {
+    // const toastId=toast.loading("loading...")
+    try {
+      const response = await API.post("/api/student/status",{hackathonId});
+      // toast.success("Registered Successfully");
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || "Loading of hackathons failed!";
+    }finally{
+      // toast.dismiss(toastId);
+    }
+  };

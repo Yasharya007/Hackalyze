@@ -53,3 +53,28 @@ export const submitHackathon = async (req, res, next) => {
         next(error);
     }
 };
+
+export const getSubmissionStatus = async (req, res) => {
+    try {
+      const {hackathonId } = req.body;
+      const studentId = req.user._id;
+      // Validate request
+      if (!studentId || !hackathonId) {
+        return res.status(400).json({ message: "studentId and hackathonId are required." });
+      }
+  
+      // Find submission with only status & result fields
+      const submission = await Submission.findOne({ studentId, hackathonId })
+        .select("status result") // Select only status and result fields
+        .exec();
+  
+        if (!submission) {
+            return res.status(404).json({ message: "No submission found for this student in the given hackathon." });
+          }
+  
+      res.status(200).json(submission);
+    } catch (error) {
+      console.error("Error fetching submission status:", error);
+      res.status(500).json({ message: "Internal Server Error", error });
+    }
+  };
