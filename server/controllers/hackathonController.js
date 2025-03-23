@@ -7,7 +7,6 @@ export const getHackathonDetails = async (req, res) => {
         const { hackathonId } = req.params;
 
         const hackathon = await Hackathon.findById(hackathonId)
-        .select("title description startDate endDate startTime endTime criteria allowedFormats teachersAssigned registeredStudents submissions createdBy") // Selecting required fields
         .lean();
         if (hackathon.length === 0) {
             return res.status(404).json({ message: "No hackathons found." });
@@ -42,18 +41,38 @@ export const getHackathonTeachers = async (req, res) => {
         const { hackathonId } = req.params;
 
         const hackathon = await Hackathon.findById(hackathonId)
-            .populate("assignedTeachers", "name email expertise")
+            .populate("teachersAssigned", "name email expertise")
             .lean();
 
         if (!hackathon) {
             return res.status(404).json({ message: "Hackathon not found" });
         }
 
-        res.json(hackathon.assignedTeachers);
+        res.json(hackathon.teachersAssigned);
     } catch (error) {
         res.status(500).json({ message: "Server error", error: error.message });
     }
 };
+
+export const getHackathonStudents = async (req, res) => {
+    try {
+        const { hackathonId } = req.params;
+
+        const hackathon = await Hackathon.findById(hackathonId)
+            .populate("registeredStudents", "name email") // Populate students
+            .lean();
+
+        if (!hackathon) {
+            return res.status(404).json({ message: "Hackathon not found" });
+        }
+
+        res.json(hackathon.registeredStudents); // Return the populated students
+
+    } catch (error) {
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
+};
+
 export const getSubmissionDetails = async (req, res) => {
     try {
         const { submissionId } = req.params; // Extract submission ID from request

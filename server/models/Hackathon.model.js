@@ -32,6 +32,10 @@ const hackathonSchema = new mongoose.Schema({
     type: [String],
     required: true,
   },
+  selectedCriteria:{
+    type:[String],
+    required:true
+  },
   allowedFormats: {
     type: [String],
     enum: ["Audio", "Video", "File","Image"],

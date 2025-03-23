@@ -1,7 +1,7 @@
 import { Submission } from "../models/Submission.models.js";
 import { Student } from "../models/student.model.js";
 import { Hackathon } from "../models/Hackathon.model.js";
-import uploadOnCloudinary  from "../utils/cloudinary.js";
+import uploadOnCloudinary from "../utils/cloudinary.js";
 import ApiError from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
 
@@ -26,19 +26,23 @@ export const submitHackathon = async (req, res, next) => {
         if (!hackathon) throw new ApiError(404, "Hackathon not found");
 
         // Upload file to Cloudinary
-        // Upload file to Cloudinary
-const cloudinaryResponse = await uploadOnCloudinary(req.file.path);
-const fileUrl = cloudinaryResponse.secure_url;  // Extract only the URL
+        const cloudinaryResponse = await uploadOnCloudinary(req.file.path);
+        const fileUrl = cloudinaryResponse.secure_url;  // Extract only the URL
 
-
+        // Create new submission
         const newSubmission = new Submission({
             studentId,
             hackathonId,
             files: [{ format: fileType, fileUrl }], 
-            description:"file uploaded"
         });
 
         await newSubmission.save();
+
+        await Hackathon.findByIdAndUpdate(
+            hackathonId,
+            { $push: { submissions: newSubmission._id } }, // Push new submission ID
+            { new: true }
+        );
 
         res.status(201).json(new ApiResponse(201, newSubmission, "Submission successful"));
 
