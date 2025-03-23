@@ -13,6 +13,7 @@ import { getAllHackathons } from "../controllers/Admin.controllers.js";
 import { getHackathonById } from "../controllers/Admin.controllers.js";
 import { notifyStudents } from "../controllers/Admin.controllers.js";
 import { publishFinalResults } from "../controllers/Admin.controllers.js";
+import { removeAssignedTeacher } from "../controllers/Admin.controllers.js";
 
 const router = express.Router();
 
@@ -39,5 +40,9 @@ router.put('/submissions/:id/shortlist', shortlistSubmission);
 // Notifications & Result Publishing Routes
 router.post('/notify-students', notifyStudents);
 router.post('/publish-results', publishFinalResults);
+
+//Remove Assigned Teacher
+router.put('/remove-assigned-teacher', removeAssignedTeacher);
+
 
 export default router;

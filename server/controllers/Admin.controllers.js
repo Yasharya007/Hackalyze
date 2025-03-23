@@ -286,4 +286,36 @@ export const publishFinalResults = async (req, res) => {
      });
     }
 };
+export const removeAssignedTeacher = async (req, res) => {
+    try {
+        const { hackathonId, teacherId } = req.body;
+
+        // Remove the teacher's ID from the assigned hackathon
+        const hackathon = await Hackathon.findByIdAndUpdate(
+            hackathonId,
+            { $pull: { teachersAssigned: teacherId } },
+            { new: true }
+        );
+
+        if (!hackathon) {
+            return res.status(404).json({
+                 message: "Hackathon not found",
+                  success: false 
+                });
+        }
+
+        res.json({
+             message: "Teacher removed successfully",
+              hackathon,
+               success: true 
+            });
+    } catch (error) {
+        res.status(500).json({ 
+      message: "Error in removing teacher", 
+      error,
+    success:false
+      });
+    }
+};
+
 
