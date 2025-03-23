@@ -1,9 +1,6 @@
-import Hackathon from "../models/Hackathon.models.js";
-import Submission from "../models/Submission.models.js";
-import Student from "../models/student.model.js";
-
-
-
+import { Hackathon } from "../models/Hackathon.model.js";
+import { Submission } from "../models/Submission.models.js";
+import { Student } from "../models/student.model.js";
 // Get details of a particular hackathon
 export const getHackathonDetails = async (req, res) => {
     try {

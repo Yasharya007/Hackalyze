@@ -1,4 +1,4 @@
-import Submission from "../models/Submission.js";
+import { Submission } from "../models/Submission.models.js";
 
 // Move a submission to the review folder
 export const moveToReviewFolder = async (req, res) => {
