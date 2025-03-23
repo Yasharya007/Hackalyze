@@ -5,6 +5,8 @@ import LoginPage from "./pages/LoginPage.jsx";
 import RegisterStudentPage from "./pages/RegisterStudentPage.jsx";
 import RegisterTeacherPage from "./pages/RegisterTeacherPage.jsx";
 import StudentHackathonPage from "./pages/StudentHackathonPage.jsx";
+import AdminHackathonPage from "./pages/AdminHackathonPage.jsx";
+import AdminSampleDashboard from "./pages/AdminSampleDashboard.jsx";
 import FAQPage from "./pages/FAQPage.jsx";
 function App() {
   
@@ -21,6 +23,8 @@ function App() {
             <Route path="/hackathon" element={<StudentHackathonPage/>}/>
             <Route path="/faq" element={<FAQPage/>}/>
             <Route path="/teacher/dashboard" element={<TeacherDashboard/>}/>
+            <Route path="/admin/hackathon" element={<AdminHackathonPage/>}/>
+            <Route path="/admin/sampleDashboard" element={<AdminSampleDashboard/>}/>
         </Routes>
       </div>
     </>
