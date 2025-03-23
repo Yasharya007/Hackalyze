@@ -235,3 +235,55 @@ export const shortlistSubmission = async (req, res) => {
              });
     }
 };
+export const notifyStudents = async (req, res) => {
+    try {
+        const { hackathonId, message } = req.body;
+        const students = await Student.find({ hackathonId });
+        
+        const notifications = await Promise.all(
+            students.map(student => Notification.create({
+                studentId: student._id,
+                message,
+                typeofmessage: "Announcement"
+            }))
+        );
+
+        res.json({ 
+            message: 'Notifications sent successfully', 
+            notifications
+        });
+    } catch (error) {
+        res.status(500).json({ 
+            message: 'Error in sending notifications',
+             error,
+             success:false
+             });
+    }
+};
+export const publishFinalResults = async (req, res) => {
+    try {
+        const { hackathonId } = req.body;
+        
+        // Notify all students about final results
+        const students = await Student.find({ hackathonId });
+        const notifications = await Promise.all(
+            students.map(student => Notification.create({
+                studentId: student._id,
+                message: "Final results have been published.",
+                typeofmessage: "Hackathon Update"
+            }))
+        );
+        
+        res.json({
+             message: 'Final results published successfully',
+              notifications 
+            });
+    } catch (error) {
+        res.status(500).json({ 
+            message: 'Error publishing final results', 
+            error,
+        success:false
+     });
+    }
+};
+
