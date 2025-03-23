@@ -1,34 +1,71 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { useDispatch,useSelector } from "react-redux";
+import { useNavigate,Link } from "react-router-dom";
+import { setHackathon } from "../slices/hackathonSlice.js";
+import { AllHackathonAPI } from "../utils/api.jsx";
+import { useState,useEffect } from "react";
 
 const StudentDashboard = () => {
+    const dispatch = useDispatch();
+      const navigate = useNavigate();
+      const [hackathons, setHackathons] = useState([]);
+      const studentId = useSelector((state) => state.student.studentId);
+      console.log(studentId)
+      const formatDate = (isoString) => isoString.split("T")[0];
     const truncateText = (text, length) => {
         return text.length > length ? text.substring(0, length) + "..." : text;
     };
+    useEffect(() => {
+        const fetchHackathons = async () => {
+          AllHackathonAPI()
+          .then((res)=>{
+            // console.log(hackathons.length);
+            for(let y=0;y<res.length;y++){
+                console.log(res[y])
+                for(let x=0;x<res[y].registeredStudents.length;x++){
+                    console.log(res[y].registeredStudents[x])
+                    if(res[y].registeredStudents[x]===studentId){
+                      res[y].status="registered";
+                      console.log("found")
+                      break;
+                    }
+                  }
+            }
+            setHackathons(res);
+            // console.log("hello");
+          }).catch(()=>{})
+        };
+    
+        fetchHackathons();
+      }, []);
+      const handleClick = (hackathon) => {
+        dispatch(setHackathon(hackathon));
+        navigate("/hackathon");
+      };
 
-    const hackathons = [
-        {
-            title: "AI Innovation Challenge",
-            status: "Active",
-            description: "Create innovative AI solutions for real-world problems",
-            deadline: "June 30, 2023",
-            statusColor: "text-green-600"
-        },
-        {
-            title: "Web Development Hackathon",
-            status: "Upcoming",
-            description: "Build responsive and accessible web applications",
-            deadline: "July 30, 2023",
-            statusColor: "text-blue-600"
-        },
-        {
-            title: "Mobile App Challenge",
-            status: "Active",
-            description: "Develop mobile applications for social good",
-            deadline: "July 15, 2023",
-            statusColor: "text-green-600"
-        }
-    ];
+    // const hackathons = [
+    //     {
+    //         title: "AI Innovation Challenge",
+    //         status: "Active",
+    //         description: "Create innovative AI solutions for real-world problems",
+    //         deadline: "June 30, 2023",
+    //         statusColor: "text-green-600"
+    //     },
+    //     {
+    //         title: "Web Development Hackathon",
+    //         status: "Upcoming",
+    //         description: "Build responsive and accessible web applications",
+    //         deadline: "July 30, 2023",
+    //         statusColor: "text-blue-600"
+    //     },
+    //     {
+    //         title: "Mobile App Challenge",
+    //         status: "Active",
+    //         description: "Develop mobile applications for social good",
+    //         deadline: "July 15, 2023",
+    //         statusColor: "text-green-600"
+    //     }
+    // ];
 
     return (
         <div className="flex h-screen bg-gray-100">
@@ -60,13 +97,13 @@ const StudentDashboard = () => {
                     {hackathons.map((hackathon, index) => (
                         <div key={index} className="bg-white p-4 shadow-md rounded-md">
                             <h3 className="text-lg font-bold">{hackathon.title}</h3>
-                            <span className={`${hackathon.statusColor} font-semibold`}>{hackathon.status}</span>
+                            <span className={`text-green-600 font-semibold`}>Active</span>
                             <p className="text-gray-500 mt-2">{truncateText(hackathon.description, 50)}</p>
-                            <p className="text-gray-500 mt-2">Deadline: {hackathon.deadline}</p>
+                            <p className="text-gray-500 mt-2">Deadline: {formatDate(hackathon.endDate)}</p>
                             <div className="mt-4 flex gap-2">
-                                <Link to={`/hackathon/${index}`} className="flex-1 bg-gray-200 p-2 rounded text-center">View</Link>
-                                {hackathon.status !== "Active" && (
-                                    <Link to="/register" className="flex-1 bg-black text-white p-2 rounded text-center">Register</Link>
+                                <button onClick={() => handleClick(hackathon)} className="flex-1 bg-gray-200 p-2 rounded text-center">View</button>
+                                {hackathon.status !== "registered" && (
+                                    <button onClick={() => handleClick(hackathon)} className="flex-1 bg-black text-white p-2 rounded text-center">Register</button>
                                 )}
                             </div>
                         </div>
