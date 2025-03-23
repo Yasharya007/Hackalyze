@@ -1,6 +1,22 @@
 import { Hackathon } from "../models/Hackathon.model.js";
 import { Student } from "../models/student.model.js";
 
+export const getAllHackathons = async (req, res) => {
+    try {
+        const hackathons = await Hackathon.find()
+            .select("title description startDate endDate startTime endTime criteria allowedFormats teachersAssigned registeredStudents submissions createdBy") // Selecting required fields
+            .lean();
+
+        if (hackathons.length === 0) {
+            return res.status(404).json({ message: "No hackathons found." });
+        }
+
+        res.status(200).json(hackathons);
+    } catch (error) {
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
+};
+
 export const getHackathonsByTeacher = async (req, res) => {
     try {
         const { teacherId } = req.params; // Get teacher ID from request
