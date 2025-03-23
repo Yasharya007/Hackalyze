@@ -1,5 +1,6 @@
 import { Route, Routes } from "react-router-dom";
 import SamplePage from "./pages/SamplePage.jsx";
+import TeacherDashboard from "./components/TeacherDashboard.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
 import RegisterStudentPage from "./pages/RegisterStudentPage.jsx";
 import RegisterTeacherPage from "./pages/RegisterTeacherPage.jsx";
@@ -19,6 +20,7 @@ function App() {
             <Route path="/student/dashboard" element={<SamplePage/>}/>
             <Route path="/hackathon" element={<StudentHackathonPage/>}/>
             <Route path="/faq" element={<FAQPage/>}/>
+            <Route path="/teacher/dashboard" element={<TeacherDashboard/>}/>
         </Routes>
       </div>
     </>
