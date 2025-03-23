@@ -1,5 +1,5 @@
-import Hackathon from "../models/Hackathon.model.js";
-import Student from "../models/student.model.js";
+import { Hackathon } from "../models/Hackathon.model.js";
+import { Student } from "../models/student.model.js";
 
 export const getHackathonsByTeacher = async (req, res) => {
     try {
