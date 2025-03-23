@@ -60,7 +60,30 @@ export const registerTeacher = async (req, res, next) => {
         res.status(404).json({message: error.message})
     }
 };
+// export const registerAdmin = async (req, res, next) => {
+//     try {
+//         const { name, email, password } = req.body;
 
+//         if (!email || !password||!name) {
+//             throw new ApiError(400, "All fields are required");
+//         }
+
+//         // const existingTeacher = await Teacher.findOne({ email });
+//         // if (existingTeacher) throw new ApiError(400, "Teacher already exists");
+//         // const existingStudent = await Student.findOne({ email });
+//         // if (existingStudent) throw new ApiError(400, "Student with same mail exist");
+//         const hashedPassword = await bcrypt.hash(password, 10);
+//         const newAdmin = new Admin({
+//             name, email, password:hashedPassword
+//         });
+
+//         await newAdmin.save();
+//         res.status(201).json(new ApiResponse(201, newAdmin, "Teacher registered successfully"));
+
+//     } catch (error) {
+//         res.status(404).json({message: error.message})
+//     }
+// };
 export const registerStudent = async (req, res, next) => {
     try {
         const { name, email, password, mobile,college, grade, gender, state, district } = req.body;
