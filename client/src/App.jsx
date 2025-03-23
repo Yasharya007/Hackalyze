@@ -1,12 +1,14 @@
 import { Route, Routes } from "react-router-dom";
 import SamplePage from "./pages/SamplePage.jsx";
-import TeacherDashboard from "./components/TeacherDashboard.jsx";
+
+import TeacherDashboard from "./pages/TeacherDashboard.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
 import RegisterStudentPage from "./pages/RegisterStudentPage.jsx";
 import RegisterTeacherPage from "./pages/RegisterTeacherPage.jsx";
 import StudentHackathonPage from "./pages/StudentHackathonPage.jsx";
+import AdminDashboard from "./pages/AdminDashboard.jsx";
 import FAQPage from "./pages/FAQPage.jsx";
-import StudentDashboard from "./components/StudentDashboard.jsx";
+import StudentDashboard from "./pages/StudentDashboard.jsx";
 function App() {
   
 
@@ -23,6 +25,8 @@ function App() {
             <Route path="/faq" element={<FAQPage/>}/>
             <Route path="/teacher/dashboard" element={<TeacherDashboard/>}/>
             <Route path="/student/dashboard" element={<StudentDashboard/>}/>
+            <Route path="/admin/dashboard" element={<AdminDashboard/>}/>
+
         </Routes>
       </div>
     </>
