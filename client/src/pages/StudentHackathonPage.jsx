@@ -42,14 +42,24 @@ const Sidebar = () => {
 
 const StudentHackathonPage = () => {
   const hackathon = useSelector((state) => state.hackathon.selectedHackathon); // Get hackathon from Redux
+  const studentId = useSelector((state) => state.student.studentId);
+  console.log(studentId)
   console.log(hackathon);
+  const formatDate = (isoString) => isoString.split("T")[0];
   const [selectedFormat, setSelectedFormat] = useState("");
   const [file, setFile] = useState(null);
   const [isRegistered, setIsRegistered] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const studentId = "YOUR_LOGGED_IN_STUDENT_ID"; // Get student ID from auth state
+  // const studentId = "YOUR_LOGGED_IN_STUDENT_ID"; // Get student ID from auth state
+  useEffect(() => {
+    for(let x=0;x<hackathon.registeredStudents.length;x++){
+      if(hackathon.registeredStudents[x]===studentId){
+        setIsRegistered(true);
+      }
+    }
+    }, [isRegistered]);
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
   };
@@ -63,22 +73,30 @@ const StudentHackathonPage = () => {
     }
   
     const formData = new FormData();
-    formData.append("format", selectedFormat);
+    formData.append("fileType", selectedFormat);
+    formData.append("hackathonId", hackathon._id);
     formData.append("file", file); // File to be uploaded
-  
-    // try {
-    //   const response = await axios.post(`/api/hackathon/${hackathon._id}/register`, formData, {
-    //     headers: { "Content-Type": "multipart/form-data" },
-    //   });
-  
-    //   if (response.status === 200) {
-    //     toast.success("Registration Successful!");
-    //     setShowForm(false);
-    //     setIsRegistered(true);
-    //   }
-    // } catch (error) {
-    //   toast.error("Registration failed. Try again.");
-    // }
+    const tst=toast.loading("submitting ...")
+    
+      axios.post("http://localhost:8000/api/student/submit", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+        withCredentials: true,
+      })
+      .then((response)=>{
+        toast.success("Registration Successful!");
+        console.log(response);
+        setShowForm(false);
+        setIsRegistered(true);
+        navigate("/student/dashboard");
+      })
+      .catch((error)=>{
+        toast.error("Something went wrong")
+      })
+      .finally(()=>{
+        toast.dismiss(tst);
+      })
+        
+      
   };
 
   if (!hackathon) return null;
@@ -92,27 +110,27 @@ const StudentHackathonPage = () => {
       <div className="flex flex-col w-full bg-white p-6 rounded-xl shadow-lg">
         {/* Title */}
         <div className="mb-4 border-b pb-4">
-          <h1 className="text-3xl font-bold text-blue-600">Cybersecurity Challenge</h1>
-          <p className="text-gray-600">Solve real-world cybersecurity challenges.</p>
+          <h1 className="text-3xl font-bold text-blue-600">{hackathon.title}</h1>
+          <p className="text-gray-600">{hackathon.description}</p>
         </div>
 
         {/* Dates & Time */}
         <div className="grid grid-cols-2 gap-6 bg-gray-100 p-4 rounded-lg">
           <div className="flex items-center gap-2">
             <FaCalendarAlt className="text-blue-500" />
-            <span><b>Start Date:</b> 6/15/2025</span>
+            <span><b>Start Date:</b> {formatDate(hackathon.startDate)}</span>
           </div>
           <div className="flex items-center gap-2">
             <FaCalendarAlt className="text-green-500" />
-            <span><b>End Date:</b> 6/17/2025</span>
+            <span><b>End Date:</b> {formatDate(hackathon.endDate)}</span>
           </div>
           <div className="flex items-center gap-2">
             <FaClock className="text-red-500" />
-            <span><b>Start Time:</b> 08:30 AM</span>
+            <span><b>Start Time:</b> {hackathon.startTime}</span>
           </div>
           <div className="flex items-center gap-2">
             <FaClock className="text-gray-700" />
-            <span><b>End Time:</b> 04:30 PM</span>
+            <span><b>End Time:</b> {hackathon.endTime}</span>
           </div>
         </div>
 
@@ -121,35 +139,36 @@ const StudentHackathonPage = () => {
           <div>
             <h2 className="text-xl font-semibold text-gray-700">🔹 Criteria</h2>
             <ul className="list-disc pl-6 text-gray-600">
-              <li>Threat Detection</li>
-              <li>Incident Response</li>
-              <li>Encryption</li>
+              {hackathon.criteria.map((item, index) => (
+                <li key={index}>{item}</li>
+              ))}
             </ul>
           </div>
 
           <div>
             <h2 className="text-xl font-semibold text-gray-700">📁 Allowed Formats</h2>
             <ul className="list-disc pl-6 text-gray-600">
-              <li>File</li>
-              <li>Video</li>
+              {hackathon.allowedFormats.map((item, index) => (
+                <li key={index}>{item}</li>
+              ))}
             </ul>
           </div>
         </div>
 
         {/* Teachers & Students */}
-        <div className="grid grid-cols-2 gap-6 mt-6">
-          <div className="bg-gray-100 p-4 rounded-lg">
+         <div className="grid grid-cols-2 gap-6 mt-6">
+          {/* <div className="bg-gray-100 p-4 rounded-lg">
             <h2 className="text-xl font-semibold text-gray-700 flex items-center gap-2">
               <FaChalkboardTeacher className="text-orange-500" /> Teachers Assigned
             </h2>
             <p className="text-gray-600 mt-2">65f1a6b9e1c3d5b4a3f9c8e2</p>
-          </div>
+          </div> */}
 
           <div className="bg-gray-100 p-4 rounded-lg">
             <h2 className="text-xl font-semibold text-gray-700 flex items-center gap-2">
               <FaGraduationCap className="text-purple-500" /> Registered Students
             </h2>
-            <p className="text-gray-600 mt-2">65f1a6b9e1c3d5b4a3f9c8d5</p>
+            <p className="text-gray-600 mt-2">{hackathon.registeredStudents.length}</p>
           </div>
         </div>
 
@@ -171,60 +190,66 @@ const StudentHackathonPage = () => {
           }
         </div>
       </div>
-        {showForm ? (
-  <div className="mt-6 p-6 bg-gray-100 rounded-lg shadow-md w-full">
-    <h2 className="text-xl font-semibold text-gray-700">📋 Registration Form</h2>
-    
-    {/* Name Input
-    <input type="text" placeholder="Full Name" className="w-full p-2 border rounded-lg mt-2" /> */}
-    
-    {/* Email Input */}
-    {/* <input type="email" placeholder="Email" className="w-full p-2 border rounded-lg mt-2" /> */}
-    
-    {/* File Format Dropdown */}
-    <select
-      value={selectedFormat}
-      onChange={(e) => setSelectedFormat(e.target.value)}
-      className="w-full p-2 border rounded-lg mt-2"
-    >
-      <option value="" disabled>Select File Format</option>
-      <option value="Audio">Audio</option>
-      <option value="Video">Video</option>
-      <option value="File">File</option>
-      <option value="Image">Image</option>
-    </select>
-    
-    {/* File Upload */}
-    {selectedFormat && (
-      <input
-        type="file"
-        accept={
-          selectedFormat === "Audio" ? "audio/*" :
-          selectedFormat === "Video" ? "video/*" :
-          selectedFormat === "Image" ? "image/*" :
-          "*/*"
-        }
-        onChange={handleFileChange}
-        className="w-full p-2 border rounded-lg mt-2"
-      />
-    )}
-
-    {/* Submit Button */}
-    <button
-      onClick={handleRegister}
-      className="mt-4 bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg"
-    >
-      ✅ Submit Registration
-    </button>
-  </div>
-) : (
-  <button
-    onClick={() => setShowForm(true)}
-    className="bg-blue-600 h-13 w-60 hover:bg-blue-700 text-white px-1 py-1 rounded-lg"
-  >
-    📝 Register Now
-  </button>
-)}
+      {
+        isRegistered? (<div>Status : Pending</div>):
+        (
+          showForm ? (
+            <div className="mt-6 p-6 bg-gray-100 rounded-lg shadow-md w-full">
+              <h2 className="text-xl font-semibold text-gray-700">📋 Registration Form</h2>
+              
+              {/* Name Input
+              <input type="text" placeholder="Full Name" className="w-full p-2 border rounded-lg mt-2" /> */}
+              
+              {/* Email Input */}
+              {/* <input type="email" placeholder="Email" className="w-full p-2 border rounded-lg mt-2" /> */}
+              
+              {/* File Format Dropdown */}
+              <select
+                value={selectedFormat}
+                onChange={(e) => setSelectedFormat(e.target.value)}
+                className="w-full p-2 border rounded-lg mt-2"
+              >
+                <option value="" disabled>Select File Format</option>
+                <option value="Audio">Audio</option>
+                <option value="Video">Video</option>
+                <option value="File">File</option>
+                <option value="Image">Image</option>
+              </select>
+              
+              {/* File Upload */}
+              {selectedFormat && (
+                <input
+                  type="file"
+                  accept={
+                    selectedFormat === "Audio" ? "audio/*" :
+                    selectedFormat === "Video" ? "video/*" :
+                    selectedFormat === "Image" ? "image/*" :
+                    "*/*"
+                  }
+                  onChange={handleFileChange}
+                  className="w-full p-2 border rounded-lg mt-2"
+                />
+              )}
+          
+              {/* Submit Button */}
+              <button
+                onClick={handleRegister}
+                className="mt-4 bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg"
+              >
+                ✅ Submit Registration
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setShowForm(true)}
+              className="bg-blue-600 h-13 w-60 hover:bg-blue-700 text-white px-1 py-1 rounded-lg"
+            >
+              📝 Register Now
+            </button>
+          )
+        )
+      }
+        
 
     </div>
   );

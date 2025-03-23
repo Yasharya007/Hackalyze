@@ -135,7 +135,7 @@ export const loginUser = async (req, res) => {
         res.status(200)
             .cookie("accessToken", accessToken, options)
             .cookie("refreshToken", refreshToken, options)
-            .json(new ApiResponse(200, { user: loggedInUser, accessToken, refreshToken }, `${role} logged in`));
+            .json(new ApiResponse(200, { user: loggedInUser, role }, `${role} logged in`));
     } catch (error) {
         console.log(error)
         res.status(404).json({message: error.message})

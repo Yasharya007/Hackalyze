@@ -12,10 +12,11 @@ function App() {
     <>
       <div id="origin" className="flex">
         <Routes>
-            <Route path="/" element={<SamplePage/>}/>
+            <Route path="/" element={<LoginPage/>}/>
             <Route path="/login" element={<LoginPage/>}/>
             <Route path="/student/register" element={<RegisterStudentPage/>}/>
             <Route path="/teacher/register" element={<RegisterTeacherPage/>}/>
+            <Route path="/student/dashboard" element={<SamplePage/>}/>
             <Route path="/hackathon" element={<StudentHackathonPage/>}/>
             <Route path="/faq" element={<FAQPage/>}/>
         </Routes>

@@ -2,12 +2,15 @@ import { useState } from "react";
 import { useNavigate,useLocation } from 'react-router-dom';
 import Contact from "./contact.jsx";
 import { loginAPI } from "../utils/api.jsx";
+import { setStudentId } from "../slices/idSlice.js";
+import { useDispatch } from "react-redux";
 import toast from "react-hot-toast";
 export default function Login() {
   const navigate=useNavigate()
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const dispatch=useDispatch()
   const handleLogin=async()=>{
     if (
       email === "" || password === "") {
@@ -16,8 +19,14 @@ export default function Login() {
     }
     loginAPI(email,password)
     .then((response)=>{
-      console.log(response);
-      navigate("/dashboard")
+      const a=response.data.user._id
+      dispatch(setStudentId(a));
+      // console.log(a);
+      // console.log(response);
+      if(response.data.role==="Student"){navigate("/student/dashboard")}
+      else if(response.data.role==="Teacher"){navigate("/teacher/dashboard")}
+      else if(response.data.role==="Admin"){navigate("/admin/dashboard")}
+      else {navigate("dashboardError")}
     })
     .catch(()=>{})
   }

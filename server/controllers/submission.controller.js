@@ -38,11 +38,14 @@ export const submitHackathon = async (req, res, next) => {
 
         await newSubmission.save();
 
+        // Add student id to hackathon model
         await Hackathon.findByIdAndUpdate(
             hackathonId,
-            { $push: { submissions: newSubmission._id } }, // Push new submission ID
-            { new: true }
-        );
+            { $push: { registeredStudents: studentId } },
+            { $push: { submissions: newSubmission._id } },
+            { new: true } // Return updated document
+          );
+
 
         res.status(201).json(new ApiResponse(201, newSubmission, "Submission successful"));
 
