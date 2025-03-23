@@ -2,6 +2,7 @@ import { Hackathon } from "../models/Hackathon.model.js";
 import { Teacher } from "../models/Teacher.model.js";
 import { Student } from "../models/student.model.js";
 import { Submission } from "../models/Submission.models.js";
+import { Notification } from "../models/Notification.models.js";
 
 // Hackathon Management
 export const createHackathon = async (req, res) => {
@@ -119,8 +120,17 @@ export const assignTeacher = async (req, res) => {
     try {
         const { hackathonId, teacherId } = req.body;
         await Hackathon.findByIdAndUpdate(hackathonId, { $push: { teachers: teacherId } });
+
+         // Notify the teacher
+         const notification = await Notification.create({
+            teacherId,
+            message: "You have been assigned to a hackathon.",
+            typeofmessage: "Hackathon Update"
+        });
+
         res.json({
              message: 'Teacher assigned successfully',
+             notification,
             success:true
          });
     } catch (error) {

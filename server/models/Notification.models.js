@@ -11,6 +11,11 @@ const NotificationSchema = new mongoose.Schema({
         ref: "Teacher", 
         required: true
     },
+    hackathonId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Hackathon", 
+        required: true 
+    },
     message: {
         type: String,
         required: true
