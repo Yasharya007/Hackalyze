@@ -10,7 +10,10 @@ import axios from "axios";
 import toast from "react-hot-toast";
 
 const TeacherDashboard = () => {
+    const dispatch=useDispatch()
+    const navigate=useNavigate()
     const teacherId = useSelector((state) => state.student.studentId);
+    // console.log(teacherId)
     const formatDate = (isoString) => isoString.split("T")[0];
     const [assignedHackathons, setassignedHackathons] = useState([]);
     useEffect(() => {

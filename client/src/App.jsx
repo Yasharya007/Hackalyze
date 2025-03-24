@@ -1,6 +1,5 @@
 import { Route, Routes } from "react-router-dom";
 import SamplePage from "./pages/SamplePage.jsx";
-
 import TeacherDashboard from "./pages/TeacherDashboard.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
 import RegisterStudentPage from "./pages/RegisterStudentPage.jsx";
