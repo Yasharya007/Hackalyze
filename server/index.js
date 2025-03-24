@@ -13,6 +13,7 @@ import studentRouter from "./routes/student.routes.js"
 import teacherRouter from "./routes/Teacher.routes.js"
 import adminRouter from "./routes/Admin.routes.js"
 import { swaggerSpec, swaggerUi } from "./utils/swaggerConfig.js";
+import evaluationRouter from "./routes/evaluationRoutes.js"
 
 dotenv.config({
     path:'./.env'
@@ -41,6 +42,8 @@ app.use('/api/search', seacrh);
 app.use('/api/student',studentRouter);
 app.use('/api/admin',adminRouter);
 app.use('/api/teacher',teacherRouter)
+app.use('/api/evaluation', evaluationRouter);
+
 // MONGOOSE SETUP
 
 //Connect database function
