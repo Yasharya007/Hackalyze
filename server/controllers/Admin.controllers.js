@@ -77,6 +77,7 @@ export const createHackathon = async (req, res) => {
         });
     }
 };
+
 export const getAllHackathons = async (req, res) => {
     try {
         const hackathons = await Hackathon.find()
@@ -233,6 +234,7 @@ export const getAssignedTeachers = async (req, res) => {
     }
 };
 
+
 // Student Management
 export const getRegisteredStudents = async (req, res) => {
     try {
@@ -249,19 +251,34 @@ export const getRegisteredStudents = async (req, res) => {
 
 export const acceptFormat = async (req, res) => {
     try {
-        const { studentId } = req.body;
-        await Student.findByIdAndUpdate(studentId, { mediaAccepted: true });
+        const { studentId, acceptedFormat } = req.body;
+
+        if (!studentId || !acceptedFormat) {
+            return res.status(400).json({ 
+                message: 'Student ID and accepted format are required', 
+                success: false 
+            });
+        }
+
+        await Student.findByIdAndUpdate(studentId, { 
+            mediaAccepted: true, 
+            acceptedFormat: acceptedFormat 
+        });
+
         res.json({ 
-            message: 'Media accepted successfully',
-         });
+            message: 'Media format accepted successfully', 
+            success: true 
+        });
+
     } catch (error) {
         res.status(500).json({ 
-            message: 'Error in accepting media', 
-            error,
-            success: false
+            message: 'Error in accepting media format', 
+            error, 
+            success: false 
         });
     }
 };
+
 
 // Submission Review
 export const getAllSubmissions = async (req, res) => {
@@ -299,20 +316,33 @@ export const getSubmissionById = async (req, res) => {
 
 export const shortlistSubmission = async (req, res) => {
     try {
-        const submission = await Submission.findByIdAndUpdate(req.params.id, { shortlisted: true }, { new: true });
-        res.json({ 
-            message: 'Submission shortlisted successfully',
-             submission,
+        const submission = await Submission.findById(req.params.id);
+        if (!submission) {
+            return res.status(404).json({
+                message: "Submission not found",
+                success: false
+            });
+        }
+
+        submission.status = "Shortlisted";  
+        await submission.save();
+
+        res.json({
+            message: "Submission shortlisted successfully",
+            submission,
             success: true
-         });
+        });
+
     } catch (error) {
-        res.status(500).json({ 
-            message: 'Error shortlisting submission',
-             error,
-             success: false
-             });
+        res.status(500).json({
+            message: "Error shortlisting submission",
+            error,
+            success: false
+        });
     }
 };
+
+
 export const notifyStudents = async (req, res) => {
     try {
         const { hackathonId, message } = req.body;
