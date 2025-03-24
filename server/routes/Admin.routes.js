@@ -44,5 +44,38 @@ router.post('/publish-results', publishFinalResults);
 //Remove Assigned Teacher
 router.put('/remove-assigned-teacher', removeAssignedTeacher);
 
+/**
+ * @swagger
+ * /api/admin/hackathons:
+ *   get:
+ *     summary: Get all hackathons
+ *     description: Admin can retrieve a list of all hackathons.
+ *     tags:
+ *       - Admin
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved the list of hackathons
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: string
+ *                   name:
+ *                     type: string
+ *                   date:
+ *                     type: string
+ *                     format: date
+ *                   description:
+ *                     type: string
+ *       401:
+ *         description: Unauthorized (Admin access required)
+ *       500:
+ *         description: Internal server error
+ */
+
 
 export default router;
