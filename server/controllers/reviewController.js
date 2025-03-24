@@ -20,7 +20,7 @@ export const markSubmissionAsReviewed = async (req, res) => {
 };
 
 // Fetch all submissions that are reviewed 
-export const getReviewedSubmissions = async (req, res) => {
+export const getReviewSubmissions = async (req, res) => {
     try {
         const submissions = await Submission.find({ status: "Reviewed" })
             .populate("studentId", "name email")
