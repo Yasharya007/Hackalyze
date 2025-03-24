@@ -1,42 +1,82 @@
 import { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { clearHackathon,setHackathon } from "../slices/hackathonSlice.js";
-import { HackathonAPI,SubmissionStatusAPI } from "../utils/api.jsx";
-import { useNavigate } from "react-router-dom";
+import { HackathonAPI, SubmissionStatusAPI, logoutAPI } from "../utils/api.jsx";
+import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { FaTachometerAlt, FaUserGraduate, FaCog, FaSignOutAlt, FaMedal, FaCalendarAlt, FaClock, FaGraduationCap, FaChalkboardTeacher, FaFileAlt } from "react-icons/fa";
 
 const Sidebar = () => {
+  const navigate = useNavigate();
+  
   return (
-    <div className="w-64 h-screen bg-white shadow-lg flex flex-col justify-between p-6">
-      {/* Profile Section */}
+    <div className="w-64 bg-white shadow-lg flex flex-col justify-between">
       <div>
-        <div className="flex items-center space-x-3">
-          <div className="w-12 h-12 bg-gray-300 rounded-full"></div>
-          <h2 className="text-lg font-semibold text-gray-800">Student Portal</h2>
+        {/* Header/Logo Section */}
+        <div className="p-6 border-b">
+          <h1 className="text-2xl font-bold">Student Portal</h1>
         </div>
 
         {/* Navigation */}
-        <nav className="mt-6">
-          <ul className="space-y-4">
-            <li className="flex items-center space-x-3 text-blue-600 font-medium">
-              <FaTachometerAlt /> <span>Dashboard</span>
-            </li>
-            <li className="flex items-center space-x-3 text-gray-700 hover:text-blue-600 cursor-pointer">
-              <FaMedal /> <span>Enrolled Hackathons</span>
-            </li>
-            <li className="flex items-center space-x-3 text-gray-700 hover:text-blue-600 cursor-pointer">
-              <FaCog /> <span>Settings</span>
-            </li>
-          </ul>
-        </nav>
+        <div className="p-4">
+          <nav>
+            <ul className="space-y-2">
+              <li>
+                <Link
+                  to="/dashboard"
+                  className="flex items-center p-2 rounded-md hover:bg-gray-100"
+                >
+                  <FaTachometerAlt className="h-5 w-5 mr-2" />
+                  <span>Dashboard</span>
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/profile"
+                  className="flex items-center p-2 rounded-md hover:bg-gray-100"
+                >
+                  <FaUserGraduate className="h-5 w-5 mr-2" />
+                  <span>My Profile</span>
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/enrolled-hackathons"
+                  className="flex items-center p-2 rounded-md hover:bg-gray-100"
+                >
+                  <FaMedal className="h-5 w-5 mr-2" />
+                  <span>Enrolled Hackathons</span>
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/settings"
+                  className="flex items-center p-2 rounded-md hover:bg-gray-100"
+                >
+                  <FaCog className="h-5 w-5 mr-2" />
+                  <span>Settings</span>
+                </Link>
+              </li>
+            </ul>
+          </nav>
+        </div>
       </div>
 
-      {/* Logout */}
-      <button className="flex items-center space-x-3 text-red-600 font-medium hover:text-red-800">
-        <FaSignOutAlt /> <span>Logout</span>
-      </button>
+      {/* Logout Button */}
+      <div className="mb-6 px-4">
+        <button
+          className="flex items-center p-2 rounded-md text-red-600 hover:bg-red-50 w-full"
+          onClick={() => {
+            logoutAPI().then(() => {
+              window.location.href = "/";
+            });
+          }}
+        >
+          <FaSignOutAlt className="h-5 w-5 mr-2" />
+          <span>Logout</span>
+        </button>
+      </div>
     </div>
   );
 };
