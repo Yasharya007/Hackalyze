@@ -1,47 +1,18 @@
-import Hackathon from "../models/Hackathon.models.js";
-import Submission from "../models/Submission.models.js";
-import Student from "../models/student.model.js";
-
-
-
+import { Hackathon } from "../models/Hackathon.model.js";
+import { Submission } from "../models/Submission.models.js";
+import { Student } from "../models/student.model.js";
 // Get details of a particular hackathon
 export const getHackathonDetails = async (req, res) => {
     try {
         const { hackathonId } = req.params;
 
         const hackathon = await Hackathon.findById(hackathonId)
-            .populate("assignedTeachers", "name email expertise");
-            
-        if (!hackathon) {
-            return res.status(404).json({ message: "Hackathon not found" });
+        .lean();
+        if (hackathon.length === 0) {
+            return res.status(404).json({ message: "No hackathons found." });
         }
 
-        // Count total registered participants
-        const totalParticipants = await Student.countDocuments({
-            "hackathonsParticipated.hackathon": hackathonId
-        });
-
-        // Count submissions in each format
-        const formatCounts = await Submission.aggregate([
-            { $match: { hackathonId } },
-            { $group: { _id: "$format", count: { $sum: 1 } } }
-        ]);
-
-        const submissionsByFormat = formatCounts.reduce((acc, cur) => {
-            acc[cur._id] = cur.count;
-            return acc;
-        }, {});
-
-        // Count total submissions for the hackathon
-        const totalSubmissions = await Submission.countDocuments({ hackathonId });
-
-        res.json({
-            problemStatement: hackathon.problemStatement,
-            assignedTeachers: hackathon.assignedTeachers,
-            totalParticipants,
-            totalSubmissions, // Added total submission count
-            submissionsByFormat
-        });
+        res.status(200).json(hackathon);
 
     } catch (error) {
         res.status(500).json({ message: "Server error", error: error.message });
@@ -70,18 +41,38 @@ export const getHackathonTeachers = async (req, res) => {
         const { hackathonId } = req.params;
 
         const hackathon = await Hackathon.findById(hackathonId)
-            .populate("assignedTeachers", "name email expertise")
+            .populate("teachersAssigned", "name email expertise")
             .lean();
 
         if (!hackathon) {
             return res.status(404).json({ message: "Hackathon not found" });
         }
 
-        res.json(hackathon.assignedTeachers);
+        res.json(hackathon.teachersAssigned);
     } catch (error) {
         res.status(500).json({ message: "Server error", error: error.message });
     }
 };
+
+export const getHackathonStudents = async (req, res) => {
+    try {
+        const { hackathonId } = req.params;
+
+        const hackathon = await Hackathon.findById(hackathonId)
+            .populate("registeredStudents", "name email") // Populate students
+            .lean();
+
+        if (!hackathon) {
+            return res.status(404).json({ message: "Hackathon not found" });
+        }
+
+        res.json(hackathon.registeredStudents); // Return the populated students
+
+    } catch (error) {
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
+};
+
 export const getSubmissionDetails = async (req, res) => {
     try {
         const { submissionId } = req.params; // Extract submission ID from request

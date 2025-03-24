@@ -1,5 +1,5 @@
 import express from "express";
-import { searchHackathons } from "../controllers/hackathonController.js";
+import { searchHackathons } from "../controllers/searchController.js";
 
 const router = express.Router();
 

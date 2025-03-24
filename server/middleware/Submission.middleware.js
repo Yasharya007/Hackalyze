@@ -1,5 +1,5 @@
 //Middleware to calculate total score, grade, and result before saving
-export function calculateSubmissionDetails(next) {
+export const  calculateSubmissionDetails=function (next) {
     if (!this.scores || this.scores.length === 0) {
         this.totalScore = 0;
         this.grade = "Low";

@@ -22,21 +22,12 @@ const AdminSchema = new mongoose.Schema({
         type: String,
         default: ""
     },
-    managedHackathons: [{ 
-        type: mongoose.Schema.Types.ObjectId, 
-        ref: "Hackathon" 
-    }], // List of hackathons the admin manages
-
-    assignedTeachers: [{ 
+     assignedTeachers: [{ 
         type: mongoose.Schema.Types.ObjectId, 
         ref: "Teacher" 
     }], // Tracks teachers assigned to hackathons
 
-    notifications: [{ 
-        message: String, 
-        date: { type: Date, default: Date.now } 
-    }], // Stores system messages for admins
-
+  
     
 },{timestamps:true});
 

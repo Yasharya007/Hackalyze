@@ -60,7 +60,30 @@ export const registerTeacher = async (req, res, next) => {
         res.status(404).json({message: error.message})
     }
 };
+// export const registerAdmin = async (req, res, next) => {
+//     try {
+//         const { name, email, password } = req.body;
 
+//         if (!email || !password||!name) {
+//             throw new ApiError(400, "All fields are required");
+//         }
+
+//         // const existingTeacher = await Teacher.findOne({ email });
+//         // if (existingTeacher) throw new ApiError(400, "Teacher already exists");
+//         // const existingStudent = await Student.findOne({ email });
+//         // if (existingStudent) throw new ApiError(400, "Student with same mail exist");
+//         const hashedPassword = await bcrypt.hash(password, 10);
+//         const newAdmin = new Admin({
+//             name, email, password:hashedPassword
+//         });
+
+//         await newAdmin.save();
+//         res.status(201).json(new ApiResponse(201, newAdmin, "Teacher registered successfully"));
+
+//     } catch (error) {
+//         res.status(404).json({message: error.message})
+//     }
+// };
 export const registerStudent = async (req, res, next) => {
     try {
         const { name, email, password, mobile,college, grade, gender, state, district } = req.body;
@@ -135,9 +158,39 @@ export const loginUser = async (req, res) => {
         res.status(200)
             .cookie("accessToken", accessToken, options)
             .cookie("refreshToken", refreshToken, options)
-            .json(new ApiResponse(200, { user: loggedInUser, accessToken, refreshToken }, `${role} logged in`));
+            .json(new ApiResponse(200, { user: loggedInUser, role }, `${role} logged in`));
     } catch (error) {
         console.log(error)
         res.status(404).json({message: error.message})
+    }
+};
+export const logoutUser = async (req, res) => {
+    try {
+        if (!req.user || !req.user._id) {
+            throw new ApiError(401, "User not authenticated");
+        }
+
+        // Find the user across all roles
+        const user =
+            (await Student.findById(req.user._id)) ||
+            (await Teacher.findById(req.user._id)) ||
+            (await Admin.findById(req.user._id));
+
+        if (!user) {
+            throw new ApiError(404, "User not found");
+        }
+
+        // Clear refresh token
+        user.refreshToken = "";
+        await user.save({ validateBeforeSave: false });
+
+        // Clear cookies securely
+        res.status(200)
+            .clearCookie("accessToken", { httpOnly: true, secure: true, sameSite: "Strict" })
+            .clearCookie("refreshToken", { httpOnly: true, secure: true, sameSite: "Strict" })
+            .json({ success: true, message: "Logged out successfully" });
+
+    } catch (error) {
+        res.status(error.statusCode || 500).json(new ApiError(error.statusCode || 500, error.message));
     }
 };
