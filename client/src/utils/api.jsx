@@ -237,8 +237,15 @@ export const TeacherRegisterAPI = async (formData) => {
       return response.data;
     } catch (error) {
       console.error("Error creating hackathon:", error);
-      toast.error(error.response?.data?.message || "Failed to create hackathon");
-      throw error.response?.data || "Failed to create hackathon";
+      const errorMessage = error.response?.data?.message || "Failed to create hackathon";
+      toast.error(errorMessage);
+      
+      // Return a properly structured error response instead of throwing
+      return {
+        success: false,
+        message: errorMessage,
+        error: error.response?.data || error.message
+      };
     } finally {
       toast.dismiss(toastId);
     }
@@ -268,8 +275,15 @@ export const TeacherRegisterAPI = async (formData) => {
       return response.data;
     } catch (error) {
       console.error("Error updating hackathon:", error);
-      toast.error(error.response?.data?.message || "Failed to update hackathon");
-      throw error.response?.data || "Failed to update hackathon";
+      const errorMessage = error.response?.data?.message || "Failed to update hackathon";
+      toast.error(errorMessage);
+      
+      // Return a properly structured error response instead of throwing
+      return {
+        success: false,
+        message: errorMessage,
+        error: error.response?.data || error.message
+      };
     } finally {
       toast.dismiss(toastId);
     }
