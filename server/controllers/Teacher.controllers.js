@@ -1,6 +1,6 @@
 import { Hackathon } from "../models/Hackathon.model.js";
 import { Submission } from "../models/Submission.models.js";
-import { Student } from "../models/student.model.js";
+import { SubmissionAudit } from "../models/SubmissionAudit.js";
 
 export const addParameter = async (req, res) => {
     try {
@@ -246,5 +246,50 @@ export const getShortlistedStudents = async (req, res) => {
         res.status(200).json(submissions);
     } catch (error) {
         res.status(500).json({ message: error.message });
+    }
+};
+
+
+//
+
+
+// Get students sorted by AI score (descending) for a particular teacher
+
+export const getSortedByAIScore = async (req, res) => {
+    try {
+        const { teacherId } = req.params;
+        const submissions = await SubmissionAudit.find({ teacherId }).sort({ AItotalScore: -1 });
+
+        if (submissions.length === 0) {
+            return res.status(404).json({ message: "No submissions found for this teacher." });
+        }
+
+        res.status(200).json(submissions);
+    } catch (error) {
+        res.status(500).json({ error: "Server error", message: error.message });
+    }
+};
+
+
+// Get students sorted by updated score if available, otherwise AI score for a particular teacher
+export const getSortedByPreference = async (req, res) => {
+    try {
+        const { teacherId } = req.params;
+        const submissions = await SubmissionAudit.find({ teacherId });
+
+        if (submissions.length === 0) {
+            return res.status(404).json({ message: "No submissions found for this teacher." });
+        }
+
+        // Sort by `updatedTotalScore` if available, otherwise use `AItotalScore`
+        submissions.sort((a, b) => {
+            const scoreA = a.updatedTotalScore ?? a.AItotalScore;
+            const scoreB = b.updatedTotalScore ?? b.AItotalScore;
+            return scoreB - scoreA; // Descending order
+        });
+
+        res.status(200).json(submissions);
+    } catch (error) {
+        res.status(500).json({ error: "Server error", message: error.message });
     }
 };
