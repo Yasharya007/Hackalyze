@@ -10,6 +10,7 @@ import hackathon from "./routes/hackathonRoutes.js"
 import review from "./routes/reviewRoutes.js"
 import seacrh from "./routes/searchRoutes.js"
 import studentRouter from "./routes/student.routes.js"
+import teacherRouter from "./routes/Teacher.routes.js"
 import adminRouter from "./routes/Admin.routes.js"
 import { swaggerSpec, swaggerUi } from "./utils/swaggerConfig.js";
 
@@ -39,6 +40,7 @@ app.use('/api/review', review);
 app.use('/api/search', seacrh);
 app.use('/api/student',studentRouter);
 app.use('/api/admin',adminRouter);
+app.use('/api/teacher',teacherRouter)
 // MONGOOSE SETUP
 
 //Connect database function
