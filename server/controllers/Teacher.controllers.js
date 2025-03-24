@@ -32,15 +32,15 @@ export const addParameter = async (req, res) => {
 
         // Update each submission with new parameter & AI-generated score
         for (let submission of submissions) {
-            const aiScore = 10;
+            const aiScore = 0;
 
             //score is being calculated by the trained model
 
             // Append the new parameter to the scores array
-            submission.scores.push({ parameter: name, score: aiScore });
+            submission.AIscores.push({ parameter: name, score: aiScore });
 
             // Recalculate total score
-            submission.totalScore = submission.scores.reduce((sum, entry) => sum + entry.score, 0);
+            submission.totalAIScore = submission.AIscores.reduce((sum, entry) => sum + entry.score, 0);
 
             await submission.save();
         }
@@ -80,10 +80,10 @@ export const deleteParameter = async (req, res) => {
 
         for (let submission of submissions) {
             // Remove the parameter from scores array
-            submission.scores = submission.scores.filter(entry => entry.parameter !== parameterName);
+            submission.AIscores = submission.AIscores.filter(entry => entry.parameter !== parameterName);
             
             // Recalculate totalScore
-            submission.totalScore = submission.scores.reduce((sum, entry) => sum + entry.score, 0);
+            submission.totalAIScore = submission.AIscores.reduce((sum, entry) => sum + entry.score, 0);
 
             await submission.save();
         }
@@ -96,53 +96,48 @@ export const deleteParameter = async (req, res) => {
 };
 
 
-//Update selected criteria for a hackathon
-export const updateSelectedCriteria = async (req, res) => {
+//save selected criteria for a hackathon
+export const saveSelectedCriteria = async (req, res) => {
     try {
         const { hackathonId } = req.params;
-        const { selectedCriteria } = req.body; // Array of { parameter, weight }
+        const { selectedCriteria } = req.body; // Expecting array [{name, weight}]
 
+        // Find and update hackathon
         const hackathon = await Hackathon.findById(hackathonId);
         if (!hackathon) return res.status(404).json({ message: "Hackathon not found" });
 
-        // Save selected criteria in Hackathon model
+        // Update selectedCriteria in Hackathon
         hackathon.selectedCriteria = selectedCriteria;
         await hackathon.save();
 
-        // Fetch all submissions for this hackathon
+        // Fetch all submissions for the given hackathon
         const submissions = await Submission.find({ hackathonId });
-
         for (let submission of submissions) {
             let updatedScores = [];
-
-            // Iterate over selectedCriteria to update scores
             for (let criteria of selectedCriteria) {
-                let existingScore = submission.scores.find(score => score.parameter === criteria.parameter);
-
-                updatedScores.push({
-                    parameter: criteria.parameter, // Ensure parameter is always present
-                    score: existingScore ? existingScore.score * criteria.weight : 0 // If not found, initialize to 0
-                });
+                const aiScoreEntry = submission.AIscores.find(ai => ai.parameter === criteria.name);
+                if (aiScoreEntry) {
+                    const weightedScore = aiScoreEntry.score * criteria.weight; // Weight * AI Score
+                    updatedScores.push({ parameter: criteria.name, score: weightedScore });
+                }
             }
 
-            // Update scores and recalculate total score
+            // Update submission scores and recalculate total score
             submission.scores = updatedScores;
             submission.totalScore = updatedScores.reduce((sum, entry) => sum + entry.score, 0);
-
             await submission.save();
         }
 
         return res.status(200).json({
-            message: "Selected criteria updated successfully",
-            updatedSelectedCriteria: hackathon.selectedCriteria
+            message: "Selected criteria saved and submission scores updated successfully",
+            selectedCriteria: hackathon.selectedCriteria
         });
 
     } catch (error) {
-        console.error("Error in updateSelectedCriteria:", error);
+        console.error("Error saving selected criteria and updating scores:", error);
         res.status(500).json({ message: error.message });
     }
 };
-
 
 
 //Get selected criteria for a hackathon
@@ -154,57 +149,6 @@ export const getSelectedCriteria = async (req, res) => {
         if (!hackathon) return res.status(404).json({ message: "Hackathon not found" });
 
         res.status(200).json(hackathon.selectedCriteria);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-};
-
-/**
- * @desc Get all submissions assigned to a teacher for evaluation
- */
-export const getSubmissionsForEvaluation = async (req, res) => {
-    try {
-        const { teacherId, hackathonId } = req.params;
-
-        const submissions = await Submission.find({ hackathonId })
-            .populate("studentId", "name email") // Fetch student details
-            .populate("hackathonId", "title");
-
-        if (!submissions.length) return res.status(404).json({ message: "No submissions found" });
-
-        res.status(200).json(submissions);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-};
-
-/**
- * @desc Evaluate a submission
- */
-export const evaluateSubmission = async (req, res) => {
-    try {
-        const { teacherId, hackathonId, submissionId } = req.params;
-        const { scores } = req.body; // Array of { parameter, score }
-
-        const submission = await Submission.findById(submissionId);
-        if (!submission) return res.status(404).json({ message: "Submission not found" });
-
-        submission.scores = scores;
-        submission.totalScore = scores.reduce((sum, s) => sum + s.score, 0);
-        submission.reviewerId = teacherId;
-        submission.status = "Reviewed";
-
-        // Assign grade & result
-        if (submission.totalScore >= 80) submission.grade = "High";
-        else if (submission.totalScore >= 50) submission.grade = "Mid";
-        else submission.grade = "Low";
-
-        if (submission.totalScore >= 80) submission.result = "Shortlisted for the final";
-        else if (submission.totalScore >= 50) submission.result = "Revisit to check its potential";
-        else submission.result = "Rejected";
-
-        await submission.save();
-        res.status(200).json({ message: "Submission evaluated successfully", submission });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

@@ -34,19 +34,28 @@ const SubmissionSchema = new mongoose.Schema(
             type: String,
             default:""
         }, 
-
+        //manual
         scores: [
             {
                 parameter: { type: String, required: true }, // Evaluation parameter
                 score: { type: Number, default: 0 } // Score for each parameter
             }
         ], 
-
         totalScore: {
             type: Number,
             default: 0
         }, // Automatically calculates the total score
 
+        AIscores: [
+            {
+                parameter: { type: String, required: true }, // Evaluation parameter
+                score: { type: Number, default: 0 } // Score for each parameter
+            }
+        ], 
+        totalAIScore: {
+            type: Number,
+            default: 0
+        },
         grade: {
             type: String,
             enum: ["Low", "Mid", "High"],
