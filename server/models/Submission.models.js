@@ -32,7 +32,7 @@ const SubmissionSchema = new mongoose.Schema(
 
         description: {
             type: String,
-            required: true
+            default:""
         }, 
 
         scores: [

@@ -32,6 +32,10 @@ const hackathonSchema = new mongoose.Schema({
     type: [String],
     required: true,
   },
+  selectedCriteria:{
+    type:[String],
+    required:true
+  },
   allowedFormats: {
     type: [String],
     enum: ["Audio", "Video", "File","Image"],
@@ -40,7 +44,7 @@ const hackathonSchema = new mongoose.Schema({
   teachersAssigned: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: "Teacher",
-    required:true
+    default: []
   }],
   registeredStudents:[{
     type: mongoose.Schema.Types.ObjectId,

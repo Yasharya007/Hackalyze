@@ -1,4 +1,4 @@
-import Hackathon from "../models/Hackathon.model.js";
+import { Hackathon } from "../models/Hackathon.model.js";
 
 // Search Hackathons API
 export const searchHackathons = async (req, res) => {

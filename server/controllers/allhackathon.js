@@ -1,5 +1,20 @@
-import Hackathon from "../models/Hackathon.model.js";
-import Student from "../models/student.model.js";
+import { Hackathon } from "../models/Hackathon.model.js";
+import { Student } from "../models/student.model.js";
+
+export const getAllHackathons = async (req, res) => {
+    try {
+        const hackathons = await Hackathon.find()
+            .lean();
+
+        if (hackathons.length === 0) {
+            return res.status(404).json({ message: "No hackathons found." });
+        }
+
+        res.status(200).json(hackathons);
+    } catch (error) {
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
+};
 
 export const getHackathonsByTeacher = async (req, res) => {
     try {
@@ -19,6 +34,25 @@ export const getHackathonsByTeacher = async (req, res) => {
         res.status(500).json({ message: "Server error", error: error.message });
     }
 };
+
+export const getHackathonsByStudent = async (req, res) => {
+    try {
+        const { studentId } = req.params; // Get student ID from request
+
+        // Find all hackathons where this student is registered
+        const hackathons = await Hackathon.find({ registeredStudents: studentId })
+            .lean();
+
+        if (hackathons.length === 0) {
+            return res.status(404).json({ message: "No hackathons registered by this student." });
+        }
+
+        res.status(200).json(hackathons);
+    } catch (error) {
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
+};
+
 
 export const getStudentCountForTeacherHackathons = async (req, res) => {
     try {

@@ -9,6 +9,8 @@ import FAQ from "./routes/FAQ.routers.js"
 import hackathon from "./routes/hackathonRoutes.js"
 import review from "./routes/reviewRoutes.js"
 import seacrh from "./routes/searchRoutes.js"
+import studentRouter from "./routes/student.routes.js"
+import adminRouter from "./routes/Admin.routes.js"
 
 dotenv.config({
     path:'./.env'
@@ -33,6 +35,8 @@ app.use('/api/FAQ', FAQ);
 app.use('/api/hackathon', hackathon);
 app.use('/api/review', review);
 app.use('/api/search', seacrh);
+app.use('/api/student',studentRouter);
+app.use('/api/admin',adminRouter);
 // MONGOOSE SETUP
 
 //Connect database function
