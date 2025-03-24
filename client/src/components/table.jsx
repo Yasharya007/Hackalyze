@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import Controls from "./Controls";  // Import the Controls component
-
+import { useNavigate } from "react-router-dom";
 function Table() {
+  const navigate=useNavigate()
   const [submissions, setSubmissions] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const submissionsPerPage = 50;
@@ -27,7 +28,7 @@ function Table() {
   const indexOfLastSubmission = currentPage * submissionsPerPage;
   const indexOfFirstSubmission = indexOfLastSubmission - submissionsPerPage;
   
-  // Apply filtering if "Show Only Shortlisted" is active
+  // // Apply filtering if "Show Only Shortlisted" is active
   const filteredSubmissions = showShortlistedOnly 
     ? submissions.filter(sub => sub.shortlisted) 
     : submissions;
@@ -40,14 +41,7 @@ function Table() {
     setCurrentPage(1); // Reset to first page after filtering
   };
 
-  // Add parameters (e.g., extra data)
-  const handleAddParameters = () => {
-    const updatedSubmissions = submissions.map(sub => ({
-      ...sub,
-      extraParameter: `Extra ${Math.floor(Math.random() * 100)}`, // Example additional parameter
-    }));
-    setSubmissions(updatedSubmissions);
-  };
+  
 
   const handleCheckboxChange = (id, field) => {
     setSubmissions(prevSubmissions => 
@@ -55,8 +49,7 @@ function Table() {
         submission.id === id ? { ...submission, [field]: !submission[field] } : submission
       )
     );
-  };
-  
+  };  
 
   const nextPage = () => {
     if (currentPage < Math.ceil(filteredSubmissions.length / submissionsPerPage)) {
@@ -75,7 +68,20 @@ function Table() {
       <h2 className="text-xl font-bold text-gray-900 text-center mb-4"> Student Submissions</h2>
       
       {/* Controls Component */}
-      <Controls  handleFilter={handleFilter} handleAddParameters={handleAddParameters} />
+      <div className="flex gap-2 mb-2">
+        <button
+          onClick={() => handleFilter()}
+          className="px-3 py-1 bg-gray-900 text-white rounded-md hover:bg-gray-700"
+        >
+          Show Only Shortlisted
+        </button>
+        <button
+          onClick={() =>{navigate("/teacher/detailedAnalysis")}}
+          className="px-3 py-1 bg-gray-900 text-white rounded-md hover:bg-gray-700"
+        >
+          Analyse and Evaluate
+        </button>
+        </div>
 
       {/* Table */}
       <div className="overflow-x-auto">
