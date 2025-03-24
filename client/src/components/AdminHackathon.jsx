@@ -1,7 +1,18 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { clearHackathon,setHackathon } from "../slices/hackathonSlice.js";
+import { HackathonAPI,SubmissionStatusAPI } from "../utils/api.jsx";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import toast from "react-hot-toast";
 
 const AdminHackathon = () => {
+  const initialhackthon = useSelector((state) => state.hackathon.selectedHackathon); // Get hackathon from Redux
+  const [hackathon,setHackathonP]=useState(initialhackthon)
   const [activeTab, setActiveTab] = useState("teachers");
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const formatDate = (isoString) => isoString.split("T")[0];
   const students = [
     {
       id: 1,
@@ -47,7 +58,7 @@ const AdminHackathon = () => {
     <div className="flex w-screen">
       {/* Sidebar */}
       <aside className="w-1/4 h-screen bg-gray-100 p-4">
-        <h2 className="text-xl font-bold">HackathonHub</h2>
+        <h2 className="text-xl font-bold">Hackalyze</h2>
         <nav className="mt-4 space-y-2">
           <a href="#" className="block px-4 py-2 bg-gray-200 rounded">Dashboard</a>
           <a href="#" className="block px-4 py-2">Create New Hackathon</a>
@@ -60,7 +71,7 @@ const AdminHackathon = () => {
       {/* Main Content */}
       <main className="flex-1 p-6">
         <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold">AI Innovation Challenge <span className="text-green-600">Active</span></h1>
+          <h1 className="text-2xl font-bold">{hackathon.title} <span className="text-green-600">Active</span></h1>
           <div>
           <button className="px-4 py-2 border rounded mr-2 hover:bg-gray-100">Edit</button>
           <button className="px-4 py-2 bg-black text-white rounded hover:bg-gray-800">Publish Results</button>
@@ -72,22 +83,22 @@ const AdminHackathon = () => {
         <div className="mt-4 grid grid-cols-3 gap-4">
           <div className="p-4 bg-white shadow rounded">
             <h3 className="text-lg font-semibold">Duration</h3>
-            <p>6/1/2023 - 6/30/2023</p>
+            <p>{formatDate(hackathon.startDate)} - {formatDate(hackathon.endDate)}</p>
           </div>
           <div className="p-4 bg-white shadow rounded">
             <h3 className="text-lg font-semibold">Participants</h3>
-            <p>120 <span className="text-gray-500">(45 submissions, 38%)</span></p>
+            <p>{hackathon.registeredStudents.length}</p>
           </div>
           <div className="p-4 bg-white shadow rounded">
             <h3 className="text-lg font-semibold">Submission Deadline</h3>
-            <p>7/1/2023, 5:29:59 AM</p>
+            <p>{formatDate(hackathon.endDate)}, {hackathon.endTime}</p>
           </div>
         </div>
         
         {/* Description */}
         <div className="mt-6 p-4 bg-white shadow rounded">
           <h2 className="text-xl font-semibold">Description</h2>
-          <p>Create innovative AI solutions for real-world problems...</p>
+          <p>{hackathon.description}</p>
         </div>
         
         {/* Tabs */}

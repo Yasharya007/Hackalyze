@@ -11,6 +11,7 @@ import review from "./routes/reviewRoutes.js"
 import seacrh from "./routes/searchRoutes.js"
 import studentRouter from "./routes/student.routes.js"
 import adminRouter from "./routes/Admin.routes.js"
+import { swaggerSpec, swaggerUi } from "./utils/swaggerConfig.js";
 
 dotenv.config({
     path:'./.env'
@@ -29,6 +30,7 @@ app.use(express.urlencoded({extended:false}))
 app.use(express.static("public"))
 
 // ROUTES
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use('/api/auth', authRouter);
 app.use('/api/allhackathon', allhackathon);
 app.use('/api/FAQ', FAQ);

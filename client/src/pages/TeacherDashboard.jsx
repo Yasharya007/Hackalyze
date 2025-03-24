@@ -1,9 +1,37 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link,useNavigate } from "react-router-dom";
 import { Bar } from "react-chartjs-2";
+import { useDispatch,useSelector } from "react-redux";
 import "chart.js/auto";
+import { HackathonByTeacherAPI } from "../utils/api.jsx";
+import { useState,useEffect } from "react";
+import { setHackathon } from "../slices/hackathonSlice.js";
+import axios from "axios";
+import toast from "react-hot-toast";
 
 const TeacherDashboard = () => {
+    const dispatch=useDispatch()
+    const navigate=useNavigate()
+    const teacherId = useSelector((state) => state.student.studentId);
+    // console.log(teacherId)
+    const formatDate = (isoString) => isoString.split("T")[0];
+    const [assignedHackathons, setassignedHackathons] = useState([]);
+    useEffect(() => {
+            const fetchHackathons = async () => {
+              HackathonByTeacherAPI(teacherId)
+              .then((res)=>{
+                // console.log(hackathons.length);
+                setassignedHackathons(res);
+                // console.log("hello");
+              }).catch(()=>{})
+            };
+        
+            fetchHackathons();
+          }, []);
+    const handleClick = (hackathon) => {
+            dispatch(setHackathon(hackathon));
+            navigate("/teacher/hackathon");
+          };
     const chartData = {
         labels: ["Hackathon 1", "Hackathon 2", "Hackathon 3"],
         datasets: [
@@ -71,9 +99,12 @@ const TeacherDashboard = () => {
                     <div class="bg-white p-6 rounded-lg shadow">
                         <h2 class="text-xl font-semibold">Assigned Hackathons</h2>
                         <div class="mt-4 space-y-4">
-                            <div class="p-3 bg-gray-50 rounded-lg">AI Innovation Challenge 1 (Active) <button class="ml-2 text-blue-600">View Details</button></div>
-                            <div class="p-3 bg-gray-50 rounded-lg">AI Innovation Challenge 2 (Upcoming) <button class="ml-2 text-blue-600">View Details</button></div>
-                            <div class="p-3 bg-gray-50 rounded-lg">AI Innovation Challenge 3 (Completed) <button class="ml-2 text-blue-600">View Details</button></div>
+                        {assignedHackathons.map((hackathon, index) => (
+                              <div key={index} className="p-3 bg-gray-50 rounded-lg">
+                                {hackathon.title} ({formatDate(hackathon.endDate)}) 
+                                <button className="ml-2 text-blue-600" onClick={() => handleClick(hackathon)}>View Details</button>
+                              </div>
+                            ))}
                         </div>
                     </div>
                     <div class="bg-white p-6 rounded-lg shadow">

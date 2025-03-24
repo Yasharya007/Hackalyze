@@ -25,7 +25,7 @@ export default function Login() {
       // console.log(response);
       if(response.data.role==="Student"){navigate("/student/dashboard")}
       else if(response.data.role==="Teacher"){navigate("/teacher/dashboard")}
-      else if(response.data.role==="Admin"){navigate("/admin/hackathon")}
+      else if(response.data.role==="Admin"){navigate("/admin/dashboard")}
       else {navigate("dashboardError")}
     })
     .catch(()=>{})

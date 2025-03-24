@@ -1,5 +1,10 @@
 import mongoose from "mongoose";
 
+const parameterSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  description: { type: String, required: true }
+}, { _id: true });
+
 const hackathonSchema = new mongoose.Schema({
   title: {
     type: String,
@@ -32,10 +37,13 @@ const hackathonSchema = new mongoose.Schema({
     type: [String],
     required: true,
   },
-  selectedCriteria:{
-    type:[String],
-    required:true
-  },
+  selectedCriteria: [
+    {
+      name: { type: String, required: true }, // Parameter name
+      weight: { type: Number, required: true,default:100,min:0,max:100 }, // Weight assigned by the teacher
+    },
+  ],
+  parameters: [parameterSchema],  
   allowedFormats: {
     type: [String],
     enum: ["Audio", "Video", "File","Image"],
@@ -44,7 +52,7 @@ const hackathonSchema = new mongoose.Schema({
   teachersAssigned: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: "Teacher",
-    required:true
+    default: []
   }],
   registeredStudents:[{
     type: mongoose.Schema.Types.ObjectId,
@@ -55,6 +63,11 @@ const hackathonSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "Submission",
     default:[]
+  }],
+  shortlistedStudents: [{ 
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Student",
+    default: []
   }],
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,

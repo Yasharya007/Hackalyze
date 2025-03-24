@@ -14,7 +14,7 @@ const TeacherSchema = new mongoose.Schema({
     contactNumber: { type: String, required:true },
     linkedin: { type: String },
     refreshToken: {type: String,default: ""},
-    assignedHackathons: [{ type: mongoose.Schema.Types.ObjectId, ref: "Hackathon" }],
+    assignedHackathons: [{ type: mongoose.Schema.Types.ObjectId, ref: "Hackathon",unique:true }],
 }, { timestamps: true });
 
 
