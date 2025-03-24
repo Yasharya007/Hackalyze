@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import ParameterSelector from "./ParameterSelector";
+import ParameterSelector from "../components/ParameterSelector.jsx";
 const StudentDetails = () => {
   const student = {
     _id: "12345",
@@ -36,7 +36,7 @@ const StudentDetails = () => {
   const result = totalScore >= 60 ? "Shortlisted" : "Not Shortlisted";
 
   return (
-    <div className="max-w-5xl ml-auto mr-0 bg-white p-6 rounded-lg shadow-md mt-5">
+    <div className="w-screen ml-auto mr-0 bg-white p-6 rounded-lg shadow-md mt-5">
          <div className="flex items-center justify-between">
   {/* Left: Name and ID stacked vertically */}
   <div>

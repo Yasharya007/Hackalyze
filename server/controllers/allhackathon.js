@@ -25,7 +25,6 @@ export const getHackathonsByTeacher = async (req, res) => {
         //     .select("title description startDate endDate") // Get only necessary fields
         //     .lean();
         const hackathons = await Hackathon.find({ teachersAssigned: { $in: [teacherId] } })
-    .select("title description startDate endDate") // Get only necessary fields
     .lean();
         if (hackathons.length === 0) {
             return res.status(404).json({ message: "No hackathons assigned to this teacher." });

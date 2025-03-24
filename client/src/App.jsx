@@ -13,6 +13,8 @@ import CreateHackathon from "./pages/CreateHackathon.jsx";
 import FAQPage from "./pages/FAQPage.jsx";
 import StudentDashboard from "./pages/StudentDashboard.jsx";
 import TeacherHackathonPage from "./pages/TeacherHackathonPage.jsx";
+import StudentDetails from "./pages/IndividualSubmission.jsx";
+import DetailedAnalysis from "./pages/DetailedAnalysis.jsx";
 function App() {
   
 
@@ -36,7 +38,8 @@ function App() {
             <Route path="/admin/dashboard" element={<AdminDashboard/>}/>
             <Route path="/main" element={<FrontPage/>}/>
             <Route path="/teacher/hackathon" element={<TeacherHackathonPage/>}/>
-
+            <Route path="/teacher/individualSubmission" element={<StudentDetails/>}/>
+            <Route path="/teacher/detailedAnalysis" element={<DetailedAnalysis/>}/>
         </Routes>
       </div>
     </>
