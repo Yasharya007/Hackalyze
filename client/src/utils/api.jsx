@@ -319,3 +319,81 @@ export const TeacherRegisterAPI = async (formData) => {
       toast.dismiss(toastId);
     }
   };
+
+  // Get hackathon Particular Hackathon details
+  export const getHackathonDetailsAPI = async (hackathonId) => {
+    try {
+        const response = await API.get(`/api/hackathon/${hackathonId}`);
+        return response.data; 
+    } catch (error) {
+        console.error("Error fetching hackathon details:", error);
+        const errorMessage = error.response?.data?.message || "Failed to load hackathon details";
+        
+        return {
+            success: false,
+            message: errorMessage,
+            error: error.response?.data || error.message
+        };
+    } 
+};
+
+// Get submissions of the hackathon 
+export const getHackathonSubmissionsAPI = async (hackathonId) => {
+  try {
+      const response = await API.get(`/api/hackathon/${hackathonId}/submissions`);
+      return response.data; 
+  } catch (error) {
+      console.error("Error fetching submissions:", error);
+      const errorMessage = error.response?.data?.message || "Failed to load submissions";
+
+      return {
+          success: false,
+          message: errorMessage,
+          error: error.response?.data || error.message
+      };
+  } 
+};
+
+// Shortlist students based on a minimum score threshold
+export const shortlistStudents = async (teacherId, hackathonId, threshold) => {
+    try {
+        const response = await API.put(`/api/teacher/${teacherId}/hackathons/${hackathonId}/shortlist`, { threshold });
+        return response.data;
+    } catch (error) {
+        console.error("Error shortlisting students:", error);
+        return { success: false, message: "Failed to shortlist students" };
+    }
+};
+
+// Get all shortlisted students
+export const getShortlistedStudents = async (teacherId, hackathonId) => {
+    try {
+        const response = await API.get(`/api/teacher/${teacherId}/hackathons/${hackathonId}/shortlisted`);
+        return response.data;
+    } catch (error) {
+        console.error("Error fetching shortlisted students:", error);
+        return { success: false, message: "Failed to fetch shortlisted students" };
+    }
+};
+
+// Get teachers assigned to a hackathon
+export const getHackathonTeachersAPI = async (hackathonId) => {
+  try {
+    const response = await API.get(`/api/hackathon/${hackathonId}/teachers`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching hackathon teachers:", error);
+    throw error;
+  }
+};
+
+// Get top submissions for a specific hackathon
+export const getTopSubmissionsAPI = async (hackathonId) => {
+  try {
+    const response = await API.get(`/api/hackathon/${hackathonId}/top-submissions`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching top submissions:", error);
+    throw error;
+  }
+};
