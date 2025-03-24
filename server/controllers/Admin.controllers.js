@@ -156,18 +156,18 @@ export const deleteHackathon = async (req, res) => {
 export const assignTeacher = async (req, res) => {
     try {
         const { hackathonId, teacherId } = req.body;
-        await Hackathon.findByIdAndUpdate(hackathonId, { $push: { teachers: teacherId } });
+        await Hackathon.findByIdAndUpdate(hackathonId, { $push: { teachersAssigned: teacherId } });
 
-         // Notify the teacher
-         const notification = await Notification.create({
-            teacherId,
-            message: "You have been assigned to a hackathon.",
-            typeofmessage: "Hackathon Update"
-        });
+        //  Notify the teacher
+        //  const notification = await Notification.create({
+        //     teacherId,
+        //     message: "You have been assigned to a hackathon.",
+        //     typeofmessage: "Hackathon Update"
+        // });
 
         res.json({
              message: 'Teacher assigned successfully',
-             notification,
+            //  notification,
             success: true
          });
     } catch (error) {

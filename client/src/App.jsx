@@ -12,6 +12,7 @@ import AdminDashboard from "./pages/AdminDashboard.jsx";
 import CreateHackathon from "./pages/CreateHackathon.jsx";
 import FAQPage from "./pages/FAQPage.jsx";
 import StudentDashboard from "./pages/StudentDashboard.jsx";
+import TeacherHackathonPage from "./pages/TeacherHackathonPage.jsx";
 function App() {
   
 
@@ -33,6 +34,7 @@ function App() {
             <Route path="/admin/edit-hackathon/:id" element={<CreateHackathon/>}/>
             <Route path="/student/dashboard" element={<StudentDashboard/>}/>
             <Route path="/admin/dashboard" element={<AdminDashboard/>}/>
+            <Route path="/teacher/hackathon" element={<TeacherHackathonPage/>}/>
 
         </Routes>
       </div>

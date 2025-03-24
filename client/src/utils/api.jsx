@@ -79,6 +79,21 @@ export const TeacherRegisterAPI = async (formData) => {
     }
   };
 
+  // Get hackathon by teacher
+
+  export const HackathonByTeacherAPI= async (teacherId) => {
+    const toastId=toast.loading("loading...")
+    try {
+      const response = await API.get(`/api/allhackathon/teacher/${teacherId}`);
+      // toast.success("Registered Successfully");
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || "Loading of hackathons failed!";
+    }finally{
+      toast.dismiss(toastId);
+    }
+  };
+
   // submission status for student
 
   export const SubmissionStatusAPI= async (hackathonId) => {

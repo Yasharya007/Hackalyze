@@ -25,7 +25,7 @@ router.put('/hackathon/:id', updateHackathon);// swagger documented
 router.delete('/hackathon/:id', deleteHackathon);// swagger documented
 
 // Teacher Assignments
-router.post('/hackathon/assign-teacher', assignTeacher);
+router.post('/hackathon/assignteacher', assignTeacher);
 router.get('/hackathon/teachers', getAssignedTeachers);
 
 // Student Management
