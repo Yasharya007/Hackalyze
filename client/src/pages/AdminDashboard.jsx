@@ -1,88 +1,300 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import axios from "axios";
+import { getAdminDashboardStats, getRecentHackathons, getTeacherAssignments } from "../utils/api.jsx";
 
 const AdminDashboard = () => {
-    const statsData = [
-        { label: "Total Hackathons", value: "12", change: "+2 from last month" },
-        { label: "Active Participants", value: "+573", change: "+201 from last month" },
-        { label: "Upcoming Events", value: "3", change: "Next event in 5 days" },
-        { label: "Submission Rate", value: "78%", change: "+12% from last month" }
-    ];
+    const [activeTab, setActiveTab] = useState("overview");
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [stats, setStats] = useState({
+        totalHackathons: 0,
+        activeParticipants: 0,
+        upcomingEvents: 0,
+        submissionRate: 0
+    });
+    const [recentHackathons, setRecentHackathons] = useState([]);
+    const [teacherAssignments, setTeacherAssignments] = useState([]);
 
-    const hackathons = [
-        { name: "AI Innovation Challenge 1", date: "May 11, 2023" },
-        { name: "AI Innovation Challenge 2", date: "May 12, 2023" },
-        { name: "AI Innovation Challenge 3", date: "May 13, 2023" }
-    ];
+    // Fetch dashboard data
+    useEffect(() => {
+        const fetchDashboardData = async () => {
+            try {
+                setLoading(true);
+                setError(null);
+                
+                // Fetch stats
+                const statsData = await getAdminDashboardStats();
+                setStats(statsData);
+                
+                // Fetch recent hackathons
+                const hackathonsData = await getRecentHackathons();
+                setRecentHackathons(hackathonsData);
+                
+                // Fetch teacher assignments
+                const assignmentsData = await getTeacherAssignments();
+                setTeacherAssignments(assignmentsData);
+                
+            } catch (err) {
+                console.error("Error fetching dashboard data:", err);
+                setError("Failed to load dashboard data. Please try again later.");
+            } finally {
+                setLoading(false);
+            }
+        };
 
-    const teachers = [
-        { name: "Teacher 1", hackathon: "AI Innovation Challenge 1" },
-        { name: "Teacher 2", hackathon: "AI Innovation Challenge 2" },
-        { name: "Teacher 3", hackathon: "AI Innovation Challenge 3" }
-    ];
+        fetchDashboardData();
+    }, []);
+
+    const handleTabChange = (tab) => {
+        setActiveTab(tab);
+    };
+
+    // Render loading state
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-gray-100 p-8 flex justify-center items-center">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
+                    <p className="text-gray-700">Loading dashboard data...</p>
+                </div>
+            </div>
+        );
+    }
+
+    // Render error state
+    if (error) {
+        return (
+            <div className="min-h-screen bg-gray-100 p-8 flex justify-center items-center">
+                <div className="text-center bg-white p-8 rounded-lg shadow-md max-w-md">
+                    <div className="text-red-600 text-5xl mb-4">⚠️</div>
+                    <h1 className="text-2xl font-bold text-gray-800 mb-2">Error Loading Dashboard</h1>
+                    <p className="text-gray-600 mb-4">{error}</p>
+                    <button 
+                        onClick={() => window.location.reload()} 
+                        className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
+                    >
+                        Retry
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     return (
-        <div className="flex w-full h-screen bg-gray-100">
-            {/* Sidebar */}
-            <aside className="w-64 bg-white p-5 border-r">
-                <h2 className="text-xl font-bold mb-5">HackathonHub</h2>
-                <nav>
-                    <ul>
-                        <li className="py-2"><Link to="/admin/dashboard" className="text-gray-700 font-semibold">Dashboard</Link></li>
-                        <li className="py-2"><Link to="/admin/create-hackathon" className="text-gray-700">Create New Hackathon</Link></li>
-                        <li className="py-2"><Link to="/admin/view-hackathons" className="text-gray-700">View Hackathons</Link></li>
-                        <li className="py-2"><Link to="/admin/settings" className="text-gray-700">Settings</Link></li>
-                    </ul>
-                </nav>
-                <button className="mt-5 w-full bg-gray-200 p-2 rounded">Logout</button>
-            </aside>
-            
-            {/* Main Content */}
-            <main className="flex-1 p-6">
-                <div className="flex justify-between items-center">
-                    <h1 className="text-4xl font-bold">Admin Dashboard</h1>
-                    <div>
-                        <Link to="/admin/create-hackathon" className="bg-black text-white px-4 py-2 rounded">Create Hackathon</Link>
-                        <button className="ml-2 border px-4 py-2 rounded">Export Data</button>
+        <div className="min-h-screen bg-gray-100">
+            <div className="flex">
+                {/* Sidebar */}
+                <aside className="w-64 bg-white p-5 border-r">
+                    <div className="flex items-center mb-6">
+                        <div className="w-10 h-10 bg-gray-200 rounded-full"></div>
+                        <h2 className="text-xl font-bold ml-2">Hackalyze</h2>
+                    </div>
+                    <nav>
+                        <ul className="space-y-2">
+                            <li>
+                                <a
+                                    href="#"
+                                    className={`flex items-center p-2 rounded-md ${activeTab === "overview" ? "bg-black text-white" : "hover:bg-gray-100"}`}
+                                    onClick={() => handleTabChange("overview")}
+                                >
+                                    <span className="mr-2">📊</span>
+                                    <span>Overview</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a
+                                    href="#"
+                                    className={`flex items-center p-2 rounded-md ${activeTab === "hackathons" ? "bg-black text-white" : "hover:bg-gray-100"}`}
+                                    onClick={() => handleTabChange("hackathons")}
+                                >
+                                    <span className="mr-2">🏆</span>
+                                    <span>Hackathons</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a
+                                    href="#"
+                                    className={`flex items-center p-2 rounded-md ${activeTab === "teachers" ? "bg-black text-white" : "hover:bg-gray-100"}`}
+                                    onClick={() => handleTabChange("teachers")}
+                                >
+                                    <span className="mr-2">👨‍🏫</span>
+                                    <span>Teachers</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                </aside>
+
+                {/* Main Content */}
+                <div className="flex-1 p-8">
+                    {/* Header */}
+                    <div className="flex justify-between items-center mb-8">
+                        <div>
+                            <h1 className="text-2xl font-bold">Admin Dashboard</h1>
+                            <p className="text-gray-600">Welcome back, Admin</p>
+                        </div>
+                        <div className="flex space-x-4">
+                            <Link to="/admin/create-hackathon" className="bg-black text-white px-4 py-2 rounded">Create Hackathon</Link>
+                        </div>
+                    </div>
+
+                    {/* Dashboard Tabs */}
+                    <div className="bg-white rounded-lg shadow-sm border p-6">
+                        {/* Overview Tab */}
+                        {activeTab === "overview" && (
+                            <div>
+                                <h2 className="text-xl font-semibold mb-4">Dashboard Overview</h2>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                                    <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                                        <h3 className="text-gray-500 text-sm">Total Hackathons</h3>
+                                        <p className="text-2xl font-bold">{stats.totalHackathons}</p>
+                                    </div>
+                                    <div className="bg-green-50 p-4 rounded-lg border border-green-100">
+                                        <h3 className="text-gray-500 text-sm">Active Participants</h3>
+                                        <p className="text-2xl font-bold">{stats.activeParticipants}</p>
+                                    </div>
+                                    <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-100">
+                                        <h3 className="text-gray-500 text-sm">Upcoming Events</h3>
+                                        <p className="text-2xl font-bold">{stats.upcomingEvents}</p>
+                                    </div>
+                                    <div className="bg-purple-50 p-4 rounded-lg border border-purple-100">
+                                        <h3 className="text-gray-500 text-sm">Submission Rate</h3>
+                                        <p className="text-2xl font-bold">{stats.submissionRate}%</p>
+                                    </div>
+                                </div>
+
+                                <h2 className="text-xl font-semibold mb-4">Recent Hackathons</h2>
+                                <div className="overflow-x-auto">
+                                    <table className="min-w-full bg-white">
+                                        <thead>
+                                            <tr className="w-full h-16 border-gray-300 border-b py-8">
+                                                <th className="text-left pl-4 text-gray-600">Name</th>
+                                                <th className="text-left text-gray-600">Date</th>
+                                                <th className="text-left text-gray-600">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {recentHackathons.length === 0 ? (
+                                                <tr>
+                                                    <td colSpan="3" className="text-center py-4 text-gray-500">
+                                                        No hackathons found
+                                                    </td>
+                                                </tr>
+                                            ) : (
+                                                recentHackathons.map((hackathon) => (
+                                                    <tr key={hackathon.id} className="h-16 border-b border-gray-300">
+                                                        <td className="pl-4">{hackathon.name}</td>
+                                                        <td>{hackathon.date}</td>
+                                                        <td>
+                                                            <Link 
+                                                                to={`/admin/hackathon/${hackathon.id}`}
+                                                                className="text-blue-600 hover:text-blue-800"
+                                                            >
+                                                                View Details
+                                                            </Link>
+                                                        </td>
+                                                    </tr>
+                                                ))
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Hackathons Tab */}
+                        {activeTab === "hackathons" && (
+                            <div>
+                                <div className="flex justify-between items-center mb-4">
+                                    <h2 className="text-xl font-semibold">All Hackathons</h2>
+                                    <Link to="/admin/create-hackathon" className="bg-black text-white px-4 py-2 rounded">Create Hackathon</Link>
+                                </div>
+                                <div className="overflow-x-auto">
+                                    <table className="min-w-full bg-white">
+                                        <thead>
+                                            <tr className="w-full h-16 border-gray-300 border-b py-8">
+                                                <th className="text-left pl-4 text-gray-600">Name</th>
+                                                <th className="text-left text-gray-600">Date</th>
+                                                <th className="text-left text-gray-600">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {recentHackathons.length === 0 ? (
+                                                <tr>
+                                                    <td colSpan="3" className="text-center py-4 text-gray-500">
+                                                        No hackathons found
+                                                    </td>
+                                                </tr>
+                                            ) : (
+                                                recentHackathons.map((hackathon) => (
+                                                    <tr key={hackathon.id} className="h-16 border-b border-gray-300">
+                                                        <td className="pl-4">{hackathon.name}</td>
+                                                        <td>{hackathon.date}</td>
+                                                        <td>
+                                                            <Link 
+                                                                to={`/admin/hackathon/${hackathon.id}`}
+                                                                className="text-blue-600 hover:text-blue-800 mr-2"
+                                                            >
+                                                                View Details
+                                                            </Link>
+                                                            <Link 
+                                                                to={`/admin/edit-hackathon/${hackathon.id}`}
+                                                                className="text-green-600 hover:text-green-800"
+                                                            >
+                                                                Edit
+                                                            </Link>
+                                                        </td>
+                                                    </tr>
+                                                ))
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Teachers Tab */}
+                        {activeTab === "teachers" && (
+                            <div>
+                                <h2 className="text-xl font-semibold mb-4">Teacher Assignments</h2>
+                                <div className="overflow-x-auto">
+                                    <table className="min-w-full bg-white">
+                                        <thead>
+                                            <tr className="w-full h-16 border-gray-300 border-b py-8">
+                                                <th className="text-left pl-4 text-gray-600">Teacher</th>
+                                                <th className="text-left text-gray-600">Assigned Hackathon</th>
+                                                <th className="text-left text-gray-600">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {teacherAssignments.length === 0 ? (
+                                                <tr>
+                                                    <td colSpan="3" className="text-center py-4 text-gray-500">
+                                                        No teacher assignments found
+                                                    </td>
+                                                </tr>
+                                            ) : (
+                                                teacherAssignments.map((assignment) => (
+                                                    <tr key={assignment.id} className="h-16 border-b border-gray-300">
+                                                        <td className="pl-4">{assignment.name}</td>
+                                                        <td>{assignment.hackathon}</td>
+                                                        <td>
+                                                            <a href="#" className="text-blue-600 hover:text-blue-800">
+                                                                View Profile
+                                                            </a>
+                                                        </td>
+                                                    </tr>
+                                                ))
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
-                
-                {/* Stats */}
-                <div className="grid grid-cols-4 gap-4 mt-6">
-                    {statsData.map((stat, index) => (
-                        <div key={index} className='bg-white p-4 rounded shadow'>
-                            <h3 className='text-xl font-bold'>{stat.value}</h3>
-                            <p className='text-gray-500 text-sm'>{stat.change}</p>
-                        </div>
-                    ))}
-                </div>
-                
-                {/* Recent Hackathons */}
-                <div className="bg-white p-5 mt-6 rounded shadow">
-                    <h2 className="text-lg font-semibold">Recent Hackathons</h2>
-                    <ul className="mt-3">
-                        {hackathons.map((h, index) => (
-                            <li key={index} className='py-2 flex justify-between border-b'>
-                                <span>{h.name} (Created on {h.date})</span>
-                                <Link to={`/admin/hackathon/${index}`} className='bg-gray-200 px-4 py-1 rounded'>View Details</Link>
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-                
-                {/* Teacher Assignments */}
-                <div className="bg-white p-5 mt-6 rounded shadow">
-                    <h2 className="text-lg font-semibold">Teacher Assignments</h2>
-                    <ul className="mt-3">
-                        {teachers.map((t, index) => (
-                            <li key={index} className='py-2 flex justify-between border-b'>
-                                <span>{t.name} - {t.hackathon}</span>
-                                <button className='bg-gray-200 px-4 py-1 rounded'>Reassign</button>
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-            </main>
+            </div>
         </div>
     );
 };
