@@ -13,8 +13,17 @@ const FrontPage = () => {
 
                 </div>
                 <div>
-                    <button className="px-4 py-2 border border-black rounded hover:bg-gray-200">Log In</button>
-                    <button className="px-4 py-2 bg-black text-white rounded ml-2 hover:bg-gray-800">Sign Up</button>
+                    <a href="/login">
+                        <button className="px-4 py-2 border border-black rounded hover:bg-gray-200">
+                            Log In
+                        </button>
+                    </a>
+                    <a href="/student/register" className="ml-2">
+                        <button className="px-4 py-2 bg-black text-white rounded hover:bg-gray-800">
+                            Sign Up
+                        </button>
+                    </a>
+
                 </div>
             </nav>
 
