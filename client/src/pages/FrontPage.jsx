@@ -1,6 +1,7 @@
-import { Link } from "react-router-dom";
+import { Link,Navigate, useNavigate } from "react-router-dom";
 
 const FrontPage = () => {
+    const navigate=useNavigate();
     return (
         <div className="bg-gray-100">
             {/* Navbar */}
@@ -13,8 +14,8 @@ const FrontPage = () => {
 
                 </div>
                 <div>
-                    <button className="px-4 py-2 border border-black rounded hover:bg-gray-200">Log In</button>
-                    <button className="px-4 py-2 bg-black text-white rounded ml-2 hover:bg-gray-800">Sign Up</button>
+                    <button className="px-4 py-2 border border-black rounded hover:bg-gray-200" onClick={()=>{navigate('/login')}}>Log In</button>
+                    <button className="px-4 py-2 bg-black text-white rounded ml-2 hover:bg-gray-800" onClick={()=>{navigate('/student/register')}}>Sign Up</button>
                 </div>
             </nav>
 
