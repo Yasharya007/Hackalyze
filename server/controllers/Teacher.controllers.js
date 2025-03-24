@@ -1,6 +1,6 @@
 import { Hackathon } from "../models/Hackathon.model.js";
 import { Submission } from "../models/Submission.models.js";
-import { SubmissionAudit } from "../models/SubmissionAudit.js";
+import { SubmissionAudit } from "../models/SubmissionAudit.models.js";
 
 export const addParameter = async (req, res) => {
     try {
