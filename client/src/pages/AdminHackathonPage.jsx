@@ -659,11 +659,21 @@ const AdminHackathonPage = () => {
             
             {/* First Confirmation Modal */}
             {showDeleteModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-20 backdrop-blur-sm flex items-center justify-center z-50">
-                    <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full border border-gray-200">
-                        <h2 className="text-xl font-bold mb-4">Delete Hackathon</h2>
-                        <p className="mb-6">Are you sure you want to delete this hackathon and its contents? This action cannot be undone.</p>
-                        <div className="flex justify-end space-x-2">
+                <div className="fixed inset-0 z-50 flex items-center justify-center">
+                    <div className="fixed inset-0 backdrop-blur-[1px]"></div>
+                    <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full relative z-10">
+                        <div className="flex items-start mb-4">
+                            <div className="bg-red-100 p-2 rounded-full mr-3">
+                                <svg className="h-6 w-6 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h2 className="text-xl font-bold">Delete Hackathon</h2>
+                                <p className="text-gray-600 mt-1">Are you sure you want to delete this hackathon and its contents? This action cannot be undone.</p>
+                            </div>
+                        </div>
+                        <div className="flex justify-end space-x-2 mt-6">
                             <button 
                                 onClick={handleCancelDelete}
                                 className="px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
@@ -683,11 +693,21 @@ const AdminHackathonPage = () => {
             
             {/* Name Confirmation Modal */}
             {showNameConfirmModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-20 backdrop-blur-sm flex items-center justify-center z-50">
-                    <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full border border-gray-200">
-                        <h2 className="text-xl font-bold mb-4">Confirm Deletion</h2>
-                        <p className="mb-4">To confirm deletion, please type the hackathon name:</p>
-                        <p className="font-bold mb-4 text-gray-500">{hackathon.title}</p>
+                <div className="fixed inset-0 z-50 flex items-center justify-center">
+                    <div className="fixed inset-0 backdrop-blur-[1px]"></div>
+                    <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full relative z-10">
+                        <div className="flex items-start mb-4">
+                            <div className="bg-red-100 p-2 rounded-full mr-3">
+                                <svg className="h-6 w-6 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h2 className="text-xl font-bold">Confirm Deletion</h2>
+                                <p className="text-gray-600 mt-1">To confirm deletion, please type the hackathon name:</p>
+                                <p className="font-bold text-gray-700 mt-2">{hackathon.title}</p>
+                            </div>
+                        </div>
                         <input 
                             type="text" 
                             value={confirmName}
@@ -695,7 +715,7 @@ const AdminHackathonPage = () => {
                             className="w-full p-2 border border-gray-300 rounded mb-4"
                             placeholder="Type hackathon name"
                         />
-                        <div className="flex justify-end space-x-2">
+                        <div className="flex justify-end space-x-2 mt-2">
                             <button 
                                 onClick={handleCancelDelete}
                                 className="px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
