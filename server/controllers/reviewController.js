@@ -1,7 +1,7 @@
 import { Submission } from "../models/Submission.models.js";
 
-// Move a submission to the review folder
-export const moveToReviewFolder = async (req, res) => {
+// Mark a submission to the review folder
+export const markSubmissionAsReviewed = async (req, res) => {
     try {
         const { submissionId } = req.params;
         const submission = await Submission.findById(submissionId);
@@ -10,19 +10,19 @@ export const moveToReviewFolder = async (req, res) => {
             return res.status(404).json({ message: "Submission not found" });
         }
 
-        submission.needsReview = true; // Mark submission for review
+        submission.status = "Reviewed"; // Update status to "Reviewed"
         await submission.save();
 
-        res.json({ message: "Submission moved to review folder successfully" });
+        res.json({ message: "Submission marked as Reviewed successfully" });
     } catch (error) {
         res.status(500).json({ message: "Server error", error: error.message });
     }
 };
 
-// Fetch all submissions in the review folder
-export const getReviewSubmissions = async (req, res) => {
+// Fetch all submissions that are reviewed 
+export const getReviewedSubmissions = async (req, res) => {
     try {
-        const submissions = await Submission.find({ needsReview: true })
+        const submissions = await Submission.find({ status: "Reviewed" })
             .populate("studentId", "name email")
             .populate("hackathonId", "title")
             .populate("reviewerId", "name")
@@ -34,8 +34,9 @@ export const getReviewSubmissions = async (req, res) => {
     }
 };
 
-// Remove a submission from the review folder (once reviewed)
-export const removeFromReviewFolder = async (req, res) => {
+
+// Remove a submission from the review (once reviewed)
+export const markSubmissionAsPending = async (req, res) => {
     try {
         const { submissionId } = req.params;
         const submission = await Submission.findById(submissionId);
@@ -44,12 +45,13 @@ export const removeFromReviewFolder = async (req, res) => {
             return res.status(404).json({ message: "Submission not found" });
         }
 
-        submission.needsReview = false; // Remove from review
+        submission.status = "Pending"; // Set status back to "Pending"
         await submission.save();
 
-        res.json({ message: "Submission removed from review folder" });
+        res.json({ message: "Submission status reset to Pending successfully" });
     } catch (error) {
         res.status(500).json({ message: "Server error", error: error.message });
     }
 };
+
 
