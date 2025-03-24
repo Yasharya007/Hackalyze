@@ -64,6 +64,18 @@ export const createHackathon = async (req, res) => {
         
         const hackathon = await Hackathon.create(hackathonData);
 
+         // Notify students about the new hackathon
+         const students = await Student.find();
+         await Promise.all(
+             students.map(student =>
+                 Notification.create({
+                     studentId: student._id,
+                     message: `A new hackathon "${title}" is upcoming. Start preparing!`,
+                     typeofmessage: "Hackathon Announcement"
+                 })
+             )
+         );
+
        return res.status(201).json({
         message: 'Hackathon Created Successfully',
         hackathon,
@@ -174,12 +186,12 @@ export const assignTeacher = async (req, res) => {
             { new: true }
         );
 
-        //  Notify the teacher
-        //  const notification = await Notification.create({
-        //     teacherId,
-        //     message: "You have been assigned to a hackathon.",
-        //     typeofmessage: "Hackathon Update"
-        // });
+         //Notify the teacher
+         const notification = await Notification.create({
+            teacherId,
+            message: "You have been assigned to a hackathon.",
+            typeofmessage: "Hackathon Update"
+        });
 
         res.json({
              message: 'Teachers updated successfully',
