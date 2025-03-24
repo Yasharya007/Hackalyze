@@ -77,6 +77,7 @@ export const createHackathon = async (req, res) => {
         });
     }
 };
+
 export const getAllHackathons = async (req, res) => {
     try {
         const hackathons = await Hackathon.find()
@@ -249,6 +250,7 @@ export const getAssignedTeachers = async (req, res) => {
     }
 };
 
+
 // Student Management
 export const getRegisteredStudents = async (req, res) => {
     try {
@@ -293,15 +295,18 @@ export const acceptFormat = async (req, res) => {
             success: true,
             hackathon: updatedHackathon
          });
+
     } catch (error) {
         console.error("Server error in acceptFormat:", error);
         res.status(500).json({ 
             message: 'Error in updating media types', 
             error: error.message,
             success: false
+
         });
     }
 };
+
 
 // Submission Review
 export const getAllSubmissions = async (req, res) => {
@@ -339,20 +344,33 @@ export const getSubmissionById = async (req, res) => {
 
 export const shortlistSubmission = async (req, res) => {
     try {
-        const submission = await Submission.findByIdAndUpdate(req.params.id, { shortlisted: true }, { new: true });
-        res.json({ 
-            message: 'Submission shortlisted successfully',
-             submission,
+        const submission = await Submission.findById(req.params.id);
+        if (!submission) {
+            return res.status(404).json({
+                message: "Submission not found",
+                success: false
+            });
+        }
+
+        submission.status = "Shortlisted";  
+        await submission.save();
+
+        res.json({
+            message: "Submission shortlisted successfully",
+            submission,
             success: true
-         });
+        });
+
     } catch (error) {
-        res.status(500).json({ 
-            message: 'Error shortlisting submission',
-             error,
-             success: false
-             });
+        res.status(500).json({
+            message: "Error shortlisting submission",
+            error,
+            success: false
+        });
     }
 };
+
+
 export const notifyStudents = async (req, res) => {
     try {
         const { hackathonId, message } = req.body;

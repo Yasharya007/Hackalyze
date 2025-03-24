@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import ParameterSelector from "./ParameterSelector";
+import { useNavigate } from "react-router-dom";
 import Controls from "./Controls";
 function Table() {
+  const navigate=useNavigate();
   const [submissions, setSubmissions] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const submissionsPerPage = 50;
@@ -134,7 +136,7 @@ function Table() {
 
       {/* View More Button (NOT a checkbox) */}
       <td className="p-2 border border-gray-300 text-center">
-        <button className="text-blue-600 hover:underline">View More</button>
+        <button className="text-blue-600 hover:underline" onClick={()=>{navigate("/teacher/individualSubmission")}} >View More</button>
       </td>
     </tr>
   ))}

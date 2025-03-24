@@ -1,33 +1,30 @@
 import { useState } from "react";
-
+import { useSelector } from "react-redux";
 const HackathonDetails = () => {
+   const hackathon = useSelector((state) => state.hackathon.selectedHackathon);
+   console.log(hackathon)
   // Hardcoded Hackathon Data for Testing
-  const hackathons = [
-    {
-      _id: "1",
-      title: "AI Innovators Hackathon",
-      description: "A competition focused on AI-driven solutions.",
-      startDate: "2025-04-15",
-      endDate: "2025-04-20",
-      startTime: "10:00 AM",
-      endTime: "05:00 PM",
-      criteria: ["Innovation", "Code Quality", "Presentation"],
-      allowedFormats: ["Audio", "Video", "File", "Image"],
-      registeredStudents: ["stu1", "stu2", "stu3"],
-    },
-  ];
+  // const hackathons = [
+  //   {
+  //     _id: "1",
+  //     title: "AI Innovators Hackathon",
+  //     description: "A competition focused on AI-driven solutions.",
+  //     startDate: "2025-04-15",
+  //     endDate: "2025-04-20",
+  //     startTime: "10:00 AM",
+  //     endTime: "05:00 PM",
+  //     criteria: ["Innovation", "Code Quality", "Presentation"],
+  //     allowedFormats: ["Audio", "Video", "File", "Image"],
+  //     registeredStudents: ["stu1", "stu2", "stu3"],
+  //   },
+  // ];
 
   return (
     <div className="max-w-3xl mx-auto bg-gradient-to-br from-gray-700 to-black shadow-lg rounded-xl p-6 text-white border border-gray-600">
       <h2 className="text-3xl font-semibold text-center tracking-wide mb-6 border-b border-gray-500 pb-3">
          Hackathon Details
       </h2>
-
-      {hackathons.length === 0 ? (
-        <p className="text-gray-400 text-lg italic text-center">No hackathons assigned.</p>
-      ) : (
-        hackathons.map((hackathon) => (
-          <div key={hackathon._id} className="bg-gray-900 shadow-md p-6 rounded-lg border-l-8 border-gray-500 mb-6">
+          <div className="bg-gray-900 shadow-md p-6 rounded-lg border-l-8 border-gray-500 mb-6">
             <h3 className="text-2xl font-bold text-gray-200 mb-3 tracking-wide">
               {hackathon.title}
             </h3>
@@ -54,8 +51,8 @@ const HackathonDetails = () => {
               </p>
             </div>
           </div>
-        ))
-      )}
+
+      
     </div>
   );
 };
