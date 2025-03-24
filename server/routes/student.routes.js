@@ -6,7 +6,7 @@ import { upload } from "../middleware/multer.middleware.js";
 const router = express.Router();
 
 router.post("/submit", verifyUser, upload.single("file"), submitHackathon);// swagger documented
-router.post("/submit/new", verifyUser,submitHackathonNew); // Swagger Documented
+router.post("/submit/bulk", verifyUser,submitHackathonNew); // Swagger Documented
 router.post("/status",verifyUser,getSubmissionStatus)
 
 /**
@@ -65,7 +65,7 @@ router.post("/status",verifyUser,getSubmissionStatus)
 
 /**
  * @swagger
- * /api/student/submit/new:
+ * /api/student/submit/bulk:
  *   post:
  *     summary: Submit multiple hackathon entries
  *     description: Allows students to submit multiple hackathon entries at once.
