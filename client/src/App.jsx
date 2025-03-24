@@ -1,6 +1,6 @@
 import { Route, Routes } from "react-router-dom";
 import SamplePage from "./pages/SamplePage.jsx";
-
+import FrontPage from "./pages/FrontPage.jsx"
 import TeacherDashboard from "./pages/TeacherDashboard.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
 import RegisterStudentPage from "./pages/RegisterStudentPage.jsx";
@@ -12,6 +12,9 @@ import AdminDashboard from "./pages/AdminDashboard.jsx";
 import CreateHackathon from "./pages/CreateHackathon.jsx";
 import FAQPage from "./pages/FAQPage.jsx";
 import StudentDashboard from "./pages/StudentDashboard.jsx";
+import TeacherHackathonPage from "./pages/TeacherHackathonPage.jsx";
+import StudentDetails from "./pages/IndividualSubmission.jsx";
+import DetailedAnalysis from "./pages/DetailedAnalysis.jsx";
 function App() {
   
 
@@ -19,7 +22,7 @@ function App() {
     <>
       <div id="origin" className="flex">
         <Routes>
-            <Route path="/" element={<LoginPage/>}/>
+            <Route path="/" element={<FrontPage/>}/>
             <Route path="/login" element={<LoginPage/>}/>
             <Route path="/student/register" element={<RegisterStudentPage/>}/>
             <Route path="/teacher/register" element={<RegisterTeacherPage/>}/>
@@ -33,7 +36,10 @@ function App() {
             <Route path="/admin/edit-hackathon/:id" element={<CreateHackathon/>}/>
             <Route path="/student/dashboard" element={<StudentDashboard/>}/>
             <Route path="/admin/dashboard" element={<AdminDashboard/>}/>
-
+            <Route path="/main" element={<FrontPage/>}/>
+            <Route path="/teacher/hackathon" element={<TeacherHackathonPage/>}/>
+            <Route path="/teacher/individualSubmission" element={<StudentDetails/>}/>
+            <Route path="/teacher/detailedAnalysis" element={<DetailedAnalysis/>}/>
         </Routes>
       </div>
     </>

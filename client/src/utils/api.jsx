@@ -79,6 +79,21 @@ export const TeacherRegisterAPI = async (formData) => {
     }
   };
 
+  // Get hackathon by teacher
+
+  export const HackathonByTeacherAPI= async (teacherId) => {
+    const toastId=toast.loading("loading...")
+    try {
+      const response = await API.get(`/api/allhackathon/teacher/${teacherId}`);
+      // toast.success("Registered Successfully");
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || "Loading of hackathons failed!";
+    }finally{
+      toast.dismiss(toastId);
+    }
+  };
+
   // submission status for student
 
   export const SubmissionStatusAPI= async (hackathonId) => {
@@ -140,7 +155,7 @@ export const TeacherRegisterAPI = async (formData) => {
     }
   };
 
-  export const getRecentHackathons = async () => {
+  export const getRecentHackathons = async (sortConfig = { field: 'title', direction: 'asc' }) => {
     try {
       const response = await API.get("/api/admin/hackathons");
       const hackathons = response.data.hackathons || [];
@@ -149,7 +164,7 @@ export const TeacherRegisterAPI = async (formData) => {
       const currentDate = new Date();
       
       // Format hackathons with all required fields for the UI
-      return hackathons.map(hackathon => {
+      const formattedHackathons = hackathons.map(hackathon => {
         const startDate = new Date(hackathon.startDate);
         const endDate = new Date(hackathon.endDate);
         
@@ -176,17 +191,51 @@ export const TeacherRegisterAPI = async (formData) => {
           date: `${new Date(hackathon.startDate).toLocaleDateString()} - ${new Date(hackathon.endDate).toLocaleDateString()}`
         };
       });
+
+      // Sort the hackathons based on the sortConfig
+      return formattedHackathons.sort((a, b) => {
+        const field = sortConfig.field;
+        
+        // Handle different field types
+        let valueA, valueB;
+        
+        if (field === 'startDate' || field === 'endDate') {
+          // Parse dates for comparison
+          valueA = new Date(a[field]).getTime();
+          valueB = new Date(b[field]).getTime();
+        } else if (field === 'title' || field === 'name') {
+          // Case-insensitive string comparison
+          valueA = (a[field] || '').toLowerCase();
+          valueB = (b[field] || '').toLowerCase();
+        } else {
+          // Default comparison
+          valueA = a[field];
+          valueB = b[field];
+        }
+        
+        // Sort based on direction
+        if (sortConfig.direction === 'asc') {
+          return valueA > valueB ? 1 : -1;
+        } else {
+          return valueA < valueB ? 1 : -1;
+        }
+      });
     } catch (error) {
       console.error("Error fetching recent hackathons:", error);
       throw error.response?.data || "Failed to load recent hackathons";
     }
   };
 
-  export const getTeacherAssignments = async () => {
+  export const getTeacherAssignments = async (formatForDashboard = true) => {
     try {
       // Get teacher assignments with the enhanced data from backend
       const response = await API.get("/api/admin/hackathon/teachers");
       const teacherAssignments = response.data || [];
+      
+      // If raw data is requested, return it directly
+      if (!formatForDashboard) {
+        return teacherAssignments;
+      }
       
       // Format the assignments for display in the dashboard
       const formattedAssignments = [];
@@ -224,7 +273,8 @@ export const TeacherRegisterAPI = async (formData) => {
       return formattedAssignments;
     } catch (error) {
       console.error("Error fetching teacher assignments:", error);
-      throw error.response?.data || "Failed to load teacher assignments";
+      toast.error(error.response?.data?.message || "Failed to fetch teachers");
+      return formatForDashboard ? [] : [];
     }
   };
 
@@ -304,3 +354,140 @@ export const TeacherRegisterAPI = async (formData) => {
       toast.dismiss(toastId);
     }
   };
+
+
+  // Assign teachers to a hackathon
+  export const assignTeacherToHackathonAPI = async (hackathonId, teacherIds) => {
+    const toastId = toast.loading("Assigning teachers...");
+    try {
+      const response = await API.post("/api/admin/hackathon/assignteacher", {
+        hackathonId,
+        teacherIds
+      });
+      toast.success("Teachers assigned successfully");
+      return response.data;
+    } catch (error) {
+      console.error("Error assigning teachers:", error);
+      toast.error(error.response?.data?.message || "Failed to assign teachers");
+      throw error;
+    } finally {
+      toast.dismiss(toastId);
+    }
+  };
+
+  // Update hackathon media types
+  export const updateHackathonMediaAPI = async (hackathonId, mediaTypes) => {
+    const toastId = toast.loading("Updating media types...");
+    try {
+      const response = await API.post("/api/admin/hackathon/accept-media", {
+        hackathonId,
+        mediaTypes
+      });
+      toast.success("Media types updated successfully");
+      return response.data;
+    } catch (error) {
+      console.error("Error updating media types:", error);
+      toast.error(error.response?.data?.message || "Failed to update media types");
+      throw error;
+    } finally {
+      toast.dismiss(toastId);
+    }
+  };
+
+  // Update hackathon deadline
+  export const updateHackathonDeadlineAPI = async (hackathonId, newDeadline) => {
+    const toastId = toast.loading("Updating deadline...");
+    try {
+      const response = await API.put(`/api/admin/hackathon/${hackathonId}`, {
+        endDate: newDeadline.date,
+        endTime: newDeadline.time
+      });
+      toast.success("Deadline updated successfully");
+      return response.data;
+    } catch (error) {
+      console.error("Error updating deadline:", error);
+      toast.error(error.response?.data?.message || "Failed to update deadline");
+      throw error;
+    } finally {
+      toast.dismiss(toastId);
+    }
+  };
+
+  // Get hackathon Particular Hackathon details
+  export const getHackathonDetailsAPI = async (hackathonId) => {
+    try {
+        const response = await API.get(`/api/hackathon/${hackathonId}`);
+        return response.data; 
+    } catch (error) {
+        console.error("Error fetching hackathon details:", error);
+        const errorMessage = error.response?.data?.message || "Failed to load hackathon details";
+        
+        return {
+            success: false,
+            message: errorMessage,
+            error: error.response?.data || error.message
+        };
+    } 
+};
+
+// Get submissions of the hackathon 
+export const getHackathonSubmissionsAPI = async (hackathonId) => {
+  try {
+      const response = await API.get(`/api/hackathon/${hackathonId}/submissions`);
+      return response.data; 
+  } catch (error) {
+      console.error("Error fetching submissions:", error);
+      const errorMessage = error.response?.data?.message || "Failed to load submissions";
+
+      return {
+          success: false,
+          message: errorMessage,
+          error: error.response?.data || error.message
+      };
+  } 
+};
+
+// Shortlist students based on a minimum score threshold
+export const shortlistStudents = async (teacherId, hackathonId, threshold) => {
+    try {
+        const response = await API.put(`/api/teacher/${teacherId}/hackathons/${hackathonId}/shortlist`, { threshold });
+        return response.data;
+    } catch (error) {
+        console.error("Error shortlisting students:", error);
+        return { success: false, message: "Failed to shortlist students" };
+    }
+};
+
+// Get all shortlisted students
+export const getShortlistedStudents = async (teacherId, hackathonId) => {
+    try {
+        const response = await API.get(`/api/teacher/${teacherId}/hackathons/${hackathonId}/shortlisted`);
+        return response.data;
+    } catch (error) {
+        console.error("Error fetching shortlisted students:", error);
+        return { success: false, message: "Failed to fetch shortlisted students" };
+    }
+};
+
+// Get teachers assigned to a hackathon
+export const getHackathonTeachersAPI = async (hackathonId) => {
+  try {
+    const response = await API.get(`/api/hackathon/${hackathonId}/teachers`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching hackathon teachers:", error);
+    throw error;
+  }
+};
+
+// Get top submissions for a specific hackathon
+export const getTopSubmissionsAPI = async (hackathonId) => {
+  try {
+    const response = await API.get(`/api/hackathon/${hackathonId}/top-submissions`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching top submissions:", error);
+    throw error;
+  }
+};
+

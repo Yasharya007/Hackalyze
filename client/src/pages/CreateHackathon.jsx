@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
-import { createHackathonAPI, getHackathonByIdAPI, updateHackathonAPI, logoutAPI } from "../utils/api.jsx";
+import { 
+  createHackathonAPI, 
+  updateHackathonAPI, 
+  getHackathonByIdAPI,
+  getTeacherAssignments,
+  logoutAPI 
+} from "../utils/api.jsx";
 import toast from "react-hot-toast";
 
 const CreateHackathon = () => {
@@ -46,6 +52,13 @@ const CreateHackathon = () => {
             return date.toISOString().split('T')[0];
           };
           
+          // Extract criteria names from selectedCriteria objects
+          const selectedCriteriaNames = Array.isArray(hackathon.selectedCriteria) 
+            ? hackathon.selectedCriteria.map(criteria => 
+                typeof criteria === 'object' ? criteria.name : criteria
+              )
+            : [];
+          
           setFormData({
             title: hackathon.title || "",
             description: hackathon.description || "",
@@ -54,7 +67,7 @@ const CreateHackathon = () => {
             startTime: hackathon.startTime || "",
             endTime: hackathon.endTime || "",
             criteria: hackathon.criteria || [],
-            selectedCriteria: hackathon.selectedCriteria || [],
+            selectedCriteria: selectedCriteriaNames,
             allowedFormats: hackathon.allowedFormats || [],
             teachersAssigned: hackathon.teachersAssigned?.map(teacher => 
               typeof teacher === 'object' ? teacher._id : teacher
@@ -127,24 +140,12 @@ const CreateHackathon = () => {
   useEffect(() => {
     const fetchTeachers = async () => {
       try {
-        // Use the API instance with error handling and proper base URL
-        const response = await fetch("/api/admin/hackathon/teachers", {
-          headers: {
-            'Content-Type': 'application/json',
-            // Include authentication headers if needed
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          },
-        });
+        // Use the API function to fetch teachers with raw data (formatForDashboard = false)
+        const teachersData = await getTeacherAssignments(false);
         
-        if (!response.ok) {
-          throw new Error(`Failed to fetch teachers: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        console.log("Teachers data:", data); // Debug log to see the response
-        
-        // Filter out any teachers without an _id property to prevent key errors
-        const validTeachers = Array.isArray(data) ? data.filter(teacher => teacher && teacher._id) : [];
+        // Filter out any teachers without an id property to prevent key errors
+        const validTeachers = Array.isArray(teachersData) ? 
+          teachersData.filter(teacher => teacher && teacher.id) : [];
         
         if (validTeachers.length === 0) {
           console.warn("No valid teachers found in the response");
@@ -177,9 +178,15 @@ const CreateHackathon = () => {
       criteria => formData.criteria.includes(criteria)
     );
     
+    // Format selectedCriteria to match the expected server model format
+    const formattedSelectedCriteria = validSelectedCriteria.map(criteriaName => ({
+      name: criteriaName,
+      weight: 100 // Default weight as specified in the model
+    }));
+    
     const hackathonData = {
       ...formData,
-      selectedCriteria: validSelectedCriteria,
+      selectedCriteria: formattedSelectedCriteria,
       // Filter out any undefined or invalid teacher IDs
       teachersAssigned: formData.teachersAssigned.filter(id => id)
     };
@@ -525,10 +532,10 @@ const CreateHackathon = () => {
                   onChange={handleArrayChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md h-32"
                 >
-                  {teachers.map((teacher, index) => (
+                  {teachers.map((teacher) => (
                     <option 
-                      key={`teacher-${teacher._id || index}`} 
-                      value={teacher._id}
+                      key={`teacher-${teacher.id}`} 
+                      value={teacher.id}
                     >
                       {teacher.name} ({teacher.email})
                     </option>
