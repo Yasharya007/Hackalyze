@@ -226,11 +226,16 @@ export const TeacherRegisterAPI = async (formData) => {
     }
   };
 
-  export const getTeacherAssignments = async () => {
+  export const getTeacherAssignments = async (formatForDashboard = true) => {
     try {
       // Get teacher assignments with the enhanced data from backend
       const response = await API.get("/api/admin/hackathon/teachers");
       const teacherAssignments = response.data || [];
+      
+      // If raw data is requested, return it directly
+      if (!formatForDashboard) {
+        return teacherAssignments;
+      }
       
       // Format the assignments for display in the dashboard
       const formattedAssignments = [];
@@ -268,7 +273,8 @@ export const TeacherRegisterAPI = async (formData) => {
       return formattedAssignments;
     } catch (error) {
       console.error("Error fetching teacher assignments:", error);
-      throw error.response?.data || "Failed to load teacher assignments";
+      toast.error(error.response?.data?.message || "Failed to fetch teachers");
+      return formatForDashboard ? [] : [];
     }
   };
 
