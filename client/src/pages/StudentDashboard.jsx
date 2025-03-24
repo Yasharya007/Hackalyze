@@ -11,10 +11,19 @@ const StudentDashboard = () => {
     const [hackathons, setHackathons] = useState([]);
     const studentId = useSelector((state) => state.student.studentId);
     console.log(studentId)
-    const formatDate = (isoString) => isoString.split("T")[0];
+
     const truncateText = (text, length) => {
         return text.length > length ? text.substring(0, length) + "..." : text;
     };
+
+    const formatDate = (isoString) => isoString.split("T")[0];
+
+    const isDeadlinePassed = (endDate) => {
+        const currentDate = new Date();
+        const deadline = new Date(endDate);
+        return currentDate > deadline;
+    };
+
     useEffect(() => {
         const fetchHackathons = async () => {
           AllHackathonAPI()
@@ -38,18 +47,19 @@ const StudentDashboard = () => {
     
         fetchHackathons();
       }, []);
-      const handleClick = (hackathon) => {
+
+    const handleClick = (hackathon) => {
         dispatch(setHackathon(hackathon));
-        navigate("/hackathon");
-      };
+        navigate(`/student/hackathon/${hackathon._id}`);
+    };
 
     return (
-        <div className="flex h-screen bg-gray-100">
+        <div className="flex h-screen w-full bg-gray-100">
             {/* Sidebar */}
-            <aside className="w-64 bg-white shadow-lg flex flex-col justify-between">
+            <aside className="w-64 bg-white shadow-lg flex flex-col justify-between h-screen sticky top-0">
                 <div>
                     {/* Header/Logo Section */}
-                    <div className="p-6 border-b">
+                    <div className="p-6">
                         <h1 className="text-2xl font-bold">Hackalyze</h1>
                     </div>
 
@@ -59,7 +69,7 @@ const StudentDashboard = () => {
                             <ul className="space-y-2">
                                 <li>
                                     <Link
-                                        to="/dashboard"
+                                        to="/student/dashboard"
                                         className="flex items-center p-2 rounded-md bg-black text-white"
                                     >
                                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -70,7 +80,7 @@ const StudentDashboard = () => {
                                 </li>
                                 <li>
                                     <Link
-                                        to="/profile"
+                                        to="/student/profile"
                                         className="flex items-center p-2 rounded-md hover:bg-gray-100"
                                     >
                                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -81,7 +91,7 @@ const StudentDashboard = () => {
                                 </li>
                                 <li>
                                     <Link
-                                        to="/enrolled-hackathons"
+                                        to="/student/enrolled-hackathons"
                                         className="flex items-center p-2 rounded-md hover:bg-gray-100"
                                     >
                                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -92,7 +102,7 @@ const StudentDashboard = () => {
                                 </li>
                                 <li>
                                     <Link
-                                        to="/settings"
+                                        to="/student/settings"
                                         className="flex items-center p-2 rounded-md hover:bg-gray-100"
                                     >
                                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -140,8 +150,19 @@ const StudentDashboard = () => {
                         <div key={index} className="bg-white p-6 rounded-lg shadow-sm border hover:shadow-md transition">
                             <h3 className="text-lg font-bold">{hackathon.title}</h3>
                             <div className="flex items-center mt-1 mb-2">
-                                <span className={`px-2 py-1 text-xs rounded-full ${hackathon.status === "registered" ? "bg-green-100 text-green-800" : "bg-blue-100 text-blue-800"}`}>
-                                    {hackathon.status === "registered" ? "Registered" : "Open"}
+                                <span className={`px-2 py-1 text-xs rounded-full ${
+                                    hackathon.status === "registered" 
+                                        ? "bg-green-100 text-green-800" 
+                                        : isDeadlinePassed(hackathon.endDate)
+                                            ? "bg-red-100 text-red-800"
+                                            : "bg-blue-100 text-blue-800"
+                                }`}>
+                                    {hackathon.status === "registered" 
+                                        ? "Registered" 
+                                        : isDeadlinePassed(hackathon.endDate)
+                                            ? "Closed"
+                                            : "Open"
+                                    }
                                 </span>
                             </div>
                             <p className="text-gray-600 text-sm mb-3">{truncateText(hackathon.description, 80)}</p>
@@ -160,7 +181,7 @@ const StudentDashboard = () => {
                                 >
                                     View Details
                                 </button>
-                                {hackathon.status !== "registered" && (
+                                {hackathon.status !== "registered" && !isDeadlinePassed(hackathon.endDate) && (
                                     <button 
                                         onClick={() => handleClick(hackathon)} 
                                         className="flex-1 border border-black px-4 py-2 rounded text-sm font-medium hover:bg-gray-50 transition"
