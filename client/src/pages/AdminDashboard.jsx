@@ -20,6 +20,11 @@ const AdminDashboard = () => {
         field: 'title',
         direction: 'asc'
     });
+    // Separate sorting state for teachers
+    const [teacherSortConfig, setTeacherSortConfig] = useState({
+        field: 'name',
+        direction: 'asc'
+    });
 
     // Fetch dashboard data
     useEffect(() => {
@@ -49,7 +54,33 @@ const AdminDashboard = () => {
                 // Fetch teacher assignments
                 try {
                     const assignmentsData = await getTeacherAssignments();
-                    setTeacherAssignments(assignmentsData);
+                    
+                    // Sort teacher assignments
+                    const sortedAssignments = [...assignmentsData].sort((a, b) => {
+                        const field = teacherSortConfig.field;
+                        
+                        // Handle different field types
+                        let valueA, valueB;
+                        
+                        if (field === 'startDate' || field === 'endDate') {
+                            // Parse dates for comparison
+                            valueA = new Date(a[field] || '').getTime() || 0;
+                            valueB = new Date(b[field] || '').getTime() || 0;
+                        } else {
+                            // Case-insensitive string comparison for text fields
+                            valueA = (a[field] || '').toLowerCase();
+                            valueB = (b[field] || '').toLowerCase();
+                        }
+                        
+                        // Sort based on direction
+                        if (teacherSortConfig.direction === 'asc') {
+                            return valueA > valueB ? 1 : -1;
+                        } else {
+                            return valueA < valueB ? 1 : -1;
+                        }
+                    });
+                    
+                    setTeacherAssignments(sortedAssignments);
                 } catch (assignmentsError) {
                     console.error("Error fetching assignments:", assignmentsError);
                     // Continue with other fetches even if this one fails
@@ -64,8 +95,7 @@ const AdminDashboard = () => {
         };
 
         fetchDashboardData();
-    }, [sortConfig]);
-
+    }, [sortConfig, teacherSortConfig]);
 
     const handleTabChange = (tab) => {
         setActiveTab(tab);
@@ -74,6 +104,24 @@ const AdminDashboard = () => {
     // Handle sorting
     const handleSort = (field) => {
         setSortConfig(prevConfig => {
+            // If clicking on the same field, toggle direction
+            if (prevConfig.field === field) {
+                return {
+                    field,
+                    direction: prevConfig.direction === 'asc' ? 'desc' : 'asc'
+                };
+            }
+            // If clicking on a new field, sort ascending by default
+            return {
+                field,
+                direction: 'asc'
+            };
+        });
+    };
+
+    // Handle sorting for teachers
+    const handleTeacherSort = (field) => {
+        setTeacherSortConfig(prevConfig => {
             // If clicking on the same field, toggle direction
             if (prevConfig.field === field) {
                 return {
@@ -240,7 +288,44 @@ const AdminDashboard = () => {
                                 </div>
                             </div>
 
-                            <h2 className="text-xl font-semibold mb-4 mt-8">Recent Hackathons</h2>
+                            <div className="flex justify-between items-center mb-4 mt-8">
+                                <h2 className="text-xl font-semibold">Top Hackathons</h2>
+                                
+                                {/* Sorting Controls */}
+                                <div className="flex items-center space-x-4">
+                                    <div className="flex items-center">
+                                        <label htmlFor="overviewSortField" className="mr-2 text-sm text-gray-600">Sort by:</label>
+                                        <select 
+                                            id="overviewSortField"
+                                            className="form-select rounded-md border-gray-300 shadow-sm text-sm"
+                                            value={sortConfig.field}
+                                            onChange={(e) => handleSort(e.target.value)}
+                                        >
+                                            <option value="title">Name</option>
+                                            <option value="startDate">Start Date</option>
+                                            <option value="endDate">End Date</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <button 
+                                        onClick={() => setSortConfig(prev => ({
+                                            ...prev, 
+                                            direction: prev.direction === 'asc' ? 'desc' : 'asc'
+                                        }))}
+                                        className="text-gray-500 hover:text-gray-700"
+                                    >
+                                        {sortConfig.direction === 'asc' ? (
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
+                                            </svg>
+                                        ) : (
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h9m5-4v12m0 0l-4-4m4 4l4-4" />
+                                            </svg>
+                                        )}
+                                    </button>
+                                </div>
+                            </div>
                             <div className="bg-white rounded-lg border shadow-sm overflow-hidden">
                                 <table className="min-w-full">
                                     <thead className="bg-gray-50">
@@ -264,7 +349,7 @@ const AdminDashboard = () => {
                                                     <td className="px-4 py-4 whitespace-nowrap">{hackathon.name}</td>
                                                     <td className="px-4 py-4 whitespace-nowrap">{hackathon.date}</td>
                                                     <td className="px-4 py-4 whitespace-nowrap">
-                                                        <span className={`px-2 py-1 text-xs rounded-full ${
+                                                        <span className={`px-2 py-1 text-xs rounded-full font-medium ${
                                                             hackathon.status === "Active" ? "bg-green-100 text-green-800" : 
                                                             hackathon.status === "Upcoming" ? "bg-blue-100 text-blue-800" : 
                                                             "bg-gray-100 text-gray-800"
@@ -311,21 +396,24 @@ const AdminDashboard = () => {
                                         </select>
                                     </div>
                                     
-                                    <div className="flex items-center">
-                                        <input 
-                                            type="checkbox" 
-                                            id="sortDirection" 
-                                            className="mr-2 form-checkbox"
-                                            checked={sortConfig.direction === 'desc'}
-                                            onChange={() => setSortConfig(prev => ({
-                                                ...prev, 
-                                                direction: prev.direction === 'asc' ? 'desc' : 'asc'
-                                            }))}
-                                        />
-                                        <label htmlFor="sortDirection" className="text-sm text-gray-600">
-                                            {sortConfig.direction === 'asc' ? 'Ascending' : 'Descending'}
-                                        </label>
-                                    </div>
+                                    <button 
+                                        onClick={() => setSortConfig(prev => ({
+                                            ...prev, 
+                                            direction: prev.direction === 'asc' ? 'desc' : 'asc'
+                                        }))}
+                                        className="text-gray-500 hover:text-gray-700"
+                                        title={sortConfig.direction === 'asc' ? 'Sort Ascending' : 'Sort Descending'}
+                                    >
+                                        {sortConfig.direction === 'asc' ? (
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
+                                            </svg>
+                                        ) : (
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h9m5-4v12m0 0l-4-4m4 4l4-4" />
+                                            </svg>
+                                        )}
+                                    </button>
                                 </div>
                             </div>
                             
@@ -361,7 +449,7 @@ const AdminDashboard = () => {
                                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
                                                 <div className="flex items-center text-sm text-gray-500">
                                                     <svg className="w-5 h-5 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                                                     </svg>
                                                     <span>Duration: {hackathon.startDate && hackathon.endDate ? 
                                                         `${new Date(hackathon.startDate).toLocaleDateString()} - ${new Date(hackathon.endDate).toLocaleDateString()}` : 
@@ -370,13 +458,13 @@ const AdminDashboard = () => {
                                                 </div>
                                                 <div className="flex items-center text-sm text-gray-500">
                                                     <svg className="w-5 h-5 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
                                                     </svg>
                                                     <span>Participants: {hackathon.participants || 0}</span>
                                                 </div>
                                                 <div className="flex items-center text-sm text-gray-500">
                                                     <svg className="w-5 h-5 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                                                     </svg>
                                                     <span>Submissions: {hackathon.submissions || 0}</span>
                                                 </div>
@@ -412,7 +500,45 @@ const AdminDashboard = () => {
                     {/* Teachers Tab */}
                     {activeTab === "teachers" && (
                         <div>
-                            <h2 className="text-xl font-semibold mb-6">Teacher Assignments</h2>
+                            <div className="flex justify-between items-center mb-6">
+                                <h2 className="text-xl font-semibold">Teacher Assignments</h2>
+                                
+                                {/* Sorting Controls for Teachers */}
+                                <div className="flex items-center space-x-4">
+                                    <div className="flex items-center">
+                                        <label htmlFor="teacherSortField" className="mr-2 text-sm text-gray-600">Sort by:</label>
+                                        <select 
+                                            id="teacherSortField"
+                                            className="form-select rounded-md border-gray-300 shadow-sm text-sm"
+                                            value={teacherSortConfig.field}
+                                            onChange={(e) => handleTeacherSort(e.target.value)}
+                                        >
+                                            <option value="name">Teacher Name</option>
+                                            <option value="teacherEmail">Email</option>
+                                            <option value="hackathon">Hackathon</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <button 
+                                        onClick={() => setTeacherSortConfig(prev => ({
+                                            ...prev, 
+                                            direction: prev.direction === 'asc' ? 'desc' : 'asc'
+                                        }))}
+                                        className="text-gray-500 hover:text-gray-700"
+                                        title={teacherSortConfig.direction === 'asc' ? 'Sort Ascending' : 'Sort Descending'}
+                                    >
+                                        {teacherSortConfig.direction === 'asc' ? (
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
+                                            </svg>
+                                        ) : (
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h9m5-4v12m0 0l-4-4m4 4l4-4" />
+                                            </svg>
+                                        )}
+                                    </button>
+                                </div>
+                            </div>
                             <div className="bg-white rounded-lg border shadow-sm overflow-hidden">
                                 <table className="min-w-full">
                                     <thead className="bg-gray-50">
