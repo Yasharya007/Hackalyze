@@ -155,7 +155,7 @@ export const TeacherRegisterAPI = async (formData) => {
     }
   };
 
-  export const getRecentHackathons = async () => {
+  export const getRecentHackathons = async (sortConfig = { field: 'title', direction: 'asc' }) => {
     try {
       const response = await API.get("/api/admin/hackathons");
       const hackathons = response.data.hackathons || [];
@@ -164,7 +164,7 @@ export const TeacherRegisterAPI = async (formData) => {
       const currentDate = new Date();
       
       // Format hackathons with all required fields for the UI
-      return hackathons.map(hackathon => {
+      const formattedHackathons = hackathons.map(hackathon => {
         const startDate = new Date(hackathon.startDate);
         const endDate = new Date(hackathon.endDate);
         
@@ -190,6 +190,35 @@ export const TeacherRegisterAPI = async (formData) => {
           status: status,
           date: `${new Date(hackathon.startDate).toLocaleDateString()} - ${new Date(hackathon.endDate).toLocaleDateString()}`
         };
+      });
+
+      // Sort the hackathons based on the sortConfig
+      return formattedHackathons.sort((a, b) => {
+        const field = sortConfig.field;
+        
+        // Handle different field types
+        let valueA, valueB;
+        
+        if (field === 'startDate' || field === 'endDate') {
+          // Parse dates for comparison
+          valueA = new Date(a[field]).getTime();
+          valueB = new Date(b[field]).getTime();
+        } else if (field === 'title' || field === 'name') {
+          // Case-insensitive string comparison
+          valueA = (a[field] || '').toLowerCase();
+          valueB = (b[field] || '').toLowerCase();
+        } else {
+          // Default comparison
+          valueA = a[field];
+          valueB = b[field];
+        }
+        
+        // Sort based on direction
+        if (sortConfig.direction === 'asc') {
+          return valueA > valueB ? 1 : -1;
+        } else {
+          return valueA < valueB ? 1 : -1;
+        }
       });
     } catch (error) {
       console.error("Error fetching recent hackathons:", error);

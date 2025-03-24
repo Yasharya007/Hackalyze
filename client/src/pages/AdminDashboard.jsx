@@ -15,6 +15,11 @@ const AdminDashboard = () => {
     });
     const [recentHackathons, setRecentHackathons] = useState([]);
     const [teacherAssignments, setTeacherAssignments] = useState([]);
+    // Sorting state
+    const [sortConfig, setSortConfig] = useState({
+        field: 'title',
+        direction: 'asc'
+    });
 
     // Fetch dashboard data
     useEffect(() => {
@@ -34,7 +39,7 @@ const AdminDashboard = () => {
                 
                 // Fetch recent hackathons
                 try {
-                    const hackathonsData = await getRecentHackathons();
+                    const hackathonsData = await getRecentHackathons(sortConfig);
                     setRecentHackathons(hackathonsData);
                 } catch (hackathonsError) {
                     console.error("Error fetching hackathons:", hackathonsError);
@@ -59,11 +64,29 @@ const AdminDashboard = () => {
         };
 
         fetchDashboardData();
-    }, []);
+    }, [sortConfig]);
 
 
     const handleTabChange = (tab) => {
         setActiveTab(tab);
+    };
+
+    // Handle sorting
+    const handleSort = (field) => {
+        setSortConfig(prevConfig => {
+            // If clicking on the same field, toggle direction
+            if (prevConfig.field === field) {
+                return {
+                    field,
+                    direction: prevConfig.direction === 'asc' ? 'desc' : 'asc'
+                };
+            }
+            // If clicking on a new field, sort ascending by default
+            return {
+                field,
+                direction: 'asc'
+            };
+        });
     };
 
     // Render loading state
@@ -269,7 +292,42 @@ const AdminDashboard = () => {
                     {/* Hackathons Tab */}
                     {activeTab === "hackathons" && (
                         <div>
-                            <h2 className="text-2xl font-semibold mb-6">Hackathons</h2>
+                            <div className="flex justify-between items-center mb-6">
+                                <h2 className="text-2xl font-semibold">Hackathons</h2>
+                                
+                                {/* Sorting Controls */}
+                                <div className="flex items-center space-x-4">
+                                    <div className="flex items-center">
+                                        <label htmlFor="sortField" className="mr-2 text-sm text-gray-600">Sort by:</label>
+                                        <select 
+                                            id="sortField"
+                                            className="form-select rounded-md border-gray-300 shadow-sm text-sm"
+                                            value={sortConfig.field}
+                                            onChange={(e) => handleSort(e.target.value)}
+                                        >
+                                            <option value="title">Name</option>
+                                            <option value="startDate">Start Date</option>
+                                            <option value="endDate">End Date</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div className="flex items-center">
+                                        <input 
+                                            type="checkbox" 
+                                            id="sortDirection" 
+                                            className="mr-2 form-checkbox"
+                                            checked={sortConfig.direction === 'desc'}
+                                            onChange={() => setSortConfig(prev => ({
+                                                ...prev, 
+                                                direction: prev.direction === 'asc' ? 'desc' : 'asc'
+                                            }))}
+                                        />
+                                        <label htmlFor="sortDirection" className="text-sm text-gray-600">
+                                            {sortConfig.direction === 'asc' ? 'Ascending' : 'Descending'}
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
                             
                             {recentHackathons.length === 0 ? (
                                 <div className="bg-white rounded-lg p-8 text-center border shadow-sm">
