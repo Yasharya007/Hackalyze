@@ -46,6 +46,13 @@ const CreateHackathon = () => {
             return date.toISOString().split('T')[0];
           };
           
+          // Extract criteria names from selectedCriteria objects
+          const selectedCriteriaNames = Array.isArray(hackathon.selectedCriteria) 
+            ? hackathon.selectedCriteria.map(criteria => 
+                typeof criteria === 'object' ? criteria.name : criteria
+              )
+            : [];
+          
           setFormData({
             title: hackathon.title || "",
             description: hackathon.description || "",
@@ -54,7 +61,7 @@ const CreateHackathon = () => {
             startTime: hackathon.startTime || "",
             endTime: hackathon.endTime || "",
             criteria: hackathon.criteria || [],
-            selectedCriteria: hackathon.selectedCriteria || [],
+            selectedCriteria: selectedCriteriaNames,
             allowedFormats: hackathon.allowedFormats || [],
             teachersAssigned: hackathon.teachersAssigned?.map(teacher => 
               typeof teacher === 'object' ? teacher._id : teacher
@@ -177,9 +184,15 @@ const CreateHackathon = () => {
       criteria => formData.criteria.includes(criteria)
     );
     
+    // Format selectedCriteria to match the expected server model format
+    const formattedSelectedCriteria = validSelectedCriteria.map(criteriaName => ({
+      name: criteriaName,
+      weight: 100 // Default weight as specified in the model
+    }));
+    
     const hackathonData = {
       ...formData,
-      selectedCriteria: validSelectedCriteria,
+      selectedCriteria: formattedSelectedCriteria,
       // Filter out any undefined or invalid teacher IDs
       teachersAssigned: formData.teachersAssigned.filter(id => id)
     };
