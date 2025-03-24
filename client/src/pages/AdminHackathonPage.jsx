@@ -266,18 +266,19 @@ const AdminHackathonPage = () => {
 
     const handleUpdateMediaTypesSubmit = async () => {
         try {
-            await updateHackathonMediaAPI(hackathon._id, selectedMediaTypes);
+            console.log("Updating media types to:", selectedMediaTypes);
+            const response = await updateHackathonMediaAPI(hackathon._id, selectedMediaTypes);
             
             // Refresh hackathon data completely to ensure UI updates
-            const response = await getHackathonByIdAPI(id);
-            if (response && response.hackathon) {
-                // Ensure we're setting the full data correctly
-                const hackathonData = response.hackathon;
+            const updatedHackathon = await getHackathonByIdAPI(id);
+            if (updatedHackathon && updatedHackathon.hackathon) {
+                const hackathonData = updatedHackathon.hackathon;
                 
-                // Log the media types data to help with debugging
-                console.log("Media types received:", hackathonData.allowedFormats);
+                // Log the media types data for debugging
+                console.log("Media types after update:", hackathonData.allowedFormats);
                 
-                // Set the updated hackathon data
+                // Explicitly update media types in local state
+                setSelectedMediaTypes(hackathonData.allowedFormats || []);
                 setHackathon(hackathonData);
             }
             
