@@ -24,16 +24,31 @@ const AdminDashboard = () => {
                 setError(null);
                 
                 // Fetch stats
-                const statsData = await getAdminDashboardStats();
-                setStats(statsData);
+                try {
+                    const statsData = await getAdminDashboardStats();
+                    setStats(statsData);
+                } catch (statsError) {
+                    console.error("Error fetching stats:", statsError);
+                    // Continue with other fetches even if this one fails
+                }
                 
                 // Fetch recent hackathons
-                const hackathonsData = await getRecentHackathons();
-                setRecentHackathons(hackathonsData);
+                try {
+                    const hackathonsData = await getRecentHackathons();
+                    setRecentHackathons(hackathonsData);
+                } catch (hackathonsError) {
+                    console.error("Error fetching hackathons:", hackathonsError);
+                    // Continue with other fetches even if this one fails
+                }
                 
                 // Fetch teacher assignments
-                const assignmentsData = await getTeacherAssignments();
-                setTeacherAssignments(assignmentsData);
+                try {
+                    const assignmentsData = await getTeacherAssignments();
+                    setTeacherAssignments(assignmentsData);
+                } catch (assignmentsError) {
+                    console.error("Error fetching assignments:", assignmentsError);
+                    // Continue with other fetches even if this one fails
+                }
                 
             } catch (err) {
                 console.error("Error fetching dashboard data:", err);
