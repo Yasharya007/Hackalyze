@@ -78,3 +78,103 @@ export const getSubmissionStatus = async (req, res) => {
       res.status(500).json({ message: "Internal Server Error", error });
     }
   };
+
+
+  export const submitHackathonNew=async(req,res,next)=>{
+    try {
+      const submissions = req.body; // Expecting an array of objects
+
+      if (!Array.isArray(submissions) || submissions.length === 0) {
+          throw new ApiError(400, "Invalid or empty submissions array");
+      }
+
+      let savedSubmissions = [];
+
+      for (const submission of submissions) {
+          const { email, hackathonId, fileUrl, fileType } = submission;
+
+          // Validate input
+          if (!email || !hackathonId || !fileUrl || !fileType) {
+              throw new ApiError(400, "Missing required fields: email, hackathonId, fileUrl, or fileType");
+          }
+
+          if (!["Audio", "Video", "File", "Image"].includes(fileType)) {
+              throw new ApiError(400, "Invalid file type");
+          }
+
+          // Find student by email
+          const student = await Student.findOne({ email });
+          if (!student) throw new ApiError(404, `Student not found for email: ${email}`);
+
+          const studentId = student._id;
+
+          // Check if hackathon exists
+          const hackathon = await Hackathon.findById(hackathonId);
+          if (!hackathon) throw new ApiError(404, `Hackathon not found for ID: ${hackathonId}`);
+
+          // Check if submission already exists to prevent duplicates
+          const existingSubmission = await Submission.findOne({ studentId, hackathonId });
+          if (existingSubmission) {
+              console.log(`Submission already exists for ${email} in hackathon ${hackathonId}`);
+              continue;
+          }
+
+          // Create new submission using the provided file URL
+          const newSubmission = new Submission({
+              studentId,
+              hackathonId,
+              files: [{ format: fileType, fileUrl }],
+          });
+
+          await newSubmission.save();
+          savedSubmissions.push(newSubmission);
+
+          // Update Hackathon model to add student and submission
+          await Hackathon.findByIdAndUpdate(
+              hackathonId,
+              { 
+                  $addToSet: { 
+                      registeredStudents: studentId, 
+                      submissions: newSubmission._id 
+                  } 
+              },
+              { new: true }
+          );
+
+          // Update Student model: Check if student already participated in this hackathon
+          const studentParticipation = student.hackathonsParticipated.find(
+              (entry) => entry.hackathon.toString() === hackathonId
+          );
+
+          if (studentParticipation) {
+              // Update existing participation status & submission ID
+              await Student.findOneAndUpdate(
+                  { _id: studentId, "hackathonsParticipated.hackathon": hackathonId },
+                  {
+                      $set: {
+                          "hackathonsParticipated.$.submission": newSubmission._id,
+                          "hackathonsParticipated.$.status": "Submitted"
+                      }
+                  }
+              );
+          } else {
+              // Add a new participation entry
+              await Student.findByIdAndUpdate(studentId, {
+                  $push: {
+                      hackathonsParticipated: {
+                          hackathon: hackathonId,
+                          submission: newSubmission._id,
+                          status: "Submitted"
+                      }
+                  }
+              });
+          }
+      }
+
+      res.status(201).json(new ApiResponse(201, savedSubmissions, "submissions successful"));
+
+  } 
+  catch (error) {
+      next(error);
+  }
+  }
