@@ -3,21 +3,36 @@ import { Teacher } from "../models/Teacher.model.js";
 import { Student } from "../models/student.model.js";
 import { Submission } from "../models/Submission.models.js";
 import { Notification } from "../models/Notification.models.js";
+import mongoose from "mongoose";
 
 // Hackathon Management
 export const createHackathon = async (req, res) => {
     try {
-        const { title, startDate } = req.body;
+        const { 
+            title, 
+            description, 
+            startDate, 
+            endDate,
+            startTime,
+            endTime,
+            criteria,
+            selectedCriteria,
+            allowedFormats,
+            teachersAssigned
+        } = req.body;
+        
+        // Check for existing hackathon with same title and startDate
         const existingHackathon = await Hackathon.findOne({ title, startDate });
         
         if (existingHackathon) {
             return res.status(400).json({
                  message: 'Hackathon already exists',
-                 success:false
+                 success: false
                 });
         }
         
-        const hackathon = await Hackathon.create({
+        // Create a hackathon object with all fields from request
+        const hackathonData = {
             title,
             description,
             startDate,
@@ -27,36 +42,58 @@ export const createHackathon = async (req, res) => {
             criteria,
             selectedCriteria,
             allowedFormats,
-            teachersAssigned,
-            createdBy
-        });
+            teachersAssigned: teachersAssigned || []
+        };
+
+        // Add createdBy if user is authenticated
+        if (req.user && req.user._id) {
+            hackathonData.createdBy = req.user._id;
+        } else {
+            // For testing purposes, you can use a default admin ID or remove this check in production
+            // This is a temporary solution until authentication is properly implemented
+            const admins = await mongoose.connection.db.collection('admins').find({}).toArray();
+            if (admins && admins.length > 0) {
+                hackathonData.createdBy = admins[0]._id;
+            } else {
+                return res.status(401).json({
+                    message: 'Authentication required to create hackathon',
+                    success: false
+                });
+            }
+        }
+        
+        const hackathon = await Hackathon.create(hackathonData);
 
        return res.status(201).json({
-        message:'Hackathon Created Successfully',
+        message: 'Hackathon Created Successfully',
         hackathon,
-        success:true
+        success: true
     });
     } catch (error) {
         res.status(500).json({ 
             message: 'Error in creating hackathon',
              error,
-             success:false
+             success: false
         });
     }
 };
 export const getAllHackathons = async (req, res) => {
     try {
-        const hackathons = await Hackathon.find();
+        const hackathons = await Hackathon.find()
+            .populate('teachersAssigned', 'name email')
+            .populate('registeredStudents', 'name email')
+            .populate('submissions');
+            
         res.json({
             hackathons,
-            sucess:true
-    });
+            success: true
+        });
     } catch (error) {
         res.status(500).json({ 
             message: 'Error in retrieving hackathons',
-             error,
-             success:false 
-            });
+            error,
+            success: false 
+        });
     }
 };
 
@@ -66,18 +103,18 @@ export const getHackathonById = async (req, res) => {
         if (!hackathon) {
         return res.status(404).json({ 
          message: 'Hackathon not found',
-         success:false
+         success: false
         });
         }
          res.json({
             hackathon,
-            success:true
+            success: true
         });
     } catch (error) {
         res.status(500).json({ 
             message: 'Error in retrieving hackathon', 
             error,
-            success:false 
+            success: false 
         });
     }
 };
@@ -88,13 +125,13 @@ export const updateHackathon = async (req, res) => {
         res.json({
             message: 'Hackathon updated successfully', 
             hackathon,
-            success:true
+            success: true
         });
     } catch (error) {
         res.status(500).json({
              message: 'Error updating hackathon', 
              error,
-             success:false
+             success: false
              });
     }
 };
@@ -104,13 +141,13 @@ export const deleteHackathon = async (req, res) => {
         await Hackathon.findByIdAndDelete(req.params.id);
         res.json({ 
             message: 'Hackathon deleted successfully',
-            success:true
+            success: true
          });
     } catch (error) {
         res.status(500).json({ 
             message: 'Error in deleting hackathon',
              error,
-             success:false
+             success: false
              });
     }
 };
@@ -131,27 +168,68 @@ export const assignTeacher = async (req, res) => {
         res.json({
              message: 'Teacher assigned successfully',
              notification,
-            success:true
+            success: true
          });
     } catch (error) {
         res.status(500).json({ 
             message: 'Error in assigning teacher',
              error,
-             success:false
+             success: false
             });
     }
 };
 
 export const getAssignedTeachers = async (req, res) => {
     try {
-        const teachers = await Teacher.find();
-        res.json(teachers);
+        // Get all teachers
+        const teachers = await Teacher.find().select('name email department');
+        
+        // Get all hackathons with teacher assignments
+        const hackathons = await Hackathon.find({ teachersAssigned: { $exists: true, $not: { $size: 0 } } })
+            .select('_id title teachersAssigned startDate endDate');
+        
+        // Create a map of teacher assignments with hackathon details
+        const assignmentMap = new Map();
+        
+        // Process each teacher and find their assignments
+        teachers.forEach(teacher => {
+            assignmentMap.set(teacher._id.toString(), {
+                id: teacher._id,
+                name: teacher.name,
+                email: teacher.email,
+                department: teacher.department,
+                assignedHackathons: []
+            });
+        });
+        
+        // Add hackathon assignments to each teacher
+        hackathons.forEach(hackathon => {
+            (hackathon.teachersAssigned || []).forEach(teacherId => {
+                const teacherIdStr = teacherId.toString();
+                if (assignmentMap.has(teacherIdStr)) {
+                    const teacherData = assignmentMap.get(teacherIdStr);
+                    teacherData.assignedHackathons.push({
+                        id: hackathon._id,
+                        title: hackathon.title,
+                        startDate: hackathon.startDate,
+                        endDate: hackathon.endDate
+                    });
+                    assignmentMap.set(teacherIdStr, teacherData);
+                }
+            });
+        });
+        
+        // Convert map to array for response
+        const teacherAssignments = Array.from(assignmentMap.values());
+        
+        res.json(teacherAssignments);
     } catch (error) {
+        console.error('Error in retrieving teacher assignments:', error);
         res.status(500).json({ 
-            message: 'Error in retrieving teachers', 
+            message: 'Error in retrieving teacher assignments', 
             error,
-            success:false
-         });
+            success: false
+        });
     }
 };
 
@@ -164,7 +242,7 @@ export const getRegisteredStudents = async (req, res) => {
         res.status(500).json({
              message: 'Error in retrieving students',
               error,
-              success:false
+              success: false
             });
     }
 };
@@ -180,7 +258,7 @@ export const acceptFormat = async (req, res) => {
         res.status(500).json({ 
             message: 'Error in accepting media', 
             error,
-            success:false
+            success: false
         });
     }
 };
@@ -194,7 +272,7 @@ export const getAllSubmissions = async (req, res) => {
         res.status(500).json({ 
             message: 'Error in retrieving submissions',
              error,
-             success:false
+             success: false
              });
     }
 };
@@ -205,7 +283,7 @@ export const getSubmissionById = async (req, res) => {
         if (!submission) {
             return res.status(404).json({
                  message: 'Submission not found',
-                success:false
+                success: false
              });
         }
         res.json(submission);
@@ -213,7 +291,7 @@ export const getSubmissionById = async (req, res) => {
         res.status(500).json({ 
             message: 'Error retrieving submission', 
             error,
-            success:false
+            success: false
          });
     }
 };
@@ -225,13 +303,13 @@ export const shortlistSubmission = async (req, res) => {
         res.json({ 
             message: 'Submission shortlisted successfully',
              submission,
-            success:true
+            success: true
          });
     } catch (error) {
         res.status(500).json({ 
             message: 'Error shortlisting submission',
              error,
-             success:false
+             success: false
              });
     }
 };
@@ -256,7 +334,7 @@ export const notifyStudents = async (req, res) => {
         res.status(500).json({ 
             message: 'Error in sending notifications',
              error,
-             success:false
+             success: false
              });
     }
 };
@@ -282,7 +360,7 @@ export const publishFinalResults = async (req, res) => {
         res.status(500).json({ 
             message: 'Error publishing final results', 
             error,
-        success:false
+        success: false
      });
     }
 };
@@ -313,9 +391,7 @@ export const removeAssignedTeacher = async (req, res) => {
         res.status(500).json({ 
       message: "Error in removing teacher", 
       error,
-    success:false
+    success: false
       });
     }
 };
-
-

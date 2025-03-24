@@ -7,8 +7,9 @@ import RegisterStudentPage from "./pages/RegisterStudentPage.jsx";
 import RegisterTeacherPage from "./pages/RegisterTeacherPage.jsx";
 import StudentHackathonPage from "./pages/StudentHackathonPage.jsx";
 import AdminHackathonPage from "./pages/AdminHackathonPage.jsx";
-import AdminSampleDashboard from "./pages/AdminSampleDashboard.jsx";
+import AdminHackathonForm from "./pages/AdminHackathonForm.jsx";
 import AdminDashboard from "./pages/AdminDashboard.jsx";
+import CreateHackathon from "./pages/CreateHackathon.jsx";
 import FAQPage from "./pages/FAQPage.jsx";
 import StudentDashboard from "./pages/StudentDashboard.jsx";
 function App() {
@@ -27,7 +28,9 @@ function App() {
             <Route path="/faq" element={<FAQPage/>}/>
             <Route path="/teacher/dashboard" element={<TeacherDashboard/>}/>
             <Route path="/admin/hackathon" element={<AdminHackathonPage/>}/>
-            <Route path="/admin/sampleDashboard" element={<AdminSampleDashboard/>}/>
+            <Route path="/admin/hackathon/:id" element={<AdminHackathonPage/>}/>
+            <Route path="/admin/create-hackathon" element={<CreateHackathon/>}/>
+            <Route path="/admin/edit-hackathon/:id" element={<CreateHackathon/>}/>
             <Route path="/student/dashboard" element={<StudentDashboard/>}/>
             <Route path="/admin/dashboard" element={<AdminDashboard/>}/>
 
