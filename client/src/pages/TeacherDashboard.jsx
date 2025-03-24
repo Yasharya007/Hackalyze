@@ -20,6 +20,7 @@ const TeacherDashboard = () => {
             const fetchHackathons = async () => {
               HackathonByTeacherAPI(teacherId)
               .then((res)=>{
+                console.log(res)
                 // console.log(hackathons.length);
                 setassignedHackathons(res);
                 // console.log("hello");
@@ -29,6 +30,7 @@ const TeacherDashboard = () => {
             fetchHackathons();
           }, []);
     const handleClick = (hackathon) => {
+        console.log(hackathon)
             dispatch(setHackathon(hackathon));
             navigate("/teacher/hackathon");
           };

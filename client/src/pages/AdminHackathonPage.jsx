@@ -1,6 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { getHackathonByIdAPI, logoutAPI, deleteHackathonAPI } from "../utils/api.jsx";
+import { 
+    getHackathonByIdAPI, 
+    getTeacherAssignments,
+    logoutAPI, 
+    deleteHackathonAPI,
+    assignTeacherToHackathonAPI,
+    updateHackathonMediaAPI,
+    updateHackathonDeadlineAPI
+} from "../utils/api.jsx";
 import toast from "react-hot-toast";
 
 const AdminHackathonPage = () => {
@@ -14,6 +22,8 @@ const AdminHackathonPage = () => {
         description: "",
         startDate: "",
         endDate: "",
+        startTime: "",
+        endTime: "",
         participants: 0,
         submissions: 0,
         submissionRate: "0%",
@@ -28,6 +38,50 @@ const AdminHackathonPage = () => {
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [showNameConfirmModal, setShowNameConfirmModal] = useState(false);
     const [confirmName, setConfirmName] = useState("");
+    
+    // New state for modals
+    const [showAssignTeacherModal, setShowAssignTeacherModal] = useState(false);
+    const [showMediaTypesModal, setShowMediaTypesModal] = useState(false);
+    const [showDeadlineModal, setShowDeadlineModal] = useState(false);
+    const [availableTeachers, setAvailableTeachers] = useState([]);
+    const [selectedTeachers, setSelectedTeachers] = useState([]);
+    const [selectedMediaTypes, setSelectedMediaTypes] = useState([]);
+    const [newDeadline, setNewDeadline] = useState({ date: "", time: "" });
+    const mediaTypeOptions = ["File", "Image", "Video", "Audio"];
+    const [teacherDetails, setTeacherDetails] = useState({});
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    // Function to enhance teacher data with full details
+    const fetchTeacherDetails = async (teacherIds) => {
+        try {
+            const allTeachers = await getTeacherAssignments(false);
+            if (!allTeachers || !Array.isArray(allTeachers)) return;
+            
+            const teacherMap = {};
+            allTeachers.forEach(teacher => {
+                if (teacher._id) {
+                    teacherMap[teacher._id] = teacher;
+                } else if (teacher.id) {
+                    teacherMap[teacher.id] = teacher;
+                }
+            });
+            
+            setTeacherDetails(teacherMap);
+            console.log("Teacher details map:", teacherMap);
+        } catch (error) {
+            console.error("Error fetching teacher details:", error);
+        }
+    };
+
+    useEffect(() => {
+        if (hackathon.teachersAssigned && hackathon.teachersAssigned.length > 0) {
+            // Extract teacher IDs if they're objects
+            const teacherIds = hackathon.teachersAssigned.map(teacher => 
+                typeof teacher === 'object' ? teacher._id || teacher.id : teacher
+            );
+            fetchTeacherDetails(teacherIds);
+        }
+    }, [hackathon.teachersAssigned]);
 
     useEffect(() => {
         const fetchHackathonDetails = async () => {
@@ -53,6 +107,18 @@ const AdminHackathonPage = () => {
                         notifications: hackathonData.notifications || [],
                         results: hackathonData.results || []
                     });
+                    
+                    // Initialize media types state from hackathon data
+                    setSelectedMediaTypes(hackathonData.allowedFormats || []);
+                    
+                    // Initialize deadline state from hackathon data
+                    if (hackathonData.endDate) {
+                        const endDate = new Date(hackathonData.endDate);
+                        setNewDeadline({
+                            date: endDate.toISOString().split('T')[0],
+                            time: hackathonData.endTime || ''
+                        });
+                    }
                 }
                 setLoading(false);
             } catch (error) {
@@ -64,6 +130,30 @@ const AdminHackathonPage = () => {
 
         fetchHackathonDetails();
     }, [id]);
+
+    // Function to fetch available teachers
+    const fetchAvailableTeachers = async () => {
+        try {
+            const teachers = await getTeacherAssignments(false);
+            setAvailableTeachers(teachers || []);
+            
+            // Set initially selected teachers based on currently assigned ones
+            if (hackathon.teachersAssigned && hackathon.teachersAssigned.length > 0) {
+                const currentlyAssignedIds = hackathon.teachersAssigned.map(teacher => 
+                    typeof teacher === 'object' ? teacher._id || teacher.id : teacher
+                );
+                setSelectedTeachers(currentlyAssignedIds);
+            } else {
+                setSelectedTeachers([]);
+            }
+
+            // Debug log
+            console.log("Available teachers:", teachers);
+        } catch (error) {
+            console.error("Error fetching teachers:", error);
+            toast.error("Failed to load teachers");
+        }
+    };
 
     const handleEditHackathon = () => {
         navigate(`/admin/edit-hackathon/${hackathon._id}`);
@@ -80,18 +170,16 @@ const AdminHackathonPage = () => {
     };
 
     const handleChangeDeadline = () => {
-        console.log("Changing deadline for hackathon:", hackathon._id);
-        // Open deadline form/modal
+        setShowDeadlineModal(true);
     };
 
     const handleUpdateMediaTypes = () => {
-        console.log("Updating media types for hackathon:", hackathon._id);
-        // Open media types form/modal
+        setShowMediaTypesModal(true);
     };
 
     const handleAssignTeacher = () => {
-        console.log("Assigning teacher to hackathon:", hackathon._id);
-        // Open teacher assignment form/modal
+        fetchAvailableTeachers();
+        setShowAssignTeacherModal(true);
     };
 
     const handleTabChange = (tab) => {
@@ -113,17 +201,23 @@ const AdminHackathonPage = () => {
         setShowNameConfirmModal(true);
     };
 
-    const handleDeleteConfirm = async () => {
+    const handleFinalDelete = async () => {
         if (confirmName === hackathon.title) {
             try {
-                await deleteHackathonAPI(id);
-                setShowNameConfirmModal(false);
-                // Navigate back to the dashboard after successful deletion
-                navigate("/admin/dashboard", { state: { activeTab: "hackathons" } });
+                const response = await deleteHackathonAPI(hackathon._id);
+                if (response && response.message) {
+                    toast.success("Hackathon deleted successfully");
+                    navigate("/admin/dashboard");
+                }
             } catch (error) {
                 console.error("Error deleting hackathon:", error);
             }
+        } else {
+            toast.error("Hackathon name does not match");
         }
+        
+        setShowNameConfirmModal(false);
+        setConfirmName("");
     };
 
     const handleCancelDelete = () => {
@@ -132,9 +226,134 @@ const AdminHackathonPage = () => {
         setConfirmName("");
     };
 
+    const handleAssignTeacherSubmit = async (e) => {
+        e.preventDefault();
+        setIsSubmitting(true);
+
+        try {
+            console.log("Submitting teacher IDs:", selectedTeachers);
+            const response = await assignTeacherToHackathonAPI(id, selectedTeachers);
+            
+            if (response && response.success) {
+                toast.success("Teachers assigned successfully");
+                setShowAssignTeacherModal(false);
+                
+                // Refresh hackathon data to get updated teachers
+                const refreshResponse = await getHackathonByIdAPI(id);
+                if (refreshResponse && refreshResponse.hackathon) {
+                    console.log("Teacher data received:", refreshResponse.hackathon.teachersAssigned);
+                    setHackathon(refreshResponse.hackathon);
+                    
+                    // Force refresh of teacher details after assignment
+                    if (refreshResponse.hackathon.teachersAssigned && 
+                        refreshResponse.hackathon.teachersAssigned.length > 0) {
+                        const teacherIds = refreshResponse.hackathon.teachersAssigned.map(teacher => 
+                            typeof teacher === 'object' ? teacher._id || teacher.id : teacher
+                        );
+                        fetchTeacherDetails(teacherIds);
+                    }
+                }
+            } else {
+                toast.error("Failed to assign teachers");
+            }
+        } catch (error) {
+            console.error("Error assigning teachers:", error);
+            toast.error("An error occurred while assigning teachers");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const handleUpdateMediaTypesSubmit = async () => {
+        try {
+            console.log("Updating media types to:", selectedMediaTypes);
+            const response = await updateHackathonMediaAPI(hackathon._id, selectedMediaTypes);
+            
+            // Refresh hackathon data completely to ensure UI updates
+            const updatedHackathon = await getHackathonByIdAPI(id);
+            if (updatedHackathon && updatedHackathon.hackathon) {
+                const hackathonData = updatedHackathon.hackathon;
+                
+                // Log the media types data for debugging
+                console.log("Media types after update:", hackathonData.allowedFormats);
+                
+                // Explicitly update media types in local state
+                setSelectedMediaTypes(hackathonData.allowedFormats || []);
+                setHackathon(hackathonData);
+            }
+            
+            setShowMediaTypesModal(false);
+            toast.success("Media types updated successfully");
+        } catch (error) {
+            console.error("Error updating media types:", error);
+            toast.error("Failed to update media types");
+        }
+    };
+
+    const handleChangeDeadlineSubmit = async () => {
+        try {
+            await updateHackathonDeadlineAPI(hackathon._id, newDeadline);
+            
+            // Refresh hackathon data completely
+            const response = await getHackathonByIdAPI(id);
+            if (response && response.hackathon) {
+                setHackathon(response.hackathon);
+            }
+            
+            setShowDeadlineModal(false);
+            toast.success("Deadline updated successfully");
+        } catch (error) {
+            console.error("Error updating deadline:", error);
+            toast.error("Failed to update deadline");
+        }
+    };
+
     const formatDate = (dateString) => {
         const options = { year: 'numeric', month: 'numeric', day: 'numeric' };
         return new Date(dateString).toLocaleDateString(undefined, options);
+    };
+
+    // Function to handle removing a teacher from the hackathon
+    const handleRemoveTeacher = async (teacherId) => {
+        try {
+            // Get current assigned teachers
+            const currentTeachers = [...hackathon.teachersAssigned];
+            
+            // Filter out the teacher to remove
+            const updatedTeachers = currentTeachers.filter(teacher => {
+                const id = typeof teacher === 'object' ? teacher._id || teacher.id : teacher;
+                return id !== teacherId;
+            });
+            
+            console.log("Removing teacher. Current:", currentTeachers, "Updated:", updatedTeachers);
+            
+            // Call API to update assigned teachers (reusing existing API)
+            const response = await assignTeacherToHackathonAPI(hackathon._id || id, updatedTeachers);
+            
+            if (response && response.success) {
+                toast.success("Teacher removed successfully");
+                
+                // Refresh hackathon data
+                const refreshResponse = await getHackathonByIdAPI(id);
+                if (refreshResponse && refreshResponse.hackathon) {
+                    setHackathon(refreshResponse.hackathon);
+                    
+                    // Force refresh of teacher details after removal
+                    if (refreshResponse.hackathon.teachersAssigned && 
+                        refreshResponse.hackathon.teachersAssigned.length > 0) {
+                        const remainingTeacherIds = refreshResponse.hackathon.teachersAssigned.map(teacher => 
+                            typeof teacher === 'object' ? teacher._id || teacher.id : teacher
+                        );
+                        fetchTeacherDetails(remainingTeacherIds);
+                    }
+                }
+            } else {
+                toast.error("Failed to remove teacher");
+            }
+        } catch (error) {
+            console.error("Error removing teacher:", error);
+            toast.error("An error occurred while removing the teacher");
+        }
     };
 
     if (loading) {
@@ -146,8 +365,8 @@ const AdminHackathonPage = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gray-100 flex w-full">
-            {/* Sidebar - Same as AdminDashboard for consistency */}
+        <div className="min-h-screen bg-gray-50 flex">
+            {/* Sidebar */}
             <aside className="w-64 bg-white border-r h-screen sticky top-0 flex flex-col">
                 <div className="p-5 flex-grow">
                     <div className="flex items-center mb-6">
@@ -157,22 +376,20 @@ const AdminHackathonPage = () => {
                     <nav>
                         <ul className="space-y-2">
                             <li>
-                                <a
-                                    href="#"
+                                <Link
+                                    to="/admin/dashboard"
                                     className="flex items-center p-2 rounded-md hover:bg-gray-100"
-                                    onClick={() => handleTabChange("overview")}
                                 >
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                                     </svg>
                                     <span>Overview</span>
-                                </a>
+                                </Link>
                             </li>
                             <li>
                                 <a
-                                    href="#"
+                                    href="/admin/dashboard"
                                     className="flex items-center p-2 rounded-md bg-black text-white"
-                                    onClick={() => handleTabChange("hackathons")}
                                 >
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
@@ -182,9 +399,8 @@ const AdminHackathonPage = () => {
                             </li>
                             <li>
                                 <a
-                                    href="#"
+                                    href="/admin/dashboard"
                                     className="flex items-center p-2 rounded-md hover:bg-gray-100"
-                                    onClick={() => handleTabChange("teachers")}
                                 >
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
@@ -206,8 +422,7 @@ const AdminHackathonPage = () => {
                         </ul>
                     </nav>
                 </div>
-                
-                {/* Logout button at bottom of sidebar */}
+                {/* Logout at bottom of sidebar */}
                 <div className="mb-6 px-4">
                     <a
                         href="#"
@@ -225,7 +440,255 @@ const AdminHackathonPage = () => {
                     </a>
                 </div>
             </aside>
+
+            {/* Assign Teacher Modal */}
+            {showAssignTeacherModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+                        <div className="p-6">
+                            <h3 className="text-lg font-semibold mb-4">Assign Teachers</h3>
+                            <p className="text-gray-600 text-sm mb-4">
+                                Select teachers to assign to this hackathon. They will be able to review and grade submissions.
+                            </p>
+                            
+                            <div className="max-h-60 overflow-y-auto border rounded-lg mb-4">
+                                {availableTeachers.length > 0 ? (
+                                    availableTeachers.map(teacher => (
+                                        <div key={teacher.id} className="p-3 border-b last:border-b-0 flex items-center">
+                                            <input
+                                                type="checkbox"
+                                                id={`teacher-${teacher.id}`}
+                                                checked={selectedTeachers.includes(teacher.id)}
+                                                onChange={() => {
+                                                    if (selectedTeachers.includes(teacher.id)) {
+                                                        setSelectedTeachers(prev => prev.filter(id => id !== teacher.id));
+                                                    } else {
+                                                        setSelectedTeachers(prev => [...prev, teacher.id]);
+                                                    }
+                                                }}
+                                                className="mr-3 h-4 w-4"
+                                            />
+                                            <label htmlFor={`teacher-${teacher.id}`} className="flex-1 cursor-pointer">
+                                                <div className="font-medium">{teacher.name}</div>
+                                                <div className="text-gray-500 text-sm">{teacher.email}</div>
+                                            </label>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="p-4 text-center text-gray-500">
+                                        No teachers available
+                                    </div>
+                                )}
+                            </div>
+                            
+                            <div className="flex justify-end space-x-3 mt-6">
+                                <button
+                                    onClick={() => setShowAssignTeacherModal(false)}
+                                    className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleAssignTeacherSubmit}
+                                    disabled={isSubmitting}
+                                    className={`px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-900 ${
+                                        isSubmitting ? 'cursor-not-allowed opacity-10' : ''
+                                    }`}
+                                >
+                                    Assign Teachers
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
             
+            {/* Update Media Types Modal */}
+            {showMediaTypesModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+                        <div className="p-6">
+                            <h3 className="text-lg font-semibold mb-4">Update Media Types</h3>
+                            <p className="text-gray-600 text-sm mb-4">
+                                Select the media types that will be accepted for submissions in this hackathon.
+                            </p>
+                            
+                            <div className="space-y-3 mb-4">
+                                {mediaTypeOptions.map(mediaType => (
+                                    <div key={mediaType} className="flex items-center">
+                                        <input
+                                            type="checkbox"
+                                            id={`media-${mediaType}`}
+                                            checked={selectedMediaTypes.includes(mediaType)}
+                                            onChange={() => {
+                                                if (selectedMediaTypes.includes(mediaType)) {
+                                                    setSelectedMediaTypes(prev => prev.filter(type => type !== mediaType));
+                                                } else {
+                                                    setSelectedMediaTypes(prev => [...prev, mediaType]);
+                                                }
+                                            }}
+                                            className="mr-3 h-4 w-4"
+                                        />
+                                        <label htmlFor={`media-${mediaType}`} className="cursor-pointer">
+                                            {mediaType}
+                                        </label>
+                                    </div>
+                                ))}
+                            </div>
+                            
+                            <div className="flex justify-end space-x-3 mt-6">
+                                <button
+                                    onClick={() => setShowMediaTypesModal(false)}
+                                    className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleUpdateMediaTypesSubmit}
+                                    className="px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-900"
+                                >
+                                    Update Media Types
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+            
+            {/* Change Deadline Modal */}
+            {showDeadlineModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+                        <div className="p-6">
+                            <h3 className="text-lg font-semibold mb-4">Change Deadline</h3>
+                            <p className="text-gray-600 text-sm mb-4">
+                                Update the end date and time for this hackathon.
+                            </p>
+                            
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        End Date
+                                    </label>
+                                    <input
+                                        type="date"
+                                        value={newDeadline.date}
+                                        onChange={(e) => setNewDeadline(prev => ({ ...prev, date: e.target.value }))}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+                                    />
+                                </div>
+                                
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        End Time
+                                    </label>
+                                    <input
+                                        type="time"
+                                        value={newDeadline.time}
+                                        onChange={(e) => setNewDeadline(prev => ({ ...prev, time: e.target.value }))}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+                                    />
+                                </div>
+                            </div>
+                            
+                            <div className="flex justify-end space-x-3 mt-6">
+                                <button
+                                    onClick={() => setShowDeadlineModal(false)}
+                                    className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleChangeDeadlineSubmit}
+                                    className="px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-900"
+                                >
+                                    Update Deadline
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Delete Confirmation Modal */}
+            {showDeleteModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center">
+                    <div className="fixed inset-0 backdrop-blur-[1px]"></div>
+                    <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full relative z-10">
+                        <div className="flex items-start mb-4">
+                            <div className="bg-red-100 p-2 rounded-full mr-3">
+                                <svg className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h2 className="text-xl font-bold">Delete Hackathon</h2>
+                                <p className="text-gray-600 mt-1">Are you sure you want to delete this hackathon and its contents? This action cannot be undone.</p>
+                            </div>
+                        </div>
+                        <div className="flex justify-end space-x-2 mt-6">
+                            <button 
+                                onClick={handleCancelDelete}
+                                className="px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                onClick={handleFirstConfirm}
+                                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                            >
+                                Yes, Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            
+            {/* Name Confirmation Modal */}
+            {showNameConfirmModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center">
+                    <div className="fixed inset-0 backdrop-blur-[1px]"></div>
+                    <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full relative z-10">
+                        <div className="flex items-start mb-4">
+                            <div className="bg-red-100 p-2 rounded-full mr-3">
+                                <svg className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h2 className="text-xl font-bold">Confirm Deletion</h2>
+                                <p className="text-gray-600 mt-1">To confirm deletion, please type the hackathon name:</p>
+                                <p className="font-bold text-gray-700 mt-2">{hackathon.title}</p>
+                            </div>
+                        </div>
+                        <input 
+                            type="text" 
+                            value={confirmName}
+                            onChange={(e) => setConfirmName(e.target.value)}
+                            className="w-full p-2 border border-gray-300 rounded mb-4"
+                            placeholder="Type hackathon name"
+                        />
+                        <div className="flex justify-end space-x-2 mt-2">
+                            <button 
+                                onClick={handleCancelDelete}
+                                className="px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                onClick={handleFinalDelete}
+                                disabled={confirmName !== hackathon.title}
+                                className={`px-4 py-2 text-white rounded ${
+                                    confirmName === hackathon.title ? 'bg-red-600 hover:bg-red-700' : 'bg-red-300 cursor-not-allowed'
+                                }`}
+                            >
+                                Confirm Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Main Content */}
             <div className="flex-1 overflow-auto p-8">
                 {/* Header */}
@@ -242,7 +705,7 @@ const AdminHackathonPage = () => {
                             onClick={handleEditHackathon}
                             className="text-gray-700 bg-white border border-gray-300 px-3 py-1 rounded-lg flex items-center text-sm hover:bg-gray-50"
                         >
-                            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                             </svg>
                             Edit
@@ -257,7 +720,7 @@ const AdminHackathonPage = () => {
                             onClick={handleDeleteClick}
                             className="text-white bg-red-600 border border-red-700 px-3 py-1 rounded-lg flex items-center text-sm hover:bg-red-700"
                         >
-                            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                             </svg>
                             Delete
@@ -272,7 +735,7 @@ const AdminHackathonPage = () => {
                         <div className="bg-gray-50 p-4 rounded-lg border">
                             <div className="flex justify-between">
                                 <h3 className="text-sm font-medium text-gray-500">Duration</h3>
-                                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                                 </svg>
                             </div>
@@ -285,7 +748,7 @@ const AdminHackathonPage = () => {
                         <div className="bg-gray-50 p-4 rounded-lg border">
                             <div className="flex justify-between">
                                 <h3 className="text-sm font-medium text-gray-500">Participants</h3>
-                                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
                                 </svg>
                             </div>
@@ -298,7 +761,7 @@ const AdminHackathonPage = () => {
                         <div className="bg-gray-50 p-4 rounded-lg border">
                             <div className="flex justify-between">
                                 <h3 className="text-sm font-medium text-gray-500">Submissions</h3>
-                                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                                 </svg>
                             </div>
@@ -325,8 +788,8 @@ const AdminHackathonPage = () => {
                             onClick={handleSendNotification}
                             className="flex items-center justify-center space-x-2 bg-white border border-gray-300 p-3 rounded-lg hover:bg-gray-50"
                         >
-                            <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                            <svg className="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
                             </svg>
                             <span className="text-sm font-medium">Send Notification</span>
                         </button>
@@ -335,8 +798,8 @@ const AdminHackathonPage = () => {
                             onClick={handleChangeDeadline}
                             className="flex items-center justify-center space-x-2 bg-white border border-gray-300 p-3 rounded-lg hover:bg-gray-50"
                         >
-                            <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            <svg className="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                             </svg>
                             <span className="text-sm font-medium">Change Deadline</span>
                         </button>
@@ -345,8 +808,8 @@ const AdminHackathonPage = () => {
                             onClick={handleUpdateMediaTypes}
                             className="flex items-center justify-center space-x-2 bg-white border border-gray-300 p-3 rounded-lg hover:bg-gray-50"
                         >
-                            <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                            <svg className="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                             </svg>
                             <span className="text-sm font-medium">Update Media Types</span>
                         </button>
@@ -421,8 +884,8 @@ const AdminHackathonPage = () => {
                                         onClick={handleAssignTeacher}
                                         className="bg-black text-white px-3 py-1 text-sm rounded-lg flex items-center"
                                     >
-                                        <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                        <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V8a2 2 0 00-2-2h-1" />
                                         </svg>
                                         Assign Teacher
                                     </button>
@@ -432,33 +895,43 @@ const AdminHackathonPage = () => {
                                         <thead className="bg-gray-50">
                                             <tr>
                                                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Expertise</th>
+                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
                                                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody className="bg-white divide-y divide-gray-200">
-                                            {hackathon.teachersAssigned && hackathon.teachersAssigned.length === 0 ? (
+                                            {!hackathon.teachersAssigned || hackathon.teachersAssigned.length === 0 ? (
                                                 <tr>
                                                     <td colSpan="3" className="px-6 py-4 text-center text-sm text-gray-500">
                                                         No teachers assigned yet
                                                     </td>
                                                 </tr>
                                             ) : (
-                                                hackathon.teachersAssigned && hackathon.teachersAssigned.map((teacher, index) => (
-                                                    <tr key={index}>
-                                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                                            {teacher.name}
-                                                        </td>
-                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                            {teacher.expertise && teacher.expertise.join(", ")}
-                                                        </td>
-                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                            <button className="text-red-600 hover:text-red-800">
-                                                                Remove
-                                                            </button>
-                                                        </td>
-                                                    </tr>
-                                                ))
+                                                hackathon.teachersAssigned.map((teacher, index) => {
+                                                    // Get the teacher ID regardless of data structure
+                                                    const teacherId = typeof teacher === 'object' ? teacher._id || teacher.id : teacher;
+                                                    // Look up complete details from our teacherDetails map
+                                                    const teacherDetail = teacherDetails[teacherId] || {};
+                                                    
+                                                    return (
+                                                        <tr key={index}>
+                                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                                                {teacherDetail.name || (typeof teacher === 'object' && teacher.name) || 'Unknown Teacher'}
+                                                            </td>
+                                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                                {teacherDetail.email || (typeof teacher === 'object' && teacher.email) || 'No email available'}
+                                                            </td>
+                                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                                <button 
+                                                                    onClick={() => handleRemoveTeacher(teacherId)}
+                                                                    className="text-red-600 hover:text-red-800"
+                                                                >
+                                                                    Remove
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })
                                             )}
                                         </tbody>
                                     </table>
@@ -476,8 +949,8 @@ const AdminHackathonPage = () => {
                                             placeholder="Search students..."
                                             className="border rounded-lg px-3 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-black"
                                         />
-                                        <svg className="w-4 h-4 text-gray-500 absolute right-3 top-1/2 transform -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                        <svg className="w-4 h-4 text-gray-500 absolute right-3 top-1/2 transform -translate-y-1/2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                                         </svg>
                                     </div>
                                 </div>
@@ -536,8 +1009,8 @@ const AdminHackathonPage = () => {
                                         onClick={handleUpdateMediaTypes}
                                         className="bg-black text-white px-3 py-1 text-sm rounded-lg flex items-center"
                                     >
-                                        <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                                        <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2 2 0 113.536 3.536L6.5 21.036H3v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                                         </svg>
                                         Update Media Types
                                     </button>
@@ -570,8 +1043,8 @@ const AdminHackathonPage = () => {
                                         onClick={handleSendNotification}
                                         className="bg-black text-white px-3 py-1 text-sm rounded-lg flex items-center"
                                     >
-                                        <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                                        <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
                                         </svg>
                                         Send Notification
                                     </button>
@@ -604,8 +1077,8 @@ const AdminHackathonPage = () => {
                                         onClick={handlePublishResults}
                                         className="bg-black text-white px-3 py-1 text-sm rounded-lg flex items-center"
                                     >
-                                        <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                                        <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
                                         </svg>
                                         Publish Results
                                     </button>
@@ -656,85 +1129,6 @@ const AdminHackathonPage = () => {
                     </div>
                 </div>
             </div>
-            
-            {/* First Confirmation Modal */}
-            {showDeleteModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center">
-                    <div className="fixed inset-0 backdrop-blur-[1px]"></div>
-                    <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full relative z-10">
-                        <div className="flex items-start mb-4">
-                            <div className="bg-red-100 p-2 rounded-full mr-3">
-                                <svg className="h-6 w-6 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                                </svg>
-                            </div>
-                            <div>
-                                <h2 className="text-xl font-bold">Delete Hackathon</h2>
-                                <p className="text-gray-600 mt-1">Are you sure you want to delete this hackathon and its contents? This action cannot be undone.</p>
-                            </div>
-                        </div>
-                        <div className="flex justify-end space-x-2 mt-6">
-                            <button 
-                                onClick={handleCancelDelete}
-                                className="px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
-                            >
-                                Cancel
-                            </button>
-                            <button 
-                                onClick={handleFirstConfirm}
-                                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-                            >
-                                Yes, Delete
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-            
-            {/* Name Confirmation Modal */}
-            {showNameConfirmModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center">
-                    <div className="fixed inset-0 backdrop-blur-[1px]"></div>
-                    <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full relative z-10">
-                        <div className="flex items-start mb-4">
-                            <div className="bg-red-100 p-2 rounded-full mr-3">
-                                <svg className="h-6 w-6 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                                </svg>
-                            </div>
-                            <div>
-                                <h2 className="text-xl font-bold">Confirm Deletion</h2>
-                                <p className="text-gray-600 mt-1">To confirm deletion, please type the hackathon name:</p>
-                                <p className="font-bold text-gray-700 mt-2">{hackathon.title}</p>
-                            </div>
-                        </div>
-                        <input 
-                            type="text" 
-                            value={confirmName}
-                            onChange={(e) => setConfirmName(e.target.value)}
-                            className="w-full p-2 border border-gray-300 rounded mb-4"
-                            placeholder="Type hackathon name"
-                        />
-                        <div className="flex justify-end space-x-2 mt-2">
-                            <button 
-                                onClick={handleCancelDelete}
-                                className="px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
-                            >
-                                Cancel
-                            </button>
-                            <button 
-                                onClick={handleDeleteConfirm}
-                                disabled={confirmName !== hackathon.title}
-                                className={`px-4 py-2 text-white rounded ${
-                                    confirmName === hackathon.title ? 'bg-red-600 hover:bg-red-700' : 'bg-red-300 cursor-not-allowed'
-                                }`}
-                            >
-                                Confirm Delete
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
         </div>
     );
 };
