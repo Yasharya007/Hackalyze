@@ -1,7 +1,6 @@
 import { Hackathon } from "../models/Hackathon.model.js";
 import { Submission } from "../models/Submission.models.js";
 import { Student } from "../models/student.model.js";
-
 export const addParameter = async (req, res) => {
     try {
         const { hackathonId } = req.params;
@@ -229,7 +228,7 @@ export const getShortlistedStudents = async (req, res) => {
 export const getSortedByAIScore = async (req, res) => {
     try {
         const { teacherId } = req.params;
-        const submissions = await SubmissionAudit.find({ teacherId }).sort({ AItotalScore: -1 });
+        const submissions = await Submission.find({ teacherId }).sort({ AItotalScore: -1 });
 
         if (submissions.length === 0) {
             return res.status(404).json({ message: "No submissions found for this teacher." });
@@ -246,7 +245,7 @@ export const getSortedByAIScore = async (req, res) => {
 export const getSortedByPreference = async (req, res) => {
     try {
         const { teacherId } = req.params;
-        const submissions = await SubmissionAudit.find({ teacherId });
+        const submissions = await Submission.find({ teacherId });
 
         if (submissions.length === 0) {
             return res.status(404).json({ message: "No submissions found for this teacher." });
