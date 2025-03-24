@@ -123,6 +123,43 @@ const CreateHackathon = () => {
     });
   };
   
+  // Fetch teachers for assignment dropdown
+  useEffect(() => {
+    const fetchTeachers = async () => {
+      try {
+        // Use the API instance with error handling and proper base URL
+        const response = await fetch("/api/admin/hackathon/teachers", {
+          headers: {
+            'Content-Type': 'application/json',
+            // Include authentication headers if needed
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch teachers: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log("Teachers data:", data); // Debug log to see the response
+        
+        // Filter out any teachers without an _id property to prevent key errors
+        const validTeachers = Array.isArray(data) ? data.filter(teacher => teacher && teacher._id) : [];
+        
+        if (validTeachers.length === 0) {
+          console.warn("No valid teachers found in the response");
+        }
+        
+        setTeachers(validTeachers);
+      } catch (error) {
+        console.error("Error fetching teachers:", error);
+        toast.error(`Failed to load teachers: ${error.message}`);
+      }
+    };
+    
+    fetchTeachers();
+  }, []);
+  
   // Submit the form
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -143,7 +180,8 @@ const CreateHackathon = () => {
     const hackathonData = {
       ...formData,
       selectedCriteria: validSelectedCriteria,
-      // Admin ID will be set by the backend based on the authenticated user
+      // Filter out any undefined or invalid teacher IDs
+      teachersAssigned: formData.teachersAssigned.filter(id => id)
     };
     
     try {
@@ -151,35 +189,34 @@ const CreateHackathon = () => {
       
       if (isEditMode) {
         // Update existing hackathon
-        await updateHackathonAPI(id, hackathonData);
+        const response = await updateHackathonAPI(id, hackathonData);
+        if (response && response.success) {
+          toast.success("Hackathon updated successfully");
+          navigate("/admin/dashboard");
+        } else {
+          const errorMsg = response?.message || "Error updating hackathon";
+          toast.error(errorMsg);
+          console.error("Error updating hackathon:", errorMsg);
+        }
       } else {
         // Create new hackathon
-        await createHackathonAPI(hackathonData);
+        const response = await createHackathonAPI(hackathonData);
+        if (response && response.success) {
+          toast.success("Hackathon created successfully");
+          navigate("/admin/dashboard");
+        } else {
+          const errorMsg = response?.message || "Error creating hackathon";
+          toast.error(errorMsg);
+          console.error("Error creating hackathon:", errorMsg);
+        }
       }
-      
-      navigate("/admin/dashboard"); // Redirect to dashboard on success
     } catch (error) {
       console.error("Error saving hackathon:", error);
+      toast.error(error?.message || "Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
   };
-  
-  // Fetch teachers for assignment dropdown
-  useEffect(() => {
-    const fetchTeachers = async () => {
-      try {
-        const response = await fetch("http://localhost:8000/api/admin/hackathon/teachers");
-        const data = await response.json();
-        setTeachers(data || []);
-      } catch (error) {
-        console.error("Error fetching teachers:", error);
-        toast.error("Failed to load teachers");
-      }
-    };
-    
-    fetchTeachers();
-  }, []);
   
   // Show loading state while fetching data in edit mode
   if (fetching) {
@@ -406,7 +443,7 @@ const CreateHackathon = () => {
                   </label>
                   <ul className="bg-gray-50 border border-gray-300 rounded-md p-3">
                     {formData.criteria.map((criteria, index) => (
-                      <li key={index} className="flex justify-between items-center mb-2">
+                      <li key={`criteria-${index}`} className="flex justify-between items-center mb-2">
                         <span>{criteria}</span>
                         <button
                           type="button"
@@ -434,7 +471,7 @@ const CreateHackathon = () => {
                   required
                 >
                   {formData.criteria.map((criteria, index) => (
-                    <option key={index} value={criteria}>
+                    <option key={`criteria-${index}`} value={criteria}>
                       {criteria}
                     </option>
                   ))}
@@ -462,7 +499,7 @@ const CreateHackathon = () => {
                   required
                 >
                   {formatOptions.map((format, index) => (
-                    <option key={index} value={format}>
+                    <option key={`format-${index}`} value={format}>
                       {format}
                     </option>
                   ))}
@@ -488,8 +525,11 @@ const CreateHackathon = () => {
                   onChange={handleArrayChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md h-32"
                 >
-                  {teachers.map((teacher) => (
-                    <option key={teacher._id} value={teacher._id}>
+                  {teachers.map((teacher, index) => (
+                    <option 
+                      key={`teacher-${teacher._id || index}`} 
+                      value={teacher._id}
+                    >
                       {teacher.name} ({teacher.email})
                     </option>
                   ))}

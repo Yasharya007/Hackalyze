@@ -444,8 +444,8 @@ const AdminHackathonPage = () => {
                                                     </td>
                                                 </tr>
                                             ) : (
-                                                hackathon.teachersAssigned && hackathon.teachersAssigned.map((teacher) => (
-                                                    <tr key={teacher._id || teacher.id}>
+                                                hackathon.teachersAssigned && hackathon.teachersAssigned.map((teacher, index) => (
+                                                    <tr key={index}>
                                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                                             {teacher.name}
                                                         </td>
@@ -499,8 +499,8 @@ const AdminHackathonPage = () => {
                                                     </td>
                                                 </tr>
                                             ) : (
-                                                hackathon.registeredStudents && hackathon.registeredStudents.map((student) => (
-                                                    <tr key={student._id || student.id}>
+                                                hackathon.registeredStudents && hackathon.registeredStudents.map((student, index) => (
+                                                    <tr key={index}>
                                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                                             {student.name}
                                                         </td>
@@ -583,7 +583,7 @@ const AdminHackathonPage = () => {
                                         </div>
                                     ) : (
                                         hackathon.notifications && hackathon.notifications.map((notification, index) => (
-                                            <div key={notification._id || notification.id || index} className="bg-white rounded-lg p-4 border">
+                                            <div key={index} className="bg-white rounded-lg p-4 border">
                                                 <div className="flex justify-between items-start mb-2">
                                                     <h3 className="text-sm font-medium">{notification.title}</h3>
                                                     <span className="text-xs text-gray-500">{formatDate(notification.sentOn)}</span>
@@ -628,7 +628,7 @@ const AdminHackathonPage = () => {
                                             </thead>
                                             <tbody className="bg-white divide-y divide-gray-200">
                                                 {hackathon.results.map((result, index) => (
-                                                    <tr key={result._id || result.id || index}>
+                                                    <tr key={index}>
                                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                                             {index + 1}
                                                         </td>
