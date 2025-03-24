@@ -145,19 +145,37 @@ export const TeacherRegisterAPI = async (formData) => {
       const response = await API.get("/api/admin/hackathons");
       const hackathons = response.data.hackathons || [];
       
-      // Sort by creation date (newest first) and take the first 5
-      return hackathons
-        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-        .slice(0, 5)
-        .map(hackathon => ({
+      // Get current date for status calculation
+      const currentDate = new Date();
+      
+      // Format hackathons with all required fields for the UI
+      return hackathons.map(hackathon => {
+        const startDate = new Date(hackathon.startDate);
+        const endDate = new Date(hackathon.endDate);
+        
+        // Determine hackathon status
+        let status;
+        if (currentDate < startDate) {
+          status = "Upcoming";
+        } else if (currentDate > endDate) {
+          status = "Completed";
+        } else {
+          status = "Active";
+        }
+        
+        return {
           id: hackathon._id,
           name: hackathon.title,
-          date: new Date(hackathon.createdAt).toLocaleDateString('en-US', { 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
-          })
-        }));
+          title: hackathon.title,
+          description: hackathon.description,
+          startDate: hackathon.startDate,
+          endDate: hackathon.endDate,
+          participants: hackathon.registeredStudents?.length || 0,
+          submissions: hackathon.submissions?.length || 0,
+          status: status,
+          date: `${new Date(hackathon.startDate).toLocaleDateString()} - ${new Date(hackathon.endDate).toLocaleDateString()}`
+        };
+      });
     } catch (error) {
       console.error("Error fetching recent hackathons:", error);
       throw error.response?.data || "Failed to load recent hackathons";
@@ -166,32 +184,44 @@ export const TeacherRegisterAPI = async (formData) => {
 
   export const getTeacherAssignments = async () => {
     try {
-      // Get all teachers
-      const teachersResponse = await API.get("/api/admin/hackathon/teachers");
-      const teachers = teachersResponse.data || [];
+      // Get teacher assignments with the enhanced data from backend
+      const response = await API.get("/api/admin/hackathon/teachers");
+      const teacherAssignments = response.data || [];
       
-      // Get all hackathons
-      const hackathonsResponse = await API.get("/api/admin/hackathons");
-      const hackathons = hackathonsResponse.data.hackathons || [];
+      // Format the assignments for display in the dashboard
+      const formattedAssignments = [];
       
-      // Create assignments by matching teachers to hackathons
-      const assignments = [];
-      
-      // This logic may need to be adjusted based on your actual data structure
-      hackathons.forEach(hackathon => {
-        (hackathon.teachersAssigned || []).forEach(teacherId => {
-          const teacher = teachers.find(t => t._id === teacherId);
-          if (teacher) {
-            assignments.push({
-              id: teacher._id,
+      teacherAssignments.forEach(teacher => {
+        if (teacher.assignedHackathons && teacher.assignedHackathons.length > 0) {
+          // Create an entry for each teacher-hackathon assignment
+          teacher.assignedHackathons.forEach(hackathon => {
+            formattedAssignments.push({
+              id: `${teacher.id}-${hackathon.id}`,
+              teacherId: teacher.id,
+              teacherName: teacher.name,
+              teacherEmail: teacher.email,
+              hackathonId: hackathon.id,
+              hackathonTitle: hackathon.title,
+              startDate: new Date(hackathon.startDate).toLocaleDateString(),
+              endDate: new Date(hackathon.endDate).toLocaleDateString(),
               name: teacher.name,
               hackathon: hackathon.title
             });
-          }
-        });
+          });
+        } else {
+          // Include teachers without assignments too
+          formattedAssignments.push({
+            id: teacher.id,
+            teacherId: teacher.id,
+            teacherName: teacher.name,
+            teacherEmail: teacher.email,
+            name: teacher.name,
+            hackathon: "Not assigned to any hackathon"
+          });
+        }
       });
       
-      return assignments.slice(0, 5); // Return the first 5 assignments
+      return formattedAssignments;
     } catch (error) {
       console.error("Error fetching teacher assignments:", error);
       throw error.response?.data || "Failed to load teacher assignments";

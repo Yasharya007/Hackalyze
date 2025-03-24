@@ -79,17 +79,21 @@ export const createHackathon = async (req, res) => {
 };
 export const getAllHackathons = async (req, res) => {
     try {
-        const hackathons = await Hackathon.find();
+        const hackathons = await Hackathon.find()
+            .populate('teachersAssigned', 'name email')
+            .populate('registeredStudents', 'name email')
+            .populate('submissions');
+            
         res.json({
             hackathons,
             success: true
-    });
+        });
     } catch (error) {
         res.status(500).json({ 
             message: 'Error in retrieving hackathons',
-             error,
-             success: false 
-            });
+            error,
+            success: false 
+        });
     }
 };
 
@@ -177,14 +181,55 @@ export const assignTeacher = async (req, res) => {
 
 export const getAssignedTeachers = async (req, res) => {
     try {
-        const teachers = await Teacher.find();
-        res.json(teachers);
+        // Get all teachers
+        const teachers = await Teacher.find().select('name email department');
+        
+        // Get all hackathons with teacher assignments
+        const hackathons = await Hackathon.find({ teachersAssigned: { $exists: true, $not: { $size: 0 } } })
+            .select('_id title teachersAssigned startDate endDate');
+        
+        // Create a map of teacher assignments with hackathon details
+        const assignmentMap = new Map();
+        
+        // Process each teacher and find their assignments
+        teachers.forEach(teacher => {
+            assignmentMap.set(teacher._id.toString(), {
+                id: teacher._id,
+                name: teacher.name,
+                email: teacher.email,
+                department: teacher.department,
+                assignedHackathons: []
+            });
+        });
+        
+        // Add hackathon assignments to each teacher
+        hackathons.forEach(hackathon => {
+            (hackathon.teachersAssigned || []).forEach(teacherId => {
+                const teacherIdStr = teacherId.toString();
+                if (assignmentMap.has(teacherIdStr)) {
+                    const teacherData = assignmentMap.get(teacherIdStr);
+                    teacherData.assignedHackathons.push({
+                        id: hackathon._id,
+                        title: hackathon.title,
+                        startDate: hackathon.startDate,
+                        endDate: hackathon.endDate
+                    });
+                    assignmentMap.set(teacherIdStr, teacherData);
+                }
+            });
+        });
+        
+        // Convert map to array for response
+        const teacherAssignments = Array.from(assignmentMap.values());
+        
+        res.json(teacherAssignments);
     } catch (error) {
+        console.error('Error in retrieving teacher assignments:', error);
         res.status(500).json({ 
-            message: 'Error in retrieving teachers', 
+            message: 'Error in retrieving teacher assignments', 
             error,
             success: false
-         });
+        });
     }
 };
 
