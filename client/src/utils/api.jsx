@@ -274,3 +274,19 @@ export const TeacherRegisterAPI = async (formData) => {
       toast.dismiss(toastId);
     }
   };
+
+  // Delete Hackathon API
+  export const deleteHackathonAPI = async (hackathonId) => {
+    const toastId = toast.loading("Deleting hackathon...");
+    try {
+      const response = await API.delete(`/api/admin/hackathon/${hackathonId}`);
+      toast.success("Hackathon deleted successfully");
+      return response.data;
+    } catch (error) {
+      console.error("Error deleting hackathon:", error);
+      toast.error(error.response?.data?.message || "Failed to delete hackathon");
+      throw error.response?.data || "Failed to delete hackathon";
+    } finally {
+      toast.dismiss(toastId);
+    }
+  };
