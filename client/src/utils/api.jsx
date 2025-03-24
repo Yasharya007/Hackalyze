@@ -354,3 +354,60 @@ export const TeacherRegisterAPI = async (formData) => {
       toast.dismiss(toastId);
     }
   };
+
+  // Assign teachers to a hackathon
+  export const assignTeacherToHackathonAPI = async (hackathonId, teacherIds) => {
+    const toastId = toast.loading("Assigning teachers...");
+    try {
+      const response = await API.post("/api/admin/hackathon/assignteacher", {
+        hackathonId,
+        teacherIds
+      });
+      toast.success("Teachers assigned successfully");
+      return response.data;
+    } catch (error) {
+      console.error("Error assigning teachers:", error);
+      toast.error(error.response?.data?.message || "Failed to assign teachers");
+      throw error;
+    } finally {
+      toast.dismiss(toastId);
+    }
+  };
+
+  // Update hackathon media types
+  export const updateHackathonMediaAPI = async (hackathonId, mediaTypes) => {
+    const toastId = toast.loading("Updating media types...");
+    try {
+      const response = await API.post("/api/admin/hackathon/accept-media", {
+        hackathonId,
+        mediaTypes
+      });
+      toast.success("Media types updated successfully");
+      return response.data;
+    } catch (error) {
+      console.error("Error updating media types:", error);
+      toast.error(error.response?.data?.message || "Failed to update media types");
+      throw error;
+    } finally {
+      toast.dismiss(toastId);
+    }
+  };
+
+  // Update hackathon deadline
+  export const updateHackathonDeadlineAPI = async (hackathonId, newDeadline) => {
+    const toastId = toast.loading("Updating deadline...");
+    try {
+      const response = await API.put(`/api/admin/hackathon/${hackathonId}`, {
+        endDate: newDeadline.date,
+        endTime: newDeadline.time
+      });
+      toast.success("Deadline updated successfully");
+      return response.data;
+    } catch (error) {
+      console.error("Error updating deadline:", error);
+      toast.error(error.response?.data?.message || "Failed to update deadline");
+      throw error;
+    } finally {
+      toast.dismiss(toastId);
+    }
+  };

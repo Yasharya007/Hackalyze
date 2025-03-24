@@ -57,15 +57,76 @@ const AdminHackathon = () => {
   return (
     <div className="flex w-screen">
       {/* Sidebar */}
-      <aside className="w-1/4 h-screen bg-gray-100 p-4">
-        <h2 className="text-xl font-bold">Hackalyze</h2>
-        <nav className="mt-4 space-y-2">
-          <a href="#" className="block px-4 py-2 bg-gray-200 rounded">Dashboard</a>
-          <a href="#" className="block px-4 py-2">Create New Hackathon</a>
-          <a href="#" className="block px-4 py-2">View Hackathons</a>
-          <a href="#" className="block px-4 py-2">Settings</a>
-        </nav>
-        <button className="mt-6 px-4 py-2 bg-red-500 text-white rounded w-full hover:bg-red-600">Logout</button>
+      <aside className="w-64 bg-white border-r h-screen sticky top-0 flex flex-col">
+        <div className="p-5 flex-grow">
+          <div className="flex items-center mb-6">
+            <div className="w-10 h-10 bg-gray-200 rounded-full"></div>
+            <h2 className="text-xl font-bold ml-2">Hackalyze</h2>
+          </div>
+          <nav>
+            <ul className="space-y-2">
+              <li>
+                <a
+                  href="/admin/dashboard"
+                  className="flex items-center p-2 rounded-md hover:bg-gray-100"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                  <span>Overview</span>
+                </a>
+              </li>
+              <li>
+                <a
+                  href="/admin/dashboard"
+                  className="flex items-center p-2 rounded-md bg-black text-white"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                  </svg>
+                  <span>Hackathons</span>
+                </a>
+              </li>
+              <li>
+                <a
+                  href="/admin/dashboard"
+                  className="flex items-center p-2 rounded-md hover:bg-gray-100"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                  </svg>
+                  <span>Teachers</span>
+                </a>
+              </li>
+              <li>
+                <a
+                  href="/admin/create-hackathon"
+                  className="flex items-center p-2 rounded-md hover:bg-gray-100"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  <span>Create Hackathon</span>
+                </a>
+              </li>
+            </ul>
+          </nav>
+        </div>
+        {/* Logout at bottom of sidebar */}
+        <div className="mb-6 px-4">
+          <button
+            className="flex items-center p-2 rounded-md text-red-600 hover:bg-red-50 w-full"
+            onClick={() => {
+              // Call logout API
+              navigate("/");
+            }}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+            <span>Logout</span>
+          </button>
+        </div>
       </aside>
       
       {/* Main Content */}
