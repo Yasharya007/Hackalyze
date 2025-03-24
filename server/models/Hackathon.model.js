@@ -44,7 +44,7 @@ const hackathonSchema = new mongoose.Schema({
   teachersAssigned: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: "Teacher",
-    required:true
+    default: []
   }],
   registeredStudents:[{
     type: mongoose.Schema.Types.ObjectId,

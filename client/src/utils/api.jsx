@@ -197,3 +197,50 @@ export const TeacherRegisterAPI = async (formData) => {
       throw error.response?.data || "Failed to load teacher assignments";
     }
   };
+
+  // Create Hackathon API
+  export const createHackathonAPI = async (hackathonData) => {
+    const toastId = toast.loading("Creating hackathon...");
+    try {
+      const response = await API.post("/api/admin/hackathon", hackathonData);
+      toast.success("Hackathon created successfully");
+      return response.data;
+    } catch (error) {
+      console.error("Error creating hackathon:", error);
+      toast.error(error.response?.data?.message || "Failed to create hackathon");
+      throw error.response?.data || "Failed to create hackathon";
+    } finally {
+      toast.dismiss(toastId);
+    }
+  };
+
+  // Get Hackathon by ID API
+  export const getHackathonByIdAPI = async (hackathonId) => {
+    const toastId = toast.loading("Loading hackathon details...");
+    try {
+      const response = await API.get(`/api/admin/hackathons/${hackathonId}`);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching hackathon:", error);
+      toast.error("Failed to load hackathon details");
+      throw error.response?.data || "Failed to load hackathon details";
+    } finally {
+      toast.dismiss(toastId);
+    }
+  };
+
+  // Update Hackathon API
+  export const updateHackathonAPI = async (hackathonId, hackathonData) => {
+    const toastId = toast.loading("Updating hackathon...");
+    try {
+      const response = await API.put(`/api/admin/hackathon/${hackathonId}`, hackathonData);
+      toast.success("Hackathon updated successfully");
+      return response.data;
+    } catch (error) {
+      console.error("Error updating hackathon:", error);
+      toast.error(error.response?.data?.message || "Failed to update hackathon");
+      throw error.response?.data || "Failed to update hackathon";
+    } finally {
+      toast.dismiss(toastId);
+    }
+  };
