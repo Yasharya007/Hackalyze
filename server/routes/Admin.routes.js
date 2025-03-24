@@ -31,6 +31,7 @@ router.get('/hackathon/teachers', getAssignedTeachers);
 // Student Management
 router.get('/hackathon/:id/students', getRegisteredStudents);
 router.post('/hackathon/accept-format', acceptFormat);
+//router.put('/hackathon/update-media/:id', acceptFormat);
 
 // Submission 
 router.get('/submissions', getAllSubmissions);// swagger documented

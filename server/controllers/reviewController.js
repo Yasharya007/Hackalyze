@@ -1,6 +1,6 @@
 import { Submission } from "../models/Submission.models.js";
 
-// Mark a submission to the review folder
+// Move a submission to the review folder
 export const markSubmissionAsReviewed = async (req, res) => {
     try {
         const { submissionId } = req.params;
@@ -19,10 +19,10 @@ export const markSubmissionAsReviewed = async (req, res) => {
     }
 };
 
-// Fetch all submissions that are reviewed 
+// Fetch all submissions in the review folder
 export const getReviewSubmissions = async (req, res) => {
     try {
-        const submissions = await Submission.find({ status: "Reviewed" })
+        const submissions = await Submission.find({ needsReview: true })
             .populate("studentId", "name email")
             .populate("hackathonId", "title")
             .populate("reviewerId", "name")
@@ -34,8 +34,7 @@ export const getReviewSubmissions = async (req, res) => {
     }
 };
 
-
-// Remove a submission from the review (once reviewed)
+// Remove a submission from the review folder (once reviewed)
 export const markSubmissionAsPending = async (req, res) => {
     try {
         const { submissionId } = req.params;
@@ -53,5 +52,3 @@ export const markSubmissionAsPending = async (req, res) => {
         res.status(500).json({ message: "Server error", error: error.message });
     }
 };
-
-

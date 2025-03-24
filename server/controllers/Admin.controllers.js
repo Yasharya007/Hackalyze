@@ -65,16 +65,16 @@ export const createHackathon = async (req, res) => {
         const hackathon = await Hackathon.create(hackathonData);
 
          // Notify students about the new hackathon
-         const students = await Student.find();
-         await Promise.all(
-             students.map(student =>
-                 Notification.create({
-                     studentId: student._id,
-                     message: `A new hackathon "${title}" is upcoming. Start preparing!`,
-                     typeofmessage: "Hackathon Announcement"
-                 })
-             )
-         );
+        const students = await Student.find();
+        await Promise.all(
+            students.map(student =>
+                Notification.create({
+                    studentId: student._id,
+                    message: `A new hackathon "${title}" is upcoming. Start preparing!`,
+                    typeofmessage: "Hackathon Announcement"
+                })
+            )
+        );
 
        return res.status(201).json({
         message: 'Hackathon Created Successfully',
@@ -168,23 +168,8 @@ export const deleteHackathon = async (req, res) => {
 // Teacher Assignments
 export const assignTeacher = async (req, res) => {
     try {
-        const { hackathonId, teacherIds } = req.body;
-        
-        // First, find the current hackathon
-        const hackathon = await Hackathon.findById(hackathonId);
-        if (!hackathon) {
-            return res.status(404).json({ 
-                message: 'Hackathon not found',
-                success: false 
-            });
-        }
-        
-        // Update the entire teachersAssigned array with the new list
-        // This allows both adding and removing teachers
-        await Hackathon.findByIdAndUpdate(hackathonId, 
-            { teachersAssigned: teacherIds },
-            { new: true }
-        );
+        const { hackathonId, teacherId } = req.body;
+        await Hackathon.findByIdAndUpdate(hackathonId, { $push: { teachersAssigned: teacherId } });
 
          //Notify the teacher
          const notification = await Notification.create({
@@ -194,15 +179,14 @@ export const assignTeacher = async (req, res) => {
         });
 
         res.json({
-             message: 'Teachers updated successfully',
+             message: 'Teacher assigned successfully',
             //  notification,
             success: true
          });
     } catch (error) {
-        console.error("Server error in assignTeacher:", error);
         res.status(500).json({ 
-            message: 'Error in updating teachers',
-             error: error.message,
+            message: 'Error in assigning teacher',
+             error,
              success: false
             });
     }
@@ -277,44 +261,32 @@ export const getRegisteredStudents = async (req, res) => {
     }
 };
 
-// Media Types Management
 export const acceptFormat = async (req, res) => {
     try {
-        const { hackathonId, mediaTypes } = req.body;
-        
-        // Find the hackathon
-        const hackathon = await Hackathon.findById(hackathonId);
-        if (!hackathon) {
-            return res.status(404).json({ 
-                message: 'Hackathon not found',
+        const { studentId, acceptedFormat } = req.body;
+
+        if (!studentId || !acceptedFormat) {
+            return res.status(400).json({ 
+                message: 'Student ID and accepted format are required', 
                 success: false 
             });
         }
-        
-        console.log("Updating hackathon media types:", { hackathonId, mediaTypes });
-        
-        // Update the media types using the correct field name: allowedFormats
-        const updatedHackathon = await Hackathon.findByIdAndUpdate(
-            hackathonId, 
-            { allowedFormats: mediaTypes },
-            { new: true }
-        );
-        
-        console.log("Updated hackathon:", updatedHackathon);
-        
+
+        await Student.findByIdAndUpdate(studentId, { 
+            mediaAccepted: true, 
+            acceptedFormat: acceptedFormat 
+        });
+
         res.json({ 
-            message: 'Media types updated successfully',
-            success: true,
-            hackathon: updatedHackathon
-         });
+            message: 'Media format accepted successfully', 
+            success: true 
+        });
 
     } catch (error) {
-        console.error("Server error in acceptFormat:", error);
         res.status(500).json({ 
-            message: 'Error in updating media types', 
-            error: error.message,
-            success: false
-
+            message: 'Error in accepting media format', 
+            error, 
+            success: false 
         });
     }
 };
