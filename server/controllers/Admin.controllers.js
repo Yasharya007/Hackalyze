@@ -4,6 +4,7 @@ import { Student } from "../models/student.model.js";
 import { Submission } from "../models/Submission.models.js";
 import { Notification } from "../models/Notification.models.js";
 import mongoose from "mongoose";
+import {Admin} from "../models/Admin.models.js";
 
 // Hackathon Management
 export const createHackathon = async (req, res) => {
@@ -261,35 +262,40 @@ export const getRegisteredStudents = async (req, res) => {
     }
 };
 
-export const acceptFormat = async (req, res) => {
-    try {
-        const { studentId, acceptedFormat } = req.body;
+// export const acceptFormat = async (req, res) => {
+//     try {
+//         const { acceptedFormat } = req.body;
 
-        if (!studentId || !acceptedFormat) {
-            return res.status(400).json({ 
-                message: 'Student ID and accepted format are required', 
-                success: false 
-            });
-        }
+//         if (!acceptedFormat || !Array.isArray(acceptedFormat)) {
+//             return res.status(400).json({ 
+//                 message: "Accepted format must be an array of valid media types", 
+//                 success: false 
+//             });
+//         }
 
-        await Student.findByIdAndUpdate(studentId, { 
-            mediaAccepted: true, 
-            acceptedFormat: acceptedFormat 
-        });
+//         // Update media settings (only one document assumed)
+//         const updatedMedia = await Media.findOneAndUpdate(
+//             {}, 
+//             { mediaAccepted: true, acceptedFormat: acceptedFormat },
+//             { new: true, upsert: true } // Create if not exists
+//         );
 
-        res.json({ 
-            message: 'Media format accepted successfully', 
-            success: true 
-        });
+//         res.json({ 
+//             message: "Media format updated successfully", 
+//             success: true, 
+//             media: updatedMedia
+//         });
 
-    } catch (error) {
-        res.status(500).json({ 
-            message: 'Error in accepting media format', 
-            error, 
-            success: false 
-        });
-    }
-};
+//     } catch (error) {
+//         res.status(500).json({ 
+//             message: "Error updating media format", 
+//             error: error.message, 
+//             success: false 
+//         });
+//     }
+// };
+
+
 
 
 // Submission Review
@@ -435,5 +441,80 @@ export const removeAssignedTeacher = async (req, res) => {
       error,
     success: false
       });
+    }
+};
+
+// Admin updates accepted media formats for a hackathon
+export const acceptFormat = async (req, res) => {
+    try {
+         const { hackathonId, adminId, allowedFormats } = req.body; // Destructure once
+
+        // Validate required fields
+        if (!hackathonId) {
+            return res.status(400).json({ 
+                message: "Hackathon ID is required", 
+                success: false 
+            });
+        }
+
+        if (!adminId) {
+            return res.status(403).json({ 
+                message: "Admin authentication required", 
+                success: false 
+            });
+        }
+
+        if (!allowedFormats || !Array.isArray(allowedFormats) || allowedFormats.length === 0) {
+            return res.status(400).json({
+                message: "Allowed formats must be a non-empty array",
+                success: false
+            });
+        }
+
+        // Check if Hackathon exists
+        const hackathon = await Hackathon.findById(hackathonId);
+        if (!hackathon) {
+            return res.status(404).json({ 
+                message: "Hackathon not found", 
+                success: false 
+            });
+        }
+
+        // Validate Admin
+        const admin = await Admin.findById(adminId);
+        if (!admin) {
+            return res.status(403).json({
+                message: "Unauthorized: Admin not found",
+                success: false
+            });
+        }
+
+        // Validate allowed formats
+        const validFormats = ["Audio", "Video", "File", "Image"];
+        const isValid = allowedFormats.every(format => validFormats.includes(format));
+        if (!isValid) {
+            return res.status(400).json({
+                message: "Invalid media format(s) provided",
+                success: false
+            });
+        }
+
+        // Update allowed media formats for the hackathon
+        hackathon.allowedFormats = allowedFormats;
+        await hackathon.save();
+
+        res.json({
+            message: "Accepted media formats updated successfully",
+            success: true,
+            updatedHackathon: hackathon
+        });
+
+    } catch (error) {
+        console.error("Error updating media formats:", error);
+        res.status(500).json({
+            message: "Error updating accepted media formats",
+            error: error.message,
+            success: false
+        });
     }
 };

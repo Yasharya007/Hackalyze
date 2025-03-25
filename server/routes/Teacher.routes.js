@@ -5,7 +5,8 @@ import {
     saveSelectedCriteria, 
     getSelectedCriteria, 
     shortlistStudents, 
-    getShortlistedStudents 
+    updateSubmission,
+    getShortlistedStudents
 } from "../controllers/Teacher.controllers.js";
 
 const router = express.Router();
@@ -17,7 +18,8 @@ router.put("/hackathons/:hackathonId/selectedCriteria", saveSelectedCriteria); /
 router.get("/hackathons/:hackathonId/selectedCriteria", getSelectedCriteria); // Get selected criteria
 
 // Shortlisting Students
-router.put("/hackathons/:hackathonId/shortlist", shortlistStudents);
+router.put("/hackathons/shortlist", shortlistStudents);
+router.put("/hackathons/updateSubmission",updateSubmission)
 router.get("/hackathons/:hackathonId/shortlisted", getShortlistedStudents);
 
 export default router;

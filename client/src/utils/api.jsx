@@ -414,9 +414,9 @@ export const getHackathonSubmissionsAPI = async (hackathonId) => {
 };
 
 // Shortlist students based on a minimum score threshold
-export const shortlistStudents = async (teacherId, hackathonId, threshold) => {
+export const shortlistStudents = async (submissionIds) => {
     try {
-        const response = await API.put(`/api/teacher/${teacherId}/hackathons/${hackathonId}/shortlist`, { threshold });
+        const response = await API.put(`/api/teacher/hackathons/shortlist`,{submissionIds});
         return response.data;
     } catch (error) {
         console.error("Error shortlisting students:", error);
@@ -424,6 +424,18 @@ export const shortlistStudents = async (teacherId, hackathonId, threshold) => {
     }
 };
 
+//Update submission details
+
+export const updateSubmissionAPI = async (submissions) => {
+  try {
+    // console.log("hello")
+      const response = await API.put(`/api/teacher/hackathons/updateSubmission`,{submissions});
+      return response.data;
+  } catch (error) {
+      console.error("Error shortlisting students:", error);
+      return { success: false, message: "Failed to shortlist students" };
+  }
+};
 // Get all shortlisted students
 export const getShortlistedStudents = async (teacherId, hackathonId) => {
     try {
@@ -607,7 +619,9 @@ export const getSortedByPreferenceAPI = async (teacherId) => {
 // particular submission 
 export const getSubmissionDetailsAPI = async (submissionId) => {
   try {
-    const response = await axios.get(`/api/hackathon/submissions/${submissionId}`);
+    console.log("call")
+    const response = await API.get(`/api/hackathon/submission/${submissionId}`);
+    console.log("called")
     return { success: true, data: response.data };
   } catch (error) {
     console.error("Failed to fetch submission details:", error);
