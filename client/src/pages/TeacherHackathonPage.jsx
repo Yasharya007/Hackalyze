@@ -260,6 +260,10 @@ function TeacherHackathonPage() {
     }
   };
 
+  const getActiveSidebarItem = () => {
+    return 'submissions'; // Always return 'submissions' since this page is part of the submissions flow
+  };
+
   return (
     <div className="flex w-full min-h-screen bg-gray-100">
       {/* Sidebar */}
@@ -272,7 +276,9 @@ function TeacherHackathonPage() {
             <li>
               <Link 
                 to="/teacher/dashboard" 
-                className="flex items-center p-2 rounded-md hover:bg-gray-100 text-gray-600"
+                className={`flex items-center p-2 rounded-md hover:bg-gray-100 text-gray-600 ${
+                  getActiveSidebarItem() === 'dashboard' ? 'bg-gray-100 font-medium' : ''
+                }`}
               >
                 <FaChartBar className="h-5 w-5 mr-3" />
                 <span>Dashboard</span>
@@ -281,7 +287,9 @@ function TeacherHackathonPage() {
             <li>
               <Link 
                 to="/view-hackathons" 
-                className="flex items-center p-2 rounded-md hover:bg-gray-100 text-gray-600"
+                className={`flex items-center p-2 rounded-md hover:bg-gray-100 text-gray-600 ${
+                  getActiveSidebarItem() === 'hackathons' ? 'bg-gray-100 font-medium' : ''
+                }`}
               >
                 <FaLaptopCode className="h-5 w-5 mr-3" />
                 <span>View Hackathons</span>
@@ -290,7 +298,9 @@ function TeacherHackathonPage() {
             <li>
               <Link 
                 to="/teacher/dashboard" 
-                className="flex items-center p-2 rounded-md hover:bg-gray-100 text-gray-600"
+                className={`flex items-center p-2 rounded-md hover:bg-gray-100 text-gray-600 ${
+                  getActiveSidebarItem() === 'parameters' ? 'bg-gray-100 font-medium' : ''
+                }`}
               >
                 <FaCogs className="h-5 w-5 mr-3" />
                 <span>Set Parameters</span>
@@ -299,7 +309,9 @@ function TeacherHackathonPage() {
             <li>
               <Link 
                 to="/teacher/submissions" 
-                className="flex items-center p-2 rounded-md hover:bg-gray-100 text-gray-600"
+                className={`flex items-center p-2 rounded-md hover:bg-gray-100 text-gray-900 font-semibold ${
+                  getActiveSidebarItem() === 'submissions' ? 'bg-gray-100' : ''
+                }`}
               >
                 <FaClipboardList className="h-5 w-5 mr-3" />
                 <span>View Submissions</span>
@@ -308,7 +320,9 @@ function TeacherHackathonPage() {
             <li>
               <Link 
                 to="/teacher/dashboard" 
-                className="flex items-center p-2 rounded-md hover:bg-gray-100 text-gray-900 font-semibold"
+                className={`flex items-center p-2 rounded-md hover:bg-gray-100 text-gray-600 ${
+                  getActiveSidebarItem() === 'shortlist' ? 'bg-gray-100 font-medium' : ''
+                }`}
               >
                 <FaTrophy className="h-5 w-5 mr-3" />
                 <span>View Shortlist</span>
@@ -317,7 +331,9 @@ function TeacherHackathonPage() {
             <li>
               <Link 
                 to="/teacher/settings" 
-                className="flex items-center p-2 rounded-md hover:bg-gray-100 text-gray-600"
+                className={`flex items-center p-2 rounded-md hover:bg-gray-100 text-gray-600 ${
+                  getActiveSidebarItem() === 'settings' ? 'bg-gray-100 font-medium' : ''
+                }`}
               >
                 <FaUserCog className="h-5 w-5 mr-3" />
                 <span>Settings</span>
