@@ -3,7 +3,7 @@ import { Link,useNavigate } from "react-router-dom";
 import { Bar } from "react-chartjs-2";
 import { useDispatch,useSelector } from "react-redux";
 import "chart.js/auto";
-import { HackathonByTeacherAPI } from "../utils/api.jsx";
+import { HackathonByTeacherAPI, logoutAPI } from "../utils/api.jsx";
 import { useState,useEffect } from "react";
 import { setHackathon } from "../slices/hackathonSlice.js";
 import axios from "axios";
@@ -48,9 +48,9 @@ const TeacherDashboard = () => {
     return (
         <div className="flex w-full h-screen bg-gray-100">
             {/* Sidebar */}
-            <aside className="w-64 bg-white p-5 shadow-lg">
+            <aside className="w-64 bg-white p-5 shadow-lg flex flex-col h-full">
                 <h2 className="text-xl font-bold mb-6">Teacher Portal</h2>
-                <nav>
+                <nav className="flex-grow">
                     <ul className="space-y-4">
                         <li>
                             <Link to="/dashboard" className="block text-gray-900 font-semibold hover:text-gray-600">Dashboard</Link>
@@ -72,7 +72,23 @@ const TeacherDashboard = () => {
                         </li>
                     </ul>
                 </nav>
-                <button className="mt-10 w-full py-2 bg-gray-200 rounded-lg">Logout</button>
+                {/* Logout Button */}
+                <div className="mt-auto mb-6">
+                    <a
+                        href="#"
+                        className="flex items-center p-2 rounded-md text-red-600 hover:bg-red-50 w-full"
+                        onClick={() => {
+                            logoutAPI().then(() => {
+                                window.location.href = "/";
+                            });
+                        }}
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        </svg>
+                        <span>Logout</span>
+                    </a>
+                </div>
             </aside>
 
             {/* Main Content */}
