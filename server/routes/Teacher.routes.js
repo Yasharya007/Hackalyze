@@ -17,7 +17,7 @@ router.put("/hackathons/:hackathonId/selectedCriteria", saveSelectedCriteria); /
 router.get("/hackathons/:hackathonId/selectedCriteria", getSelectedCriteria); // Get selected criteria
 
 // Shortlisting Students
-router.put("/hackathons/:hackathonId/shortlist", shortlistStudents);
+router.put("/hackathons/shortlist", shortlistStudents);
 router.get("/hackathons/:hackathonId/shortlisted", getShortlistedStudents);
 
 export default router;

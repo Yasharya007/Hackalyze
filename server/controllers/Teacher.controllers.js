@@ -156,32 +156,21 @@ export const getSelectedCriteria = async (req, res) => {
 // Shortlist students 
 export const shortlistStudents = async (req, res) => {
     try {
-        const { hackathonId } = req.params;
-        const { selectedStudents } = req.body; // Array of student IDs
-        if (!selectedStudents || selectedStudents.length === 0) {
-            return res.status(400).json({ message: "No students selected for shortlisting" });
-        }
-        // Find all submissions by selected students for this hackathon
-        const submissions = await Submission.find({
-            studentId: { $in: selectedStudents },
-            hackathonId: hackathonId
-        });
-        
-        if (submissions.length === 0) {
-            return res.status(404).json({ message: "No submissions found for the selected students" });
+        const { submissionIds } = req.body; // Array of submission IDs
+
+        if (!submissionIds || submissionIds.length === 0) {
+            return res.status(400).json({ message: "No submissions selected for shortlisting" });
         }
 
-        let updatedSubmissions = [];
-
-        for (const submission of submissions) {
-            submission.status = "Shortlisted";
-            await submission.save();
-            updatedSubmissions.push(submission._id);
-        }
+        // Update the status of the selected submissions
+        const updatedSubmissions = await Submission.updateMany(
+            { _id: { $in: submissionIds } },
+            { $set: { status: "Shortlisted" } }
+        );
 
         return res.status(200).json({
-            message: "Students successfully shortlisted",
-            updatedSubmissions
+            message: "Submissions successfully shortlisted",
+            modifiedCount: updatedSubmissions.modifiedCount
         });
 
     } catch (error) {
@@ -189,6 +178,7 @@ export const shortlistStudents = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
 
 
 // Get all shortlisted students

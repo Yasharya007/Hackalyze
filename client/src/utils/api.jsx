@@ -414,9 +414,9 @@ export const getHackathonSubmissionsAPI = async (hackathonId) => {
 };
 
 // Shortlist students based on a minimum score threshold
-export const shortlistStudents = async (teacherId, hackathonId, threshold) => {
+export const shortlistStudents = async (submissionIds) => {
     try {
-        const response = await API.put(`/api/teacher/${teacherId}/hackathons/${hackathonId}/shortlist`, { threshold });
+        const response = await API.put(`/api/teacher/hackathons/shortlist`,{submissionIds});
         return response.data;
     } catch (error) {
         console.error("Error shortlisting students:", error);
