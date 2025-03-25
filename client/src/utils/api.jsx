@@ -154,8 +154,7 @@ export const TeacherRegisterAPI = async (formData) => {
       toast.dismiss(toastId);
     }
   };
-
-  export const getRecentHackathons = async () => {
+  export const getRecentHackathons = async (sortConfig = { field: 'title', direction: 'asc' }) => {
     try {
       const response = await API.get("/api/admin/hackathons");
       const hackathons = response.data.hackathons || [];
@@ -164,7 +163,7 @@ export const TeacherRegisterAPI = async (formData) => {
       const currentDate = new Date();
       
       // Format hackathons with all required fields for the UI
-      return hackathons.map(hackathon => {
+      const formattedHackathons = hackathons.map(hackathon => {
         const startDate = new Date(hackathon.startDate);
         const endDate = new Date(hackathon.endDate);
         
@@ -191,18 +190,51 @@ export const TeacherRegisterAPI = async (formData) => {
           date: `${new Date(hackathon.startDate).toLocaleDateString()} - ${new Date(hackathon.endDate).toLocaleDateString()}`
         };
       });
+
+      // Sort the hackathons based on the sortConfig
+      return formattedHackathons.sort((a, b) => {
+        const field = sortConfig.field;
+        
+        // Handle different field types
+        let valueA, valueB;
+        
+        if (field === 'startDate' || field === 'endDate') {
+          // Parse dates for comparison
+          valueA = new Date(a[field]).getTime();
+          valueB = new Date(b[field]).getTime();
+        } else if (field === 'title' || field === 'name') {
+          // Case-insensitive string comparison
+          valueA = (a[field] || '').toLowerCase();
+          valueB = (b[field] || '').toLowerCase();
+        } else {
+          // Default comparison
+          valueA = a[field];
+          valueB = b[field];
+        }
+        
+        // Sort based on direction
+        if (sortConfig.direction === 'asc') {
+          return valueA > valueB ? 1 : -1;
+        } else {
+          return valueA < valueB ? 1 : -1;
+        }
+      });
     } catch (error) {
       console.error("Error fetching recent hackathons:", error);
       throw error.response?.data || "Failed to load recent hackathons";
     }
   };
 
-  export const getTeacherAssignments = async () => {
+  export const getTeacherAssignments = async (formatForDashboard = true) => {
     try {
       // Get teacher assignments with the enhanced data from backend
       const response = await API.get("/api/admin/hackathon/teachers");
       const teacherAssignments = response.data || [];
       
+      // If raw data is requested, return it directly
+      if (!formatForDashboard) {
+        return teacherAssignments;
+      }  
       // Format the assignments for display in the dashboard
       const formattedAssignments = [];
       
@@ -239,7 +271,8 @@ export const TeacherRegisterAPI = async (formData) => {
       return formattedAssignments;
     } catch (error) {
       console.error("Error fetching teacher assignments:", error);
-      throw error.response?.data || "Failed to load teacher assignments";
+      toast.error(error.response?.data?.message || "Failed to fetch teachers");
+      return formatForDashboard ? [] : [];
     }
   };
 
@@ -319,7 +352,7 @@ export const TeacherRegisterAPI = async (formData) => {
       toast.dismiss(toastId);
     }
   };
-  
+
   // Assign teachers to a hackathon
   export const assignTeacherToHackathonAPI = async (hackathonId, teacherIds) => {
     const toastId = toast.loading("Assigning teachers...");
@@ -376,8 +409,7 @@ export const TeacherRegisterAPI = async (formData) => {
       toast.dismiss(toastId);
     }
   };
-
-  /*teacher landing page starts*/
+/*teacher landing page starts*/
 
   // Get hackathon Particular Hackathon details
   export const getHackathonDetailsAPI = async (hackathonId) => {

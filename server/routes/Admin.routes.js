@@ -14,7 +14,6 @@ import { getHackathonById } from "../controllers/Admin.controllers.js";
 import { notifyStudents } from "../controllers/Admin.controllers.js";
 import { publishFinalResults } from "../controllers/Admin.controllers.js";
 import { removeAssignedTeacher } from "../controllers/Admin.controllers.js";
-
 const router = express.Router();
 
 // Hackathon Management

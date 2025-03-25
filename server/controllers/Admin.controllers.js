@@ -4,7 +4,6 @@ import { Student } from "../models/student.model.js";
 import { Submission } from "../models/Submission.models.js";
 import { Notification } from "../models/Notification.models.js";
 import mongoose from "mongoose";
-import {Admin} from "../models/Admin.models.js";
 
 // Hackathon Management
 export const createHackathon = async (req, res) => {
@@ -65,18 +64,6 @@ export const createHackathon = async (req, res) => {
         
         const hackathon = await Hackathon.create(hackathonData);
 
-         // Notify students about the new hackathon
-        const students = await Student.find();
-        await Promise.all(
-            students.map(student =>
-                Notification.create({
-                    studentId: student._id,
-                    message: `A new hackathon "${title}" is upcoming. Start preparing!`,
-                    typeofmessage: "Hackathon Announcement"
-                })
-            )
-        );
-
        return res.status(201).json({
         message: 'Hackathon Created Successfully',
         hackathon,
@@ -90,7 +77,6 @@ export const createHackathon = async (req, res) => {
         });
     }
 };
-
 export const getAllHackathons = async (req, res) => {
     try {
         const hackathons = await Hackathon.find()
@@ -169,25 +155,41 @@ export const deleteHackathon = async (req, res) => {
 // Teacher Assignments
 export const assignTeacher = async (req, res) => {
     try {
-        const { hackathonId, teacherId } = req.body;
-        await Hackathon.findByIdAndUpdate(hackathonId, { $push: { teachersAssigned: teacherId } });
+        const { hackathonId, teacherIds } = req.body;
+        
+        // First, find the current hackathon
+        const hackathon = await Hackathon.findById(hackathonId);
+        if (!hackathon) {
+            return res.status(404).json({ 
+                message: 'Hackathon not found',
+                success: false 
+            });
+        }
+        
+        // Update the entire teachersAssigned array with the new list
+        // This allows both adding and removing teachers
+        await Hackathon.findByIdAndUpdate(hackathonId, 
+            { teachersAssigned: teacherIds },
+            { new: true }
+        );
 
-         //Notify the teacher
-         const notification = await Notification.create({
-            teacherId,
-            message: "You have been assigned to a hackathon.",
-            typeofmessage: "Hackathon Update"
-        });
+        //  Notify the teacher
+        //  const notification = await Notification.create({
+        //     teacherId,
+        //     message: "You have been assigned to a hackathon.",
+        //     typeofmessage: "Hackathon Update"
+        // });
 
         res.json({
-             message: 'Teacher assigned successfully',
+             message: 'Teachers updated successfully',
             //  notification,
             success: true
          });
     } catch (error) {
+        console.error("Server error in assignTeacher:", error);
         res.status(500).json({ 
-            message: 'Error in assigning teacher',
-             error,
+            message: 'Error in updating teachers',
+             error: error.message,
              success: false
             });
     }
@@ -247,7 +249,6 @@ export const getAssignedTeachers = async (req, res) => {
     }
 };
 
-
 // Student Management
 export const getRegisteredStudents = async (req, res) => {
     try {
@@ -262,41 +263,45 @@ export const getRegisteredStudents = async (req, res) => {
     }
 };
 
-// export const acceptFormat = async (req, res) => {
-//     try {
-//         const { acceptedFormat } = req.body;
-
-//         if (!acceptedFormat || !Array.isArray(acceptedFormat)) {
-//             return res.status(400).json({ 
-//                 message: "Accepted format must be an array of valid media types", 
-//                 success: false 
-//             });
-//         }
-
-//         // Update media settings (only one document assumed)
-//         const updatedMedia = await Media.findOneAndUpdate(
-//             {}, 
-//             { mediaAccepted: true, acceptedFormat: acceptedFormat },
-//             { new: true, upsert: true } // Create if not exists
-//         );
-
-//         res.json({ 
-//             message: "Media format updated successfully", 
-//             success: true, 
-//             media: updatedMedia
-//         });
-
-//     } catch (error) {
-//         res.status(500).json({ 
-//             message: "Error updating media format", 
-//             error: error.message, 
-//             success: false 
-//         });
-//     }
-// };
-
-
-
+// Media Types Management
+export const acceptFormat = async (req, res) => {
+    try {
+        const { hackathonId, mediaTypes } = req.body;
+        
+        // Find the hackathon
+        const hackathon = await Hackathon.findById(hackathonId);
+        if (!hackathon) {
+            return res.status(404).json({ 
+                message: 'Hackathon not found',
+                success: false 
+            });
+        }
+        
+        console.log("Updating hackathon media types:", { hackathonId, mediaTypes });
+        
+        // Update the media types using the correct field name: allowedFormats
+        const updatedHackathon = await Hackathon.findByIdAndUpdate(
+            hackathonId, 
+            { allowedFormats: mediaTypes },
+            { new: true }
+        );
+        
+        console.log("Updated hackathon:", updatedHackathon);
+        
+        res.json({ 
+            message: 'Media types updated successfully',
+            success: true,
+            hackathon: updatedHackathon
+         });
+    } catch (error) {
+        console.error("Server error in acceptFormat:", error);
+        res.status(500).json({ 
+            message: 'Error in updating media types', 
+            error: error.message,
+            success: false
+        });
+    }
+};
 
 // Submission Review
 export const getAllSubmissions = async (req, res) => {
@@ -334,33 +339,20 @@ export const getSubmissionById = async (req, res) => {
 
 export const shortlistSubmission = async (req, res) => {
     try {
-        const submission = await Submission.findById(req.params.id);
-        if (!submission) {
-            return res.status(404).json({
-                message: "Submission not found",
-                success: false
-            });
-        }
-
-        submission.status = "Shortlisted";  
-        await submission.save();
-
-        res.json({
-            message: "Submission shortlisted successfully",
-            submission,
+        const submission = await Submission.findByIdAndUpdate(req.params.id, { shortlisted: true }, { new: true });
+        res.json({ 
+            message: 'Submission shortlisted successfully',
+             submission,
             success: true
-        });
-
+         });
     } catch (error) {
-        res.status(500).json({
-            message: "Error shortlisting submission",
-            error,
-            success: false
-        });
+        res.status(500).json({ 
+            message: 'Error shortlisting submission',
+             error,
+             success: false
+             });
     }
 };
-
-
 export const notifyStudents = async (req, res) => {
     try {
         const { hackathonId, message } = req.body;
@@ -441,80 +433,5 @@ export const removeAssignedTeacher = async (req, res) => {
       error,
     success: false
       });
-    }
-};
-
-// Admin updates accepted media formats for a hackathon
-export const acceptFormat = async (req, res) => {
-    try {
-         const { hackathonId, adminId, allowedFormats } = req.body; // Destructure once
-
-        // Validate required fields
-        if (!hackathonId) {
-            return res.status(400).json({ 
-                message: "Hackathon ID is required", 
-                success: false 
-            });
-        }
-
-        if (!adminId) {
-            return res.status(403).json({ 
-                message: "Admin authentication required", 
-                success: false 
-            });
-        }
-
-        if (!allowedFormats || !Array.isArray(allowedFormats) || allowedFormats.length === 0) {
-            return res.status(400).json({
-                message: "Allowed formats must be a non-empty array",
-                success: false
-            });
-        }
-
-        // Check if Hackathon exists
-        const hackathon = await Hackathon.findById(hackathonId);
-        if (!hackathon) {
-            return res.status(404).json({ 
-                message: "Hackathon not found", 
-                success: false 
-            });
-        }
-
-        // Validate Admin
-        const admin = await Admin.findById(adminId);
-        if (!admin) {
-            return res.status(403).json({
-                message: "Unauthorized: Admin not found",
-                success: false
-            });
-        }
-
-        // Validate allowed formats
-        const validFormats = ["Audio", "Video", "File", "Image"];
-        const isValid = allowedFormats.every(format => validFormats.includes(format));
-        if (!isValid) {
-            return res.status(400).json({
-                message: "Invalid media format(s) provided",
-                success: false
-            });
-        }
-
-        // Update allowed media formats for the hackathon
-        hackathon.allowedFormats = allowedFormats;
-        await hackathon.save();
-
-        res.json({
-            message: "Accepted media formats updated successfully",
-            success: true,
-            updatedHackathon: hackathon
-        });
-
-    } catch (error) {
-        console.error("Error updating media formats:", error);
-        res.status(500).json({
-            message: "Error updating accepted media formats",
-            error: error.message,
-            success: false
-        });
     }
 };
