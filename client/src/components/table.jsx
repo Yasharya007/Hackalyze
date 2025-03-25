@@ -1,7 +1,10 @@
 import { useState, useEffect } from "react";
 import Controls from "./Controls";  // Import the Controls component
 import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { getHackathonSubmissionsAPI } from "../utils/api.jsx";
 function Table() {
+  const hackathon = useSelector((state) => state.hackathon.selectedHackathon);
   const navigate=useNavigate()
   const [submissions, setSubmissions] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -10,30 +13,40 @@ function Table() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const data = Array.from({ length: 200 }, (_, index) => ({
-        id: `SUB${index + 1}`,
-        studentName: `Student ${index + 1}`,
-        file: `Submission ${index + 1}`,
-        aiScore: Math.floor(Math.random() * 100),
-        manualScore: Math.floor(Math.random() * 100),
-        reviewed: false,
-        shortlisted: false, // Randomly mark some as shortlisted
-      }));
-      setSubmissions(data);
+      getHackathonSubmissionsAPI(hackathon._id)
+      .then((res)=>{
+        console.log(res);
+        setSubmissions(res)
+      }).catch(()=>{})
+      // const data = Array.from({ length: 200 }, (_, index) => ({
+      //   id: `SUB${index + 1}`,
+      //   studentName: `Student ${index + 1}`,
+      //   file: `Submission ${index + 1}`,
+      //   aiScore: Math.floor(Math.random() * 100),
+      //   manualScore: Math.floor(Math.random() * 100),
+      //   reviewed: false,
+      //   shortlisted: false, // Randomly mark some as shortlisted
+      // }));
+
+      // setSubmissions(data);
     };
 
     fetchData();
   }, []);
+ 
 
-  const indexOfLastSubmission = currentPage * submissionsPerPage;
-  const indexOfFirstSubmission = indexOfLastSubmission - submissionsPerPage;
+    const indexOfLastSubmission = currentPage * submissionsPerPage;
+    const indexOfFirstSubmission = indexOfLastSubmission - submissionsPerPage;
+    
+    // // Apply filtering if "Show Only Shortlisted" is active
+    const filteredSubmissions = showShortlistedOnly 
+      ? submissions.filter(sub => sub.status === "Shortlisted") 
+      : submissions;
   
-  // // Apply filtering if "Show Only Shortlisted" is active
-  const filteredSubmissions = showShortlistedOnly 
-    ? submissions.filter(sub => sub.shortlisted) 
-    : submissions;
+    const currentSubmissions = filteredSubmissions.slice(indexOfFirstSubmission, indexOfLastSubmission);
+ 
 
-  const currentSubmissions = filteredSubmissions.slice(indexOfFirstSubmission, indexOfLastSubmission);
+ 
 
   // Toggle Filter (Show Only Shortlisted)
   const handleFilter = () => {
@@ -43,13 +56,13 @@ function Table() {
 
   
 
-  const handleCheckboxChange = (id, field) => {
-    setSubmissions(prevSubmissions => 
-      prevSubmissions.map(submission => 
-        submission.id === id ? { ...submission, [field]: !submission[field] } : submission
-      )
-    );
-  };  
+  // const handleCheckboxChange = (id, field) => {
+  //   setSubmissions(prevSubmissions => 
+  //     prevSubmissions.map(submission => 
+  //       submission.id === id ? { ...submission, [field]: !submission[field] } : submission
+  //     )
+  //   );
+  // };  
 
   const nextPage = () => {
     if (currentPage < Math.ceil(filteredSubmissions.length / submissionsPerPage)) {
@@ -93,35 +106,23 @@ function Table() {
               <th className="p-2 border border-gray-300">File</th>
               <th className="p-2 border border-gray-300 text-center">AI Score</th>
               <th className="p-2 border border-gray-300 text-center">Manual Score</th>
-              <th className="p-2 border border-gray-300 text-center">Reviewed</th>
-              <th className="p-2 border border-gray-300 text-center">Shortlisted</th>
+              <th className="p-15 border border-gray-300 text-center">Description</th>
+              <th className="p-2 border border-gray-300 text-center">Status</th>
             </tr>
           </thead>
           <tbody>
             {currentSubmissions.map((submission, index) => (
               <tr key={submission.id} className={`border border-gray-200 ${index % 2 === 0 ? "bg-gray-50" : "bg-white"}`}>
-                <td className="p-2 border border-gray-300 text-center">{submission.id}</td>
-                <td className="p-2 border border-gray-300">{submission.studentName}</td>
+                <td className="p-2 border border-gray-300 text-center">{index+1}</td>
+                <td className="p-2 border border-gray-300 hover:text-blue-900 cursor-pointer" onClick={()=>{navigate("/teacher/individualSubmission")}}>{submission.studentId.name}</td>
                 <td className="p-2 border border-gray-300">
-                  <a href="#" className="text-indigo-600 hover:underline">{submission.file}</a>
+                  <a href={submission.files[0].fileUrl} className="text-indigo-600 hover:underline">file {index+1}</a>
                 </td>
-                <td className="p-2 border border-gray-300 text-center">{submission.aiScore}</td>
-                <td className="p-2 border border-gray-300 text-center">{submission.manualScore}</td>
-                <td className="p-2 border border-gray-300 text-center">
-  <input
-    type="checkbox"
-    checked={submission.reviewed}
-    onChange={() => handleCheckboxChange(submission.id, "reviewed")}
-    className="cursor-pointer"
-  />
-</td>
+                <td className="p-2 border border-gray-300 text-center">{submission.totalAIScore}</td>
+                <td className="p-2 border border-gray-300 text-center">{submission.totalScore}</td>
+                <td className="p-2 border border-gray-300 text-center text-black">{submission.description}</td>
 <td className="p-2 border border-gray-300 text-center">
-  <input
-    type="checkbox"
-    checked={submission.shortlisted}
-    onChange={() => handleCheckboxChange(submission.id, "shortlisted")}
-    className="cursor-pointer accent-green-600"
-  />
+  {submission.status}
 </td>
 
               </tr>

@@ -1,15 +1,17 @@
 import express from "express";
-import { moveToReviewFolder, getReviewSubmissions, removeFromReviewFolder } from "../controllers/reviewController.js";
+import { markSubmissionAsReviewed, getReviewedSubmissions, markSubmissionAsPending } from "../controllers/reviewController.js";
 
 const router = express.Router();
 
 // Move a submission to review folder
-router.put("/:submissionId/review", moveToReviewFolder);
+router.put("/:submissionId/review", markSubmissionAsReviewed);
 
 // Get all submissions in the review folder
-router.get("/review-folder", getReviewSubmissions);
+router.get("/review-folder", getReviewedSubmissions);
 
 // Remove submission from review folder
-router.put("/:submissionId/remove-review", removeFromReviewFolder);
+router.put("/:submissionId/remove-review", markSubmissionAsPending);
+
+
 
 export default router;

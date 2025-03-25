@@ -3,6 +3,7 @@ import storage from "redux-persist/lib/storage"; // Uses localStorage for persis
 import { persistStore, persistReducer } from "redux-persist";
 import hackathonReducer from "./slices/hackathonSlice.js";
 import studentReducer from "./slices/idSlice.js";
+import submissionReducer from "./slices/submissionSlice.js";
 
 // Persist configuration
 const hackathonPersistConfig = {
@@ -15,14 +16,20 @@ const studentPersistConfig = {
   storage
 };
 
+const submissionPersistConfig = {
+  key: "submission",
+  storage
+};
+
 // Wrap reducers with persistReducer
 const persistedHackathonReducer = persistReducer(hackathonPersistConfig, hackathonReducer);
 const persistedStudentReducer = persistReducer(studentPersistConfig, studentReducer);
-
+const persistedsubmissionReducer = persistReducer(submissionPersistConfig,submissionReducer);
 const store = configureStore({
   reducer: {
     hackathon: persistedHackathonReducer,
-    student: persistedStudentReducer
+    student: persistedStudentReducer,
+    submission:persistedsubmissionReducer
   }
 });
 
