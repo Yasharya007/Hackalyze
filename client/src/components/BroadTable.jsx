@@ -124,7 +124,15 @@ const updateSubmission= async () => {
       .catch(() => {});
 };
 
-
+const sortByAIScore = () => {
+  const sortedSubmissions = [...submissions].sort((a, b) => b.totalAIScore - a.totalAIScore);
+  setSubmissions(sortedSubmissions);
+};
+// totalScore
+const sortBytotalScore = () => {
+  const sortedSubmissions = [...submissions].sort((a, b) => b.totalScore - a.totalScore);
+  setSubmissions(sortedSubmissions);
+};
   const nextPage = () => {
     if (currentPage < Math.ceil(filteredSubmissions.length / submissionsPerPage)) {
       setCurrentPage(currentPage + 1);
@@ -143,6 +151,7 @@ const updateSubmission= async () => {
       <h2 className="text-xl font-bold text-gray-900 text-center mb-4">Student Submissions</h2>
       
       {/* <Controls/> */}
+      <div className="w-full flex justify-between">
       <div className="flex gap-2 mb-2">
         <button
           onClick={() => handleShortlistFilter()}
@@ -150,12 +159,20 @@ const updateSubmission= async () => {
         >
           Show Only Shortlisted
         </button>
-        {/* <button
-          onClick={handleSelectSubmissions}
+        <button
+          onClick={() => sortByAIScore()}
           className="px-3 py-1 bg-gray-900 text-white rounded-md hover:bg-gray-700"
         >
-          Select Submissions
-        </button> */}
+          Sort by AI
+        </button>
+        <button
+          onClick={() => sortBytotalScore()}
+          className="px-3 py-1 bg-gray-900 text-white rounded-md hover:bg-gray-700"
+        >
+          Sort by Manual score
+        </button>
+        </div>
+        <div className="flex gap-2 mb-2">
         <div className="flex items-center gap-3">
       <input
         type="number"
@@ -179,6 +196,8 @@ const updateSubmission= async () => {
           Finalise Result
         </button>
         </div>
+      </div>
+      
       {/* Table */}
       <div className="overflow-x-auto">
         <table className="w-full border-collapse border border-gray-300 text-gray-800 text-sm">
