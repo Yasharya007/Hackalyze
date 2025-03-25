@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { HackathonByTeacherAPI, logoutAPI } from "../utils/api.jsx";
 import { setHackathon } from "../slices/hackathonSlice.js";
-import { FaChartBar, FaLaptopCode, FaCogs, FaClipboardList, FaTrophy, FaUserCog, FaChevronRight, FaRegClock, FaCalendarAlt, FaUsers } from "react-icons/fa";
+import { FaChartBar, FaLaptopCode, FaCogs, FaClipboardList, FaTrophy, FaUserCog, FaChevronRight, FaRegClock, FaCalendarAlt, FaUsers, FaFilter, FaSort } from "react-icons/fa";
 import toast from "react-hot-toast";
 
 const TeacherHackathonsPage = () => {
@@ -11,7 +11,18 @@ const TeacherHackathonsPage = () => {
   const navigate = useNavigate();
   const teacherId = useSelector((state) => state.student.studentId);
   const [assignedHackathons, setAssignedHackathons] = useState([]);
+  const [displayedHackathons, setDisplayedHackathons] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [sortConfig, setSortConfig] = useState({
+    field: 'title',
+    direction: 'asc'
+  });
+  const [filterConfig, setFilterConfig] = useState({
+    upcoming: true,
+    active: true,
+    completed: true
+  });
+  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
 
   // Format date function
   const formatDate = (isoString) => {
@@ -30,46 +41,122 @@ const TeacherHackathonsPage = () => {
     const endDate = new Date(hackathon.endDate);
 
     if (now < startDate) {
-      return { label: "Upcoming", className: "bg-blue-100 text-blue-700" };
+      return { label: "Upcoming", className: "bg-blue-100 text-blue-700", type: "upcoming" };
     } else if (now > endDate) {
-      return { label: "Completed", className: "bg-gray-100 text-gray-700" };
+      return { label: "Completed", className: "bg-gray-100 text-gray-700", type: "completed" };
     } else {
-      return { label: "Active", className: "bg-green-100 text-green-700" };
+      return { label: "Active", className: "bg-green-100 text-green-700", type: "active" };
     }
-  };
-
-  const getStatusClass = (hackathon) => {
-    const status = getHackathonStatus(hackathon);
-    return status.className;
   };
 
   // Fetch hackathons assigned to this teacher
   useEffect(() => {
     setIsLoading(true);
-    HackathonByTeacherAPI(teacherId)
-      .then((res) => {
-        console.log("Teacher's assigned hackathons:", res);
-        setAssignedHackathons(res);
+    const fetchHackathons = async () => {
+      try {
+        const data = await HackathonByTeacherAPI(teacherId);
+        if (data && Array.isArray(data)) {
+          setAssignedHackathons(data);
+          applyFiltersAndSort(data);
+        } else {
+          toast.error("Failed to load hackathons");
+        }
+      } catch (error) {
+        console.error("Error fetching hackathons:", error);
+        toast.error("An error occurred while fetching hackathons");
+      } finally {
         setIsLoading(false);
-      })
-      .catch((err) => {
-        console.error("Error fetching teacher's hackathons:", err);
-        toast.error("Failed to load hackathons");
-        setIsLoading(false);
-      });
+      }
+    };
+
+    fetchHackathons();
   }, [teacherId]);
 
-  // Handle click to review submissions
+  // Apply both filters and sorting
+  const applyFiltersAndSort = (hackathons = assignedHackathons) => {
+    let filtered = hackathons.filter(hackathon => {
+      const status = getHackathonStatus(hackathon);
+      if (status.type === 'upcoming' && !filterConfig.upcoming) return false;
+      if (status.type === 'active' && !filterConfig.active) return false;
+      if (status.type === 'completed' && !filterConfig.completed) return false;
+      return true;
+    });
+
+    const sorted = sortHackathons(filtered);
+    setDisplayedHackathons(sorted);
+  };
+
+  // Handle review submissions button click
   const handleReviewSubmissions = (hackathon) => {
     dispatch(setHackathon(hackathon));
     navigate("/teacher/hackathon");
   };
 
-  // Handle click to view details
-  const handleViewDetails = (hackathon) => {
-    dispatch(setHackathon(hackathon));
-    navigate(`/teacher/hackathon/${hackathon._id}/details`);
+  // Sorting logic
+  const sortHackathons = (hackathons) => {
+    const sorted = [...hackathons];
+    sorted.sort((a, b) => {
+      if (sortConfig.field === 'title') {
+        return sortConfig.direction === 'asc' 
+          ? a.title.localeCompare(b.title)
+          : b.title.localeCompare(a.title);
+      } else if (sortConfig.field === 'startDate') {
+        return sortConfig.direction === 'asc'
+          ? new Date(a.startDate) - new Date(b.startDate)
+          : new Date(b.startDate) - new Date(a.startDate);
+      } else if (sortConfig.field === 'endDate') {
+        return sortConfig.direction === 'asc'
+          ? new Date(a.endDate) - new Date(b.endDate)
+          : new Date(b.endDate) - new Date(a.endDate);
+      } else if (sortConfig.field === 'status') {
+        const statusOrder = { active: 0, upcoming: 1, completed: 2 };
+        const statusA = getHackathonStatus(a).type;
+        const statusB = getHackathonStatus(b).type;
+        return sortConfig.direction === 'asc'
+          ? statusOrder[statusA] - statusOrder[statusB]
+          : statusOrder[statusB] - statusOrder[statusA];
+      }
+      return 0;
+    });
+    return sorted;
   };
+
+  // Handle sort button click
+  const handleSort = (field) => {
+    setSortConfig(prevConfig => {
+      const newDirection = 
+        prevConfig.field === field && prevConfig.direction === 'asc' 
+          ? 'desc' 
+          : 'asc';
+      
+      const newConfig = { field, direction: newDirection };
+      
+      // Re-sort with new config
+      setDisplayedHackathons(sortHackathons(displayedHackathons));
+      
+      return newConfig;
+    });
+  };
+
+  // Handle filter checkbox change
+  const handleFilterChange = (filterType) => {
+    setFilterConfig(prev => {
+      const newConfig = {
+        ...prev,
+        [filterType]: !prev[filterType]
+      };
+      
+      // Apply updated filters
+      applyFiltersAndSort();
+      
+      return newConfig;
+    });
+  };
+
+  // Effect to apply filters and sorting when configs change
+  useEffect(() => {
+    applyFiltersAndSort();
+  }, [sortConfig, filterConfig]);
 
   return (
     <div className="flex w-full min-h-screen bg-gray-100">
@@ -157,72 +244,168 @@ const TeacherHackathonsPage = () => {
 
       {/* Main Content */}
       <main className="flex-1 p-6">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Assigned Hackathons</h1>
+        <div className="bg-white p-6 rounded-lg shadow-md mb-6">
+          <h1 className="text-2xl font-bold mb-2">My Assigned Hackathons</h1>
           <p className="text-gray-600">View and manage hackathons assigned to you</p>
         </div>
 
-        {/* Filter & Sort Controls */}
-        <div className="flex justify-end mb-6 gap-2">
-          <button className="px-4 py-2 bg-white rounded shadow hover:bg-gray-50">
-            Filter
-          </button>
-          <button className="px-4 py-2 bg-white rounded shadow hover:bg-gray-50">
-            Sort
-          </button>
+        {/* Filter and Sort Controls */}
+        <div className="bg-white p-4 rounded-lg shadow-md mb-6">
+          <div className="flex flex-wrap items-center justify-between">
+            {/* Filter */}
+            <div className="relative mb-2 md:mb-0">
+              <button 
+                onClick={() => setShowFilterDropdown(!showFilterDropdown)}
+                className="flex items-center px-4 py-2 bg-gray-100 rounded-md hover:bg-gray-200"
+              >
+                <FaFilter className="mr-2" />
+                <span>Filter</span>
+              </button>
+              
+              {showFilterDropdown && (
+                <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-md shadow-md z-10 w-48 p-2">
+                  <div className="p-2 border-b">
+                    <h3 className="font-medium text-sm">Status</h3>
+                  </div>
+                  <div className="p-2 space-y-2">
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        checked={filterConfig.active} 
+                        onChange={() => handleFilterChange('active')}
+                        className="rounded text-black focus:ring-black"
+                      />
+                      <span className="flex items-center">
+                        <span className="inline-block w-2 h-2 rounded-full bg-green-500 mr-2"></span>
+                        Active
+                      </span>
+                    </label>
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        checked={filterConfig.upcoming} 
+                        onChange={() => handleFilterChange('upcoming')}
+                        className="rounded text-black focus:ring-black"
+                      />
+                      <span className="flex items-center">
+                        <span className="inline-block w-2 h-2 rounded-full bg-blue-500 mr-2"></span>
+                        Upcoming
+                      </span>
+                    </label>
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        checked={filterConfig.completed} 
+                        onChange={() => handleFilterChange('completed')}
+                        className="rounded text-black focus:ring-black"
+                      />
+                      <span className="flex items-center">
+                        <span className="inline-block w-2 h-2 rounded-full bg-gray-500 mr-2"></span>
+                        Completed
+                      </span>
+                    </label>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Sort */}
+            <div className="flex items-center space-x-2">
+              <span className="text-gray-700 mr-2">Sort by:</span>
+              <button 
+                onClick={() => handleSort('title')}
+                className={`px-3 py-1 rounded text-sm ${sortConfig.field === 'title' ? 'bg-black text-white' : 'bg-gray-100'}`}
+              >
+                Name {sortConfig.field === 'title' && (
+                  sortConfig.direction === 'asc' ? '↑' : '↓'
+                )}
+              </button>
+              <button 
+                onClick={() => handleSort('startDate')}
+                className={`px-3 py-1 rounded text-sm ${sortConfig.field === 'startDate' ? 'bg-black text-white' : 'bg-gray-100'}`}
+              >
+                Start Date {sortConfig.field === 'startDate' && (
+                  sortConfig.direction === 'asc' ? '↑' : '↓'
+                )}
+              </button>
+              <button 
+                onClick={() => handleSort('status')}
+                className={`px-3 py-1 rounded text-sm ${sortConfig.field === 'status' ? 'bg-black text-white' : 'bg-gray-100'}`}
+              >
+                Status {sortConfig.field === 'status' && (
+                  sortConfig.direction === 'asc' ? '↑' : '↓'
+                )}
+              </button>
+            </div>
+          </div>
         </div>
 
+        {/* Hackathon Cards */}
         {isLoading ? (
           <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-black"></div>
           </div>
-        ) : assignedHackathons.length === 0 ? (
-          <div className="bg-white rounded-lg shadow p-6 text-center">
-            <h3 className="text-xl font-semibold mb-2">No Hackathons Assigned</h3>
-            <p className="text-gray-600">You haven't been assigned to any hackathons yet.</p>
+        ) : displayedHackathons.length === 0 ? (
+          <div className="bg-white rounded-lg shadow-md p-6 text-center">
+            <p className="text-lg text-gray-500">No hackathons found based on current filters</p>
+            <button 
+              onClick={() => {
+                setFilterConfig({ upcoming: true, active: true, completed: true });
+              }}
+              className="mt-4 px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800"
+            >
+              Reset Filters
+            </button>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {assignedHackathons.map((hackathon) => {
+            {displayedHackathons.map((hackathon) => {
+              const status = getHackathonStatus(hackathon);
               return (
                 <div key={hackathon._id} className="bg-white rounded-lg shadow overflow-hidden">
                   {/* Hackathon Image */}
-                  <div className="h-48 bg-gray-200 relative">
+                  <div className="h-40 bg-gray-200 relative">
                     {hackathon.image ? (
-                      <img 
-                        src={hackathon.image} 
-                        alt={hackathon.title} 
-                        className="w-full h-full object-cover"
-                      />
+                      <img src={hackathon.image} alt={hackathon.title} className="w-full h-full object-cover" />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <span className="text-3xl text-gray-400">🏆</span>
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-r from-blue-500 to-purple-600">
+                        <h3 className="text-xl font-bold text-white">
+                          {hackathon.title.substring(0, 30)}
+                          {hackathon.title.length > 30 ? "..." : ""}
+                        </h3>
                       </div>
                     )}
-                    {/* Status Badge */}
+                    {/* Status Badge - now absolute positioned in the top right */}
                     <span className={`absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-semibold ${status.className}`}>
                       {status.label}
                     </span>
                   </div>
 
-                  {/* Content */}
-                  <div className="p-5">
-                    <h3 className="text-xl font-bold mb-2">{hackathon.title}</h3>
-                    <p className="text-gray-600 mb-4 line-clamp-2">{hackathon.description}</p>
+                  {/* Hackathon Details */}
+                  <div className="p-4">
+                    <div className="flex items-center mb-2">
+                      <h3 className="text-lg font-bold mr-2">
+                        {hackathon.title.substring(0, 30)}
+                        {hackathon.title.length > 30 ? "..." : ""}
+                      </h3>
+                      {/* Status Icon next to hackathon name */}
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs ${status.className}`}>
+                        <FaRegClock className="mr-1" />
+                      </span>
+                    </div>
                     
-                    {/* Info Items */}
                     <div className="space-y-2 mb-4">
-                      <div className="flex items-center text-gray-700">
-                        <FaCalendarAlt className="mr-2" />
-                        <span>Deadline: {formatDate(hackathon.endDate)}</span>
+                      <div className="flex items-center text-sm text-gray-600">
+                        <FaCalendarAlt className="mr-2 text-gray-400" />
+                        <span>Start: {formatDate(hackathon.startDate)}</span>
                       </div>
-                      <div className="flex items-center text-gray-700">
-                        <FaUsers className="mr-2" />
-                        <span>Participants: {hackathon.participants?.length || 0}</span>
+                      <div className="flex items-center text-sm text-gray-600">
+                        <FaCalendarAlt className="mr-2 text-gray-400" />
+                        <span>End: {formatDate(hackathon.endDate)}</span>
                       </div>
-                      <div className="flex items-center text-gray-700">
-                        <FaClipboardList className="mr-2" />
-                        <span>Submissions: {hackathon.submissionCount || 0}</span>
+                      <div className="flex items-center text-sm text-gray-600">
+                        <FaUsers className="mr-2 text-gray-400" />
+                        <span>{hackathon.registeredStudents?.length || 0} Students</span>
                       </div>
                     </div>
 
