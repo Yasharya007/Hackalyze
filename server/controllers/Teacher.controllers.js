@@ -149,6 +149,24 @@ export const getSelectedCriteria = async (req, res) => {
     }
 };
 
+export const getAllParameters = async (req, res) => {
+    try {
+        const { hackathonId } = req.params;
+
+        // Find the hackathon and populate its parameters
+        const hackathon = await Hackathon.findById(hackathonId).populate("parameters");
+
+        if (!hackathon) {
+            return res.status(404).json({ message: "Hackathon not found" });
+        }
+
+        return res.status(200).json({ parameters: hackathon.parameters });
+    } catch (error) {
+        console.error("Error fetching parameters:", error);
+        return res.status(500).json({ message: "Internal server error" });
+    }
+};
+
 // Shortlist students 
 export const shortlistStudents = async (req, res) => {
     try {

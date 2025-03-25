@@ -3,7 +3,8 @@ import {
     addParameter, 
     deleteParameter, 
     saveSelectedCriteria, 
-    getSelectedCriteria, 
+    getSelectedCriteria,
+    getAllParameters,
     shortlistStudents, 
     updateSubmission,
     getShortlistedStudents
@@ -16,6 +17,7 @@ router.post("/hackathons/:hackathonId/parameters", addParameter); // Add paramet
 router.delete("/hackathons/:hackathonId/parameters/:parameterId", deleteParameter); // Delete a parameter
 router.put("/hackathons/:hackathonId/selectedCriteria", saveSelectedCriteria); // Update selected criteria
 router.get("/hackathons/:hackathonId/selectedCriteria", getSelectedCriteria); // Get selected criteria
+router.get("/hackathons/:hackathonId/getParameters", getAllParameters); // Get all parameters for a hackathon
 
 // Shortlisting Students
 router.put("/hackathons/shortlist", shortlistStudents);
