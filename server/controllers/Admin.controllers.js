@@ -72,7 +72,7 @@ export const createHackathon = async (req, res) => {
                 Notification.create({
                     studentId: student._id,
                     message: `A new hackathon "${title}" is upcoming. Start preparing!`,
-                    typeofmessage: "Hackathon Announcement"
+                    typeofmessage: "Announcement"
                 })
             )
         );
