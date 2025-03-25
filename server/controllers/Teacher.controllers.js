@@ -253,3 +253,38 @@ export const getSortedByPreference = async (req, res) => {
         res.status(500).json({ error: "Server error", message: error.message });
     }
 };
+
+export const updateSubmission = async (req, res) => {
+    try {
+        const { submissions } = req.body;
+
+        if (!Array.isArray(submissions) || submissions.length === 0) {
+            return res.status(400).json({ message: "Invalid input. Provide an array of submissions." });
+        }
+
+        // Prepare bulk update operations
+        const bulkOperations = submissions.map(sub => ({
+            updateOne: {
+                filter: { _id: sub.submissionId },
+                update: { $set: { status: sub.status } }
+            }
+        }));
+
+        // Execute bulkWrite to update multiple documents
+        const result = await Submission.bulkWrite(bulkOperations);
+
+        // Check if updates were applied
+        if (result.modifiedCount === 0) {
+            return res.status(404).json({ message: "No submissions were updated." });
+        }
+
+        return res.status(200).json({
+            message: "Submissions updated successfully",
+            modifiedCount: result.modifiedCount
+        });
+
+    } catch (error) {
+        console.error("Error updating submissions:", error);
+        return res.status(500).json({ message: "Internal server error" });
+    }
+};
