@@ -21,6 +21,7 @@ import StudentProfile from "./pages/StudentProfile.jsx";
 import EnrolledHackathons from "./pages/EnrolledHackathons.jsx";
 import StudentSettings from "./pages/StudentSettings.jsx";
 import TeacherSettings from "./pages/TeacherSettings.jsx";
+import TeacherSubmissionsPage from "./pages/TeacherSubmissionsPage.jsx";
 
 function App() {
   
@@ -46,6 +47,7 @@ function App() {
             <Route path="/student/enrolled-hackathons" element={<EnrolledHackathons/>}/>
             <Route path="/student/settings" element={<StudentSettings/>}/>
             <Route path="/teacher/settings" element={<TeacherSettings/>}/>
+            <Route path="/teacher/submissions" element={<TeacherSubmissionsPage/>}/>
             <Route path="/admin/dashboard" element={<AdminDashboard/>}/>
             <Route path="/main" element={<FrontPage/>}/>
             <Route path="/teacher/hackathon" element={<TeacherHackathonPage/>}/>

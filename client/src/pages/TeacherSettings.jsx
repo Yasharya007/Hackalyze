@@ -148,7 +148,7 @@ const TeacherSettings = () => {
                         </li>
                         <li>
                             <Link 
-                                to="/teacher/dashboard" 
+                                to="/teacher/submissions" 
                                 className="flex items-center p-2 rounded-md hover:bg-gray-100 text-gray-600"
                             >
                                 <FaClipboardList className="h-5 w-5 mr-3" />
