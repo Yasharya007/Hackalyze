@@ -1,47 +1,48 @@
 import React from "react";
-import { useDispatch,useSelector } from "react-redux";
-import { useNavigate,Link } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate, Link } from "react-router-dom";
 import { setHackathon } from "../slices/hackathonSlice.js";
 import { AllHackathonAPI } from "../utils/api.jsx";
-import { useState,useEffect } from "react";
+import { useState, useEffect } from "react";
 
 const StudentDashboard = () => {
     const dispatch = useDispatch();
-      const navigate = useNavigate();
-      const [hackathons, setHackathons] = useState([]);
-      const studentId = useSelector((state) => state.student.studentId);
-      console.log(studentId)
-      const formatDate = (isoString) => isoString.split("T")[0];
+    const navigate = useNavigate();
+    const [visible, setVisible] = useState(true);
+    const [hackathons, setHackathons] = useState([]);
+    const studentId = useSelector((state) => state.student.studentId);
+    console.log(studentId)
+    const formatDate = (isoString) => isoString.split("T")[0];
     const truncateText = (text, length) => {
         return text.length > length ? text.substring(0, length) + "..." : text;
     };
     useEffect(() => {
         const fetchHackathons = async () => {
-          AllHackathonAPI()
-          .then((res)=>{
-            // console.log(hackathons.length);
-            for(let y=0;y<res.length;y++){
-                console.log(res[y])
-                for(let x=0;x<res[y].registeredStudents.length;x++){
-                    console.log(res[y].registeredStudents[x])
-                    if(res[y].registeredStudents[x]===studentId){
-                      res[y].status="registered";
-                      console.log("found")
-                      break;
+            AllHackathonAPI()
+                .then((res) => {
+                    // console.log(hackathons.length);
+                    for (let y = 0; y < res.length; y++) {
+                        console.log(res[y])
+                        for (let x = 0; x < res[y].registeredStudents.length; x++) {
+                            console.log(res[y].registeredStudents[x])
+                            if (res[y].registeredStudents[x] === studentId) {
+                                res[y].status = "registered";
+                                console.log("found")
+                                break;
+                            }
+                        }
                     }
-                  }
-            }
-            setHackathons(res);
-            // console.log("hello");
-          }).catch(()=>{})
+                    setHackathons(res);
+                    // console.log("hello");
+                }).catch(() => { })
         };
-    
+
         fetchHackathons();
-      }, []);
-      const handleClick = (hackathon) => {
+    }, []);
+    const handleClick = (hackathon) => {
         dispatch(setHackathon(hackathon));
         navigate("/hackathon");
-      };
+    };
 
     // const hackathons = [
     //     {
@@ -81,15 +82,21 @@ const StudentDashboard = () => {
                 </nav>
                 <button className="mt-10 w-full bg-gray-200 p-2 rounded">Logout</button>
             </aside>
-            
+
             {/* Main Content */}
             <main className="flex-1 p-6">
                 {/* Notification */}
-                <div className="bg-white p-4 shadow-md flex justify-between items-center">
-                    <p className="text-gray-800 font-semibold">Submission deadline approaching</p>
-                    <p className="text-gray-500">The submission deadline for AI Innovation Challenge is in 5 days.</p>
-                    <button className="text-gray-400">Dismiss</button>
-                </div>
+                {visible && (
+                    <div className="bg-white p-4 shadow-md flex justify-between items-center">
+                        <div>
+                            <p className="text-gray-800 font-semibold">Submission deadline approaching</p>
+                            <p className="text-gray-500">The submission deadline for AI Innovation Challenge is in 5 days.</p>
+                        </div>
+                        <button className="text-gray-800" onClick={() => setVisible(false)}>
+                            Dismiss
+                        </button>
+                    </div>
+                )}
 
                 {/* Available Hackathons */}
                 <h2 className="text-2xl font-bold mt-6">Available Hackathons</h2>

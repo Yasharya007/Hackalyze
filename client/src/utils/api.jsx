@@ -319,3 +319,30 @@ export const TeacherRegisterAPI = async (formData) => {
       toast.dismiss(toastId);
     }
   };
+
+  //fetch and dismiss notifications
+  export const FetchNotificationsAPI = async (studentId) => {
+    try {
+        const response = await fetch(`/api/admin/notify-students`);
+        if (!response.ok) {
+            throw new Error("Failed to fetch notifications");
+        }
+        return await response.json();
+    } catch (error) {
+        console.error("Error fetching notifications:", error);
+        return [];
+    }
+};
+
+export const DismissNotificationAPI = async (notificationId) => {
+  try {
+      const response = await fetch(`/api/admin/notify-students/${notificationId}`, {
+          method: "DELETE",
+      });
+      if (!response.ok) {
+          throw new Error("Failed to dismiss notification");
+      }
+  } catch (error) {
+      console.error("Error dismissing notification:", error);
+  }
+};
