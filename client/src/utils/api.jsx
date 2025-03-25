@@ -424,6 +424,18 @@ export const shortlistStudents = async (submissionIds) => {
     }
 };
 
+//Update submission details
+
+export const updateSubmissionAPI = async (submissions) => {
+  try {
+    // console.log("hello")
+      const response = await API.put(`/api/teacher/hackathons/updateSubmission`,{submissions});
+      return response.data;
+  } catch (error) {
+      console.error("Error shortlisting students:", error);
+      return { success: false, message: "Failed to shortlist students" };
+  }
+};
 // Get all shortlisted students
 export const getShortlistedStudents = async (teacherId, hackathonId) => {
     try {

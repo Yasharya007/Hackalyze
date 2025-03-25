@@ -265,7 +265,7 @@ export const updateSubmission = async (req, res) => {
         // Prepare bulk update operations
         const bulkOperations = submissions.map(sub => ({
             updateOne: {
-                filter: { _id: sub.submissionId },
+                filter: { _id: sub._id },
                 update: { $set: { status: sub.status } }
             }
         }));

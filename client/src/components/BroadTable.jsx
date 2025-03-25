@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import ParameterSelector from "./ParameterSelector";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { getHackathonSubmissionsAPI ,shortlistStudents} from "../utils/api.jsx";
+import { getHackathonSubmissionsAPI ,shortlistStudents,updateSubmissionAPI} from "../utils/api.jsx";
 import { useDispatch } from "react-redux";
 import { setSelectedSubmissionId } from "../slices/submissionSlice.js";
 import Controls from "./Controls";
@@ -105,6 +105,25 @@ function Table() {
    .then(()=>{navigate("/teacher/hackathon")})
    .catch(()=>{})
 };
+const updateSubmission= async () => {
+  // Extract all submissions with _id and status
+  const allSubmissions = submissions.map(submission => ({
+      _id: submission._id,
+      status: submission.status
+  }));
+
+  if (allSubmissions.length === 0) {
+      alert("No submissions available to finalize.");
+      return;
+  }
+
+  console.log("All submissions:", allSubmissions);
+
+  updateSubmissionAPI(allSubmissions)
+      .then(() => { navigate("/teacher/hackathon"); })
+      .catch(() => {});
+};
+
 
   const nextPage = () => {
     if (currentPage < Math.ceil(filteredSubmissions.length / submissionsPerPage)) {
@@ -154,7 +173,7 @@ function Table() {
       </button>
     </div>
         <button
-          onClick={finalizeShortlist}
+          onClick={updateSubmission}
           className="px-3 py-1 bg-gray-900 text-white rounded-md hover:bg-gray-700"
         >
           Finalise Result
