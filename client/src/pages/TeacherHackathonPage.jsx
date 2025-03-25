@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { FaChartBar, FaLaptopCode, FaCogs, FaClipboardList, FaTrophy, FaUserCog, FaFilter, FaSort, FaSortUp, FaSortDown, FaChevronDown, FaChevronRight, FaSearch, FaEye, FaInfoCircle, FaTimes } from 'react-icons/fa';
+import { FaChartBar, FaLaptopCode, FaCogs, FaClipboardList, FaTrophy, FaUserCog, FaFilter, FaSort, FaSortUp, FaSortDown, FaChevronDown, FaChevronRight, FaSearch, FaEye, FaInfoCircle, FaTimes, FaCheck, FaTimesCircle, FaArrowLeft, FaAngleDown } from 'react-icons/fa';
 import { getHackathonSubmissionsAPI, logoutAPI } from '../utils/api.jsx';
 
 function TeacherHackathonPage() {
@@ -13,13 +13,14 @@ function TeacherHackathonPage() {
   const [showDetails, setShowDetails] = useState(false);
   const [detailsLocked, setDetailsLocked] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [sortConfig, setSortConfig] = useState({ field: 'id', direction: 'asc' });
+  const [sortConfig, setSortConfig] = useState({ field: 'displayId', direction: 'asc' });
   const [filterConfig, setFilterConfig] = useState({
-    showShortlistedOnly: false,
+    filterType: 'all', // 'all', 'shortlisted', 'reviewed', 'not_reviewed'
     searchQuery: '',
     selectedStatus: 'All Submissions'
   });
-  
+  const [showFilterMenu, setShowFilterMenu] = useState(false);
+  const filterMenuRef = useRef(null);
   const detailsRef = useRef(null);
   const btnRef = useRef(null);
   
@@ -63,9 +64,13 @@ function TeacherHackathonPage() {
   const applyFiltersAndSort = () => {
     let result = [...submissions];
     
-    // Apply status filter
-    if (filterConfig.showShortlistedOnly) {
+    // Apply combined filter
+    if (filterConfig.filterType === 'shortlisted') {
       result = result.filter(sub => sub.status === 'Shortlisted');
+    } else if (filterConfig.filterType === 'reviewed') {
+      result = result.filter(sub => sub.reviewed === true);
+    } else if (filterConfig.filterType === 'not_reviewed') {
+      result = result.filter(sub => sub.reviewed !== true);
     }
     
     // Apply search filter
@@ -87,6 +92,12 @@ function TeacherHackathonPage() {
         if (sortConfig.field === 'studentName') {
           valueA = a.studentId?.name || '';
           valueB = b.studentId?.name || '';
+        } else if (sortConfig.field === 'manualScore') {
+          valueA = a.manualScore || 0;
+          valueB = b.manualScore || 0;
+        } else if (sortConfig.field === 'aiScore') {
+          valueA = a.aiScore || 0;
+          valueB = b.aiScore || 0;
         } else {
           valueA = a[sortConfig.field] || '';
           valueB = b[sortConfig.field] || '';
@@ -119,12 +130,13 @@ function TeacherHackathonPage() {
     }));
   };
   
-  const toggleShortlistFilter = () => {
+  const handleFilterChange = (filterType) => {
     setFilterConfig(prev => ({
       ...prev,
-      showShortlistedOnly: !prev.showShortlistedOnly
+      filterType
     }));
     setCurrentPage(1); // Reset to first page
+    setShowFilterMenu(false);
   };
   
   const handleSearch = (e) => {
@@ -218,6 +230,36 @@ function TeacherHackathonPage() {
     };
   }, [detailsLocked]);
 
+  // Close filter menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showFilterMenu && 
+          filterMenuRef.current && 
+          !filterMenuRef.current.contains(event.target)) {
+        setShowFilterMenu(false);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showFilterMenu]);
+
+  // Get filter label
+  const getFilterLabel = () => {
+    switch(filterConfig.filterType) {
+      case 'shortlisted':
+        return 'Shortlisted Only';
+      case 'reviewed':
+        return 'Reviewed Only';
+      case 'not_reviewed':
+        return 'Not Reviewed';
+      default:
+        return 'All Submissions';
+    }
+  };
+
   return (
     <div className="flex w-full min-h-screen bg-gray-100">
       {/* Sidebar */}
@@ -300,9 +342,18 @@ function TeacherHackathonPage() {
       <main className="flex-1 p-6">
         <div className="bg-white p-6 rounded-lg shadow-md mb-6 relative">
           <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-2xl font-bold mb-2">Submissions</h1>
-              <p className="text-gray-600">{hackathon?.title} Submissions</p>
+            <div className="flex items-center">
+              <button
+                onClick={() => navigate('/teacher/submissions')}
+                className="mr-4 p-2 rounded-full hover:bg-gray-100 text-gray-600"
+                aria-label="Back to submissions"
+              >
+                <FaArrowLeft className="text-xl" />
+              </button>
+              <div>
+                <h1 className="text-2xl font-bold mb-2">Submissions</h1>
+                <p className="text-gray-600">{hackathon?.title} Submissions</p>
+              </div>
             </div>
             <div 
               className="relative"
@@ -415,25 +466,104 @@ function TeacherHackathonPage() {
             <div className="bg-white rounded-lg shadow-md p-6">
               {/* Controls and Filters */}
               <div className="flex flex-wrap justify-between items-center mb-4 gap-3">
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={toggleShortlistFilter}
-                    className={`px-3 py-1.5 rounded-md flex items-center text-sm ${
-                      filterConfig.showShortlistedOnly 
-                        ? 'bg-blue-600 text-white' 
-                        : 'bg-gray-200 text-gray-700'
-                    }`}
-                  >
-                    <FaFilter className="mr-2" />
-                    {filterConfig.showShortlistedOnly ? 'Showing Shortlisted' : 'Show All'}
-                  </button>
+                <div className="flex items-center gap-3 flex-wrap">
+                  {/* Combined Filter Dropdown */}
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowFilterMenu(!showFilterMenu)}
+                      className="px-3 py-1.5 rounded-md flex items-center justify-between gap-2 text-sm border border-gray-300 bg-white hover:bg-gray-50 min-w-[180px]"
+                    >
+                      <div className="flex items-center">
+                        <FaFilter className="mr-2 text-gray-500" />
+                        <span>{getFilterLabel()}</span>
+                      </div>
+                      <FaAngleDown />
+                    </button>
+                    
+                    {showFilterMenu && (
+                      <div 
+                        ref={filterMenuRef}
+                        className="absolute left-0 top-full mt-1 w-64 bg-white rounded-md shadow-lg z-10 border border-gray-200 py-1"
+                      >
+                        <button
+                          onClick={() => handleFilterChange('all')}
+                          className={`w-full px-4 py-2 text-left text-sm flex items-center hover:bg-gray-100 ${
+                            filterConfig.filterType === 'all' ? 'bg-gray-100 font-medium' : ''
+                          }`}
+                        >
+                          All Submissions
+                        </button>
+                        <button
+                          onClick={() => handleFilterChange('shortlisted')}
+                          className={`w-full px-4 py-2 text-left text-sm flex items-center hover:bg-gray-100 ${
+                            filterConfig.filterType === 'shortlisted' ? 'bg-gray-100 font-medium' : ''
+                          }`}
+                        >
+                          <span className="flex-1">Shortlisted Only</span>
+                          <span className="px-2 py-0.5 bg-blue-100 text-blue-800 text-xs rounded-full">
+                            {submissions.filter(s => s.status === 'Shortlisted').length}
+                          </span>
+                        </button>
+                        <button
+                          onClick={() => handleFilterChange('reviewed')}
+                          className={`w-full px-4 py-2 text-left text-sm flex items-center hover:bg-gray-100 ${
+                            filterConfig.filterType === 'reviewed' ? 'bg-gray-100 font-medium' : ''
+                          }`}
+                        >
+                          <span className="flex-1">Reviewed Only</span>
+                          <FaCheck className="text-green-600 mr-1" />
+                          <span className="px-2 py-0.5 bg-green-100 text-green-800 text-xs rounded-full">
+                            {submissions.filter(s => s.reviewed === true).length}
+                          </span>
+                        </button>
+                        <button
+                          onClick={() => handleFilterChange('not_reviewed')}
+                          className={`w-full px-4 py-2 text-left text-sm flex items-center hover:bg-gray-100 ${
+                            filterConfig.filterType === 'not_reviewed' ? 'bg-gray-100 font-medium' : ''
+                          }`}
+                        >
+                          <span className="flex-1">Not Reviewed</span>
+                          <FaTimesCircle className="text-red-600 mr-1" />
+                          <span className="px-2 py-0.5 bg-red-100 text-red-800 text-xs rounded-full">
+                            {submissions.filter(s => s.reviewed !== true).length}
+                          </span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
                   
+                  {/* Analytics Button */}
                   <button
                     onClick={() => navigate('/teacher/detailedAnalysis')}
                     className="px-3 py-1.5 bg-gray-800 text-white rounded-md hover:bg-gray-700 text-sm flex items-center"
                   >
                     <FaChartBar className="mr-2" />
                     Analysis & Evaluation
+                  </button>
+                </div>
+                
+                {/* Sort Controls */}
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-600">Sort by:</span>
+                  <select 
+                    value={sortConfig.field}
+                    onChange={(e) => setSortConfig({...sortConfig, field: e.target.value})}
+                    className="py-1.5 px-3 border rounded-md text-sm"
+                  >
+                    <option value="displayId">ID</option>
+                    <option value="studentName">Name</option>
+                    <option value="aiScore">AI Score</option>
+                    <option value="manualScore">Manual Score</option>
+                    <option value="submittedAt">Submission Date</option>
+                  </select>
+                  <button
+                    onClick={() => setSortConfig({
+                      ...sortConfig, 
+                      direction: sortConfig.direction === 'asc' ? 'desc' : 'asc'
+                    })}
+                    className="p-1.5 rounded-md border border-gray-300 hover:bg-gray-100"
+                  >
+                    {sortConfig.direction === 'asc' ? <FaSortUp /> : <FaSortDown />}
                   </button>
                 </div>
                 
@@ -480,9 +610,19 @@ function TeacherHackathonPage() {
                               Format
                             </div>
                           </th>
-                          <th className="p-3 border border-gray-300 cursor-pointer" onClick={() => handleSort('totalAIScore')}>
+                          <th className="p-3 border border-gray-300">
                             <div className="flex items-center justify-center">
                               Overview
+                            </div>
+                          </th>
+                          <th className="p-3 border border-gray-300 cursor-pointer" onClick={() => handleSort('aiScore')}>
+                            <div className="flex items-center justify-center">
+                              AI Score {getSortIcon('aiScore')}
+                            </div>
+                          </th>
+                          <th className="p-3 border border-gray-300 cursor-pointer" onClick={() => handleSort('manualScore')}>
+                            <div className="flex items-center justify-center">
+                              Manual Score {getSortIcon('manualScore')}
                             </div>
                           </th>
                           <th className="p-3 border border-gray-300">
@@ -536,6 +676,30 @@ function TeacherHackathonPage() {
                                 {submission.description || 'No description'}
                               </td>
                               <td className="p-3 border border-gray-300 text-center">
+                                <div className="flex justify-center items-center">
+                                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                    (submission.aiScore >= 80) ? 'bg-green-100 text-green-800' :
+                                    (submission.aiScore >= 60) ? 'bg-blue-100 text-blue-800' :
+                                    (submission.aiScore >= 40) ? 'bg-yellow-100 text-yellow-800' :
+                                    'bg-red-100 text-red-800'
+                                  }`}>
+                                    {submission.aiScore || '0'}/100
+                                  </span>
+                                </div>
+                              </td>
+                              <td className="p-3 border border-gray-300 text-center">
+                                <div className="flex justify-center items-center">
+                                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                    (submission.manualScore >= 80) ? 'bg-green-100 text-green-800' :
+                                    (submission.manualScore >= 60) ? 'bg-blue-100 text-blue-800' :
+                                    (submission.manualScore >= 40) ? 'bg-yellow-100 text-yellow-800' :
+                                    'bg-red-100 text-red-800'
+                                  }`}>
+                                    {submission.manualScore || '0'}/100
+                                  </span>
+                                </div>
+                              </td>
+                              <td className="p-3 border border-gray-300 text-center">
                                 {submission.reviewed ? (
                                   <span className="text-green-600">✓</span>
                                 ) : (
@@ -564,7 +728,7 @@ function TeacherHackathonPage() {
                           ))
                         ) : (
                           <tr>
-                            <td colSpan="8" className="p-4 text-center text-gray-500">
+                            <td colSpan="10" className="p-4 text-center text-gray-500">
                               No submissions found matching the current filters.
                             </td>
                           </tr>
