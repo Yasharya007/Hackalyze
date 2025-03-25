@@ -12,6 +12,7 @@ import toast from "react-hot-toast";
 const TeacherDashboard = () => {
     const dispatch=useDispatch()
     const navigate=useNavigate()
+    const [visible, setVisible] = useState(true);
     const teacherId = useSelector((state) => state.student.studentId);
     // console.log(teacherId)
     const formatDate = (isoString) => isoString.split("T")[0];
@@ -75,7 +76,20 @@ const TeacherDashboard = () => {
 
             {/* Main Content */}
             <main className="flex-1 p-8">
-                <div className="flex justify-between items-center">
+
+                {/* Notification */}
+                {visible && (
+                    <div className="bg-white p-4 shadow-md flex justify-between items-center">
+                        <div>
+                            <p className="text-gray-800 font-semibold">Important Announcement for Teachers</p>
+                            <p className="text-gray-500">Dear Teachers, please submit the student performance reports by the end of this week.</p>
+                        </div>
+                        <button className="text-gray-800" onClick={() => setVisible(false)}>
+                            Dismiss
+                        </button>
+                    </div>
+                )}
+                <div className="flex mt-4 justify-between items-center">
                     <h1 className="text-4xl font-bold">Teacher Dashboard</h1>
                     <button className="bg-gray-200 px-4 py-2 rounded-lg">Export Data</button>
                 </div>
