@@ -3,10 +3,13 @@ import ParameterSelector from "./ParameterSelector";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { getHackathonSubmissionsAPI ,shortlistStudents} from "../utils/api.jsx";
+import { useDispatch } from "react-redux";
+import { setSelectedSubmissionId } from "../slices/submissionSlice.js";
 import Controls from "./Controls";
 function Table() {
   const hackathon = useSelector((state) => state.hackathon.selectedHackathon);
   const navigate=useNavigate();
+  const dispatch = useDispatch();
   const [numShortlist, setNumShortlist] = useState("");
   const [submissions, setSubmissions] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -82,6 +85,10 @@ function Table() {
       }))
     );
   };
+  const handleSelectSubmission = (submissionId) => {
+    dispatch(setSelectedSubmissionId(submissionId)); // Store ID in Redux
+    navigate("/teacher/individualSubmission"); // Navigate to the page
+};
   const finalizeShortlist = async () => {
     // Extract only the IDs of "Shortlisted" submissions
     const submissionIds = submissions
@@ -214,7 +221,7 @@ function Table() {
 
       {/* View More Button (NOT a checkbox) */}
       <td className="p-2 border border-gray-300 text-center">
-        <button className="text-blue-600 hover:underline" onClick={()=>{navigate("/teacher/individualSubmission")}} >review</button>
+        <button className="text-blue-600 hover:underline" onClick={() => handleSelectSubmission(submission._id)} >review</button>
       </td>
     </tr>
   ))}

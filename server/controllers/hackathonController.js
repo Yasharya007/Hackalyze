@@ -78,7 +78,7 @@ export const getSubmissionDetails = async (req, res) => {
         const { submissionId } = req.params; // Extract submission ID from request
 
         const submission = await Submission.findById(submissionId)
-            .populate("studentId", "name email") // Get student name & email
+            .populate("studentId", "name email mobileNumber schoolCollegeName grade gender state district") // Get student name & email
             .populate("hackathonId", "title") // Get hackathon title
             .populate("reviewerId", "name email") // Get reviewer (teacher) details
             .lean(); // Convert to plain JavaScript object

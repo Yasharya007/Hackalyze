@@ -607,7 +607,9 @@ export const getSortedByPreferenceAPI = async (teacherId) => {
 // particular submission 
 export const getSubmissionDetailsAPI = async (submissionId) => {
   try {
-    const response = await axios.get(`/api/hackathon/submissions/${submissionId}`);
+    console.log("call")
+    const response = await API.get(`/api/hackathon/submission/${submissionId}`);
+    console.log("called")
     return { success: true, data: response.data };
   } catch (error) {
     console.error("Failed to fetch submission details:", error);
