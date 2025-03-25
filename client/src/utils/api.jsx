@@ -507,6 +507,26 @@ export const addParameterAPI = async (hackathonId, name, description) => {
   }
 }; 
 
+// get parameter
+export const getParametersAPI = async (hackathonId) => {
+  // const toastId = toast.loading("Adding parameter..."); // Show loading toast
+  // console.log("hello",hackathonId,name,description)
+  try {
+    const response = await API.get(`/api/teacher/hackathons/${hackathonId}/getParameters`);
+
+    // toast.success("Parameter added successfully");
+    return response.data;
+  } catch (error) {
+    console.error("Error in getting parameter:", error);
+
+    const errorMessage = error.response?.data?.message || "Failed to get parameter";
+    toast.error(errorMessage);
+    throw error.response?.data || "Failed to get parameter";
+  } finally {
+    // toast.dismiss(toastId);
+  }
+}; 
+
 // update the criteria
 export const updateSelectedCriteriaAPI = async (hackathonId, criteriaData) => {
   const toastId = toast.loading("Updating selected criteria..."); // Show loading toast
