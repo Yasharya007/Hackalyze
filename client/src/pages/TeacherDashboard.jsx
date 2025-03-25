@@ -102,7 +102,7 @@ const TeacherDashboard = () => {
                         </li>
                         <li>
                             <Link 
-                                to="/settings" 
+                                to="/teacher/settings" 
                                 className="flex items-center p-2 rounded-md hover:bg-gray-100 text-gray-600"
                             >
                                 <FaUserCog className="h-5 w-5 mr-3" />

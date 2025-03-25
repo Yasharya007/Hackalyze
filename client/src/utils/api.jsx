@@ -504,6 +504,33 @@ export const getTopSubmissionsAPI = async (hackathonId) => {
 /*teacher landing page end*/
 
 
+// Get teacher profile
+export const getTeacherProfileAPI = async (teacherId) => {
+  try {
+    const response = await API.get(`/api/teacher/profile/${teacherId}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching teacher profile:", error);
+    throw error.response?.data || "Failed to load teacher profile";
+  }
+};
+
+// Update teacher profile
+export const updateTeacherProfileAPI = async (teacherId, profileData) => {
+  const toastId = toast.loading("Updating profile...");
+  try {
+    const response = await API.put(`/api/teacher/update/${teacherId}`, profileData);
+    toast.success("Profile updated successfully");
+    return response.data;
+  } catch (error) {
+    console.error("Error updating teacher profile:", error);
+    toast.error(error.response?.data?.message || "Failed to update profile");
+    throw error.response?.data || "Failed to update teacher profile";
+  } finally {
+    toast.dismiss(toastId);
+  }
+};
+
 // show all parameters 
 export const getSelectedCriteriaAPI = async (hackathonId) => {
   try {

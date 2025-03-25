@@ -7,8 +7,11 @@ import {
     getAllParameters,
     shortlistStudents, 
     updateSubmission,
-    getShortlistedStudents
+    getShortlistedStudents,
+    getTeacherProfile,
+    updateTeacherProfile
 } from "../controllers/Teacher.controllers.js";
+import { verifyUser } from "../middleware/auth.js";
 
 const router = express.Router();
 
@@ -23,5 +26,9 @@ router.get("/hackathons/:hackathonId/getParameters", getAllParameters); // Get a
 router.put("/hackathons/shortlist", shortlistStudents);
 router.put("/hackathons/updateSubmission",updateSubmission)
 router.get("/hackathons/:hackathonId/shortlisted", getShortlistedStudents);
+
+// Teacher Profile
+router.get("/profile/:teacherId", verifyUser, getTeacherProfile);
+router.put("/update/:teacherId", verifyUser, updateTeacherProfile);
 
 export default router;

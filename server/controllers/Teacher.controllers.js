@@ -1,6 +1,9 @@
 import { Hackathon } from "../models/Hackathon.model.js";
 import { Submission } from "../models/Submission.models.js";
 import { Student } from "../models/student.model.js";
+import { Teacher } from "../models/Teacher.model.js"; // Import Teacher model
+import bcrypt from 'bcryptjs'; // Import bcryptjs (not bcrypt)
+
 export const addParameter = async (req, res) => {
     try {
         const { hackathonId } = req.params;
@@ -200,32 +203,115 @@ export const shortlistStudents = async (req, res) => {
 export const getShortlistedStudents = async (req, res) => {
     try {
         const { hackathonId } = req.params;
-
-        // Find all submissions where status is "Shortlisted" for the given hackathon
-        const shortlistedSubmissions = await Submission.find({
-            hackathonId: hackathonId,
-            status: "Shortlisted"
-        }).select("studentId");
-
-        if (shortlistedSubmissions.length === 0) {
-            return res.status(404).json({ message: "No students have been shortlisted yet." });
-        }
-
-        // Extract student IDs from shortlisted submissions
-        const studentIds = shortlistedSubmissions.map(sub => sub.studentId);
-
-        // Fetch student details for the shortlisted students
-        const shortlistedStudents = await Student.find({ _id: { $in: studentIds } })
-            .select("name email mobileNumber schoolCollegeName grade state district");
-
-        return res.status(200).json({ shortlistedStudents });
-
+        const submissions = await Submission.find({ 
+            hackathonId, 
+            isShortlisted: true 
+        }).populate('studentId');
+        
+        res.status(200).json({
+            message: "Shortlisted students retrieved successfully",
+            shortlistedStudents: submissions.map(submission => ({
+                submissionId: submission._id,
+                studentId: submission.studentId._id,
+                studentName: submission.studentId.name,
+                email: submission.studentId.email,
+                totalScore: submission.totalScore,
+                AIScore: submission.totalAIScore
+            }))
+        });
     } catch (error) {
-        console.error("Error in getShortlistedStudents:", error);
-        res.status(500).json({ message: error.message });
+        console.error("Error getting shortlisted students:", error);
+        res.status(500).json({ message: "Internal server error" });
     }
 };
 
+// Get teacher profile
+export const getTeacherProfile = async (req, res) => {
+    try {
+        const { teacherId } = req.params;
+        
+        // Verify the user ID from token matches requested ID for security
+        if (req.user._id.toString() !== teacherId) {
+            return res.status(403).json({ 
+                success: false, 
+                message: "Unauthorized: You can only view your own profile" 
+            });
+        }
+        
+        const teacher = await Teacher.findById(teacherId)
+            .select('-password -refreshToken');  // Exclude sensitive fields
+        
+        if (!teacher) {
+            return res.status(404).json({ 
+                success: false, 
+                message: "Teacher not found" 
+            });
+        }
+        
+        res.status(200).json({
+            success: true,
+            message: "Teacher profile retrieved successfully",
+            data: teacher
+        });
+    } catch (error) {
+        console.error("Error fetching teacher profile:", error);
+        res.status(500).json({ 
+            success: false, 
+            message: "Internal server error",
+            error: error.message 
+        });
+    }
+};
+
+// Update teacher profile
+export const updateTeacherProfile = async (req, res) => {
+    try {
+        const { teacherId } = req.params;
+        const updates = req.body;
+        
+        // Verify the user ID from token matches requested ID for security
+        if (req.user._id.toString() !== teacherId) {
+            return res.status(403).json({ 
+                success: false, 
+                message: "Unauthorized: You can only update your own profile" 
+            });
+        }
+        
+        const teacher = await Teacher.findById(teacherId);
+        if (!teacher) {
+            return res.status(404).json({ 
+                success: false, 
+                message: "Teacher not found" 
+            });
+        }
+        
+        // Handle password update separately
+        if (updates.password) {
+            const salt = await bcrypt.genSalt(10);
+            updates.password = await bcrypt.hash(updates.password, salt);
+        }
+        
+        // Update profile fields
+        const updatedTeacher = await Teacher.findByIdAndUpdate(
+            teacherId,
+            { $set: updates },
+            { new: true }
+        ).select('-password -refreshToken');
+        
+        res.status(200).json({
+            success: true,
+            message: "Profile updated successfully",
+            data: updatedTeacher
+        });
+    } catch (error) {
+        console.error("Error updating teacher profile:", error);
+        res.status(500).json({ 
+            success: false, 
+            message: "Failed to update profile",
+            error: error.message 
+        });
+    }
+};
 
 // Get students sorted by AI score (descending) for a particular teacher
 
