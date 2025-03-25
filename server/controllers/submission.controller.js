@@ -4,10 +4,11 @@ import { Hackathon } from "../models/Hackathon.model.js";
 import uploadOnCloudinary from "../utils/cloudinary.js";
 import ApiError from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
+import bcrypt from "bcryptjs";
 
 export const submitHackathon = async (req, res, next) => {
     try {
-        const { hackathonId, fileType } = req.body; // Extracting FormData fields
+        const { hackathonId, fileType, isResubmission, submissionId } = req.body; // Extracting FormData fields
         const studentId = req.user._id; // Getting student ID from auth middleware
 
         if (!req.file) {
@@ -24,31 +25,72 @@ export const submitHackathon = async (req, res, next) => {
 
         const hackathon = await Hackathon.findById(hackathonId);
         if (!hackathon) throw new ApiError(404, "Hackathon not found");
+        
+        // Check if hackathon deadline has passed
+        const currentDate = new Date();
+        const deadline = new Date(hackathon.endDate);
+        if (currentDate > deadline) {
+            throw new ApiError(400, "Hackathon deadline has passed, submissions are closed");
+        }
 
         // Upload file to Cloudinary
         const cloudinaryResponse = await uploadOnCloudinary(req.file.path);
+        if (!cloudinaryResponse) {
+            throw new ApiError(500, "File upload failed");
+        }
         const fileUrl = cloudinaryResponse.secure_url;  // Extract only the URL
 
-        // Create new submission
-        const newSubmission = new Submission({
-            studentId,
-            hackathonId,
-            files: [{ format: fileType, fileUrl }], 
-        });
+        if (isResubmission === "true" && submissionId) {
+            // Handle resubmission - update existing submission
+            const existingSubmission = await Submission.findById(submissionId);
+            
+            if (!existingSubmission) {
+                throw new ApiError(404, "Original submission not found");
+            }
+            
+            // Verify student owns this submission
+            if (existingSubmission.studentId.toString() !== studentId.toString()) {
+                throw new ApiError(403, "You are not authorized to update this submission");
+            }
+            
+            // Replace the file in the submission
+            existingSubmission.files = [{ format: fileType, fileUrl }];
+            await existingSubmission.save();
+            
+            return res.status(200).json(new ApiResponse(200, existingSubmission, "Submission updated successfully"));
+        } else {
+            // Handle new submission
+            // Check if student is already registered for this hackathon
+            const existingSubmission = await Submission.findOne({ 
+                studentId,
+                hackathonId
+            });
+            
+            if (existingSubmission) {
+                throw new ApiError(400, "You are already registered for this hackathon. Use the resubmit option to update your submission.");
+            }
 
-        await newSubmission.save();
+            // Create new submission
+            const newSubmission = new Submission({
+                studentId,
+                hackathonId,
+                files: [{ format: fileType, fileUrl }], 
+            });
 
-        // Add student id to hackathon model
-        await Hackathon.findByIdAndUpdate(
-            hackathonId,
-            { $push: { registeredStudents: studentId } },
-            { $push: { submissions: newSubmission._id } },
-            { new: true } // Return updated document
-          );
+            await newSubmission.save();
 
+            // Add student id to hackathon model
+            await Hackathon.findByIdAndUpdate(
+                hackathonId,
+                { $push: { 
+                    registeredStudents: studentId, 
+                    submissions: newSubmission._id 
+                } },
+                { new: true } // Return updated document
+            );
 
-        res.status(201).json(new ApiResponse(201, newSubmission, "Submission successful"));
-
+            return res.status(201).json(new ApiResponse(201, newSubmission, "Submission successful"));
+        }
     } catch (error) {
         next(error);
     }
@@ -56,7 +98,7 @@ export const submitHackathon = async (req, res, next) => {
 
 export const getSubmissionStatus = async (req, res) => {
     try {
-      const {hackathonId } = req.body;
+      const { hackathonId } = req.body;
       const studentId = req.user._id;
       // Validate request
       if (!studentId || !hackathonId) {
@@ -65,22 +107,28 @@ export const getSubmissionStatus = async (req, res) => {
   
       // Find submission with only status & result fields
       const submission = await Submission.findOne({ studentId, hackathonId })
-        .select("status result") // Select only status and result fields
+        .select("_id status result files") // Also include files and _id for resubmission
         .exec();
   
-        if (!submission) {
-            return res.status(404).json({ message: "No submission found for this student in the given hackathon." });
-          }
+      if (!submission) {
+        return res.json({ 
+          isRegistered: false,
+          message: "No submission found for this student in the given hackathon."
+        });
+      }
   
-      res.status(200).json(submission);
+      return res.status(200).json({ 
+        isRegistered: true,
+        status: submission.status || "Registered",
+        submission: submission
+      });
     } catch (error) {
       console.error("Error fetching submission status:", error);
       res.status(500).json({ message: "Internal Server Error", error });
     }
-  };
+};
 
-
-  export const submitHackathonNew=async(req,res,next)=>{
+export const submitHackathonNew=async(req,res,next)=>{
     try {
       const submissions = req.body; // Expecting an array of objects
 
@@ -177,4 +225,106 @@ export const getSubmissionStatus = async (req, res) => {
   catch (error) {
       next(error);
   }
-  }
+}
+
+// Get student profile
+export const getStudentProfile = async (req, res, next) => {
+    try {
+        const { studentId } = req.params;
+        
+        // Find student profile
+        const student = await Student.findById(studentId);
+        if (!student) {
+            return res.status(404).json(new ApiResponse(404, null, "Student not found"));
+        }
+
+        // Get enrolled hackathons with submissions
+        const enrolledHackathons = await Hackathon.find({
+            registeredStudents: { $in: [studentId] }
+        }).populate('submissions').lean();
+
+        // Count submissions (hackathons where the student has submitted)
+        const submissionsCount = await Submission.countDocuments({ studentId });
+
+        // Prepare response object (exclude password)
+        const profileData = {
+            name: student.name,
+            email: student.email,
+            institution: student.schoolCollegeName,
+            grade: student.grade,
+            gender: student.gender,
+            state: student.state,
+            district: student.district,
+            mobileNumber: student.mobileNumber,
+            registeredHackathons: enrolledHackathons,
+            submissions: submissionsCount
+        };
+
+        return res.status(200).json(new ApiResponse(200, profileData, "Student profile fetched successfully"));
+    } catch (error) {
+        console.error("Error fetching student profile:", error);
+        next(error);
+    }
+};
+
+// Update student profile
+export const updateStudentProfile = async (req, res, next) => {
+    try {
+        const { studentId } = req.params;
+        const { name, email, institution, grade, password } = req.body;
+
+        // Validate if student exists
+        const student = await Student.findById(studentId);
+        if (!student) {
+            return res.status(404).json(new ApiResponse(404, null, "Student not found"));
+        }
+
+        // Prepare update object
+        const updateData = {};
+        if (name) updateData.name = name;
+        if (email) updateData.email = email;
+        if (institution) updateData.schoolCollegeName = institution;
+        if (grade) updateData.grade = grade;
+
+        // Hash password if provided
+        if (password) {
+            const salt = await bcrypt.genSalt(10);
+            updateData.password = await bcrypt.hash(password, salt);
+        }
+
+        // Update student
+        const updatedStudent = await Student.findByIdAndUpdate(
+            studentId,
+            { $set: updateData },
+            { new: true, select: '-password' } // Return updated document without password
+        );
+
+        return res.status(200).json(new ApiResponse(200, updatedStudent, "Profile updated successfully"));
+    } catch (error) {
+        console.error("Error updating student profile:", error);
+        next(error);
+    }
+};
+
+// Get enrolled hackathons
+export const getEnrolledHackathons = async (req, res, next) => {
+    try {
+        const { studentId } = req.params;
+        
+        // Validate if student exists
+        const student = await Student.findById(studentId);
+        if (!student) {
+            return res.status(404).json(new ApiResponse(404, null, "Student not found"));
+        }
+
+        // Find all hackathons where student is registered
+        const enrolledHackathons = await Hackathon.find({
+            registeredStudents: { $in: [studentId] }
+        });
+
+        return res.status(200).json(new ApiResponse(200, enrolledHackathons, "Enrolled hackathons fetched successfully"));
+    } catch (error) {
+        console.error("Error fetching enrolled hackathons:", error);
+        next(error);
+    }
+};
