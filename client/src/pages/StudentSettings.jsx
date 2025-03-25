@@ -27,15 +27,17 @@ const StudentSettings = () => {
 
     const fetchStudentData = async () => {
         try {
-            setLoading(true);
-            const response = await axios.get(`/api/student/profile/${studentId}`);
+            const response = await axios.get(`http://localhost:8000/api/student/profile/${studentId}`, {
+                withCredentials: true
+            });
             
-            if (response.data) {
+            if (response.data && response.data.data) {
+                const data = response.data.data;
                 setFormData({
-                    name: response.data.name || "",
-                    email: response.data.email || "",
-                    institution: response.data.institution || "",
-                    grade: response.data.grade || "",
+                    name: data.name || "",
+                    email: data.email || "",
+                    institution: data.institution || "",
+                    grade: data.grade || "",
                     password: "",
                     confirmPassword: ""
                 });
@@ -65,16 +67,24 @@ const StudentSettings = () => {
         try {
             setSaveLoading(true);
             
-            // Only include password if it's being changed
-            const dataToUpdate = { ...formData };
-            if (!dataToUpdate.password) {
-                delete dataToUpdate.password;
+            const dataToUpdate = {
+                name: formData.name,
+                email: formData.email,
+                schoolCollegeName: formData.institution,
+                grade: formData.grade
+            };
+            
+            if (formData.password) {
+                dataToUpdate.password = formData.password;
             }
-            delete dataToUpdate.confirmPassword;
             
-            const response = await axios.put(`/api/student/update/${studentId}`, dataToUpdate);
+            const response = await axios.put(
+                `http://localhost:8000/api/student/update/${studentId}`, 
+                dataToUpdate,
+                { withCredentials: true }
+            );
             
-            if (response.status === 200) {
+            if (response.data && response.data.success) {
                 toast.success("Profile updated successfully");
                 // Reset password fields
                 setFormData(prev => ({

@@ -238,15 +238,13 @@ export const getStudentProfile = async (req, res, next) => {
             return res.status(404).json(new ApiResponse(404, null, "Student not found"));
         }
 
-        // Count registered and completed hackathons
+        // Get enrolled hackathons with submissions
         const enrolledHackathons = await Hackathon.find({
             registeredStudents: { $in: [studentId] }
-        });
+        }).populate('submissions').lean();
 
-        // Get completed hackathons (where end date is in the past)
-        const completedHackathons = enrolledHackathons.filter(hackathon => 
-            new Date(hackathon.endDate) < new Date()
-        ).length;
+        // Count submissions (hackathons where the student has submitted)
+        const submissionsCount = await Submission.countDocuments({ studentId });
 
         // Prepare response object (exclude password)
         const profileData = {
@@ -259,7 +257,7 @@ export const getStudentProfile = async (req, res, next) => {
             district: student.district,
             mobileNumber: student.mobileNumber,
             registeredHackathons: enrolledHackathons,
-            completedHackathons
+            submissions: submissionsCount
         };
 
         return res.status(200).json(new ApiResponse(200, profileData, "Student profile fetched successfully"));

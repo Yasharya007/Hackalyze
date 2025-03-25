@@ -13,7 +13,7 @@ const StudentProfile = () => {
         institution: "",
         grade: "",
         registeredHackathons: 0,
-        completedHackathons: 0
+        submissions: 0
     });
     const [loading, setLoading] = useState(true);
 
@@ -26,16 +26,26 @@ const StudentProfile = () => {
     const fetchStudentProfile = async () => {
         try {
             setLoading(true);
-            const response = await axios.get(`/api/student/profile/${studentId}`);
+            const response = await axios.get(`http://localhost:8000/api/student/profile/${studentId}`, {
+                withCredentials: true
+            });
             
-            if (response.data) {
+            if (response.data && response.data.data) {
+                const data = response.data.data;
+                
+                // Get submissions count from registeredHackathons array
+                const submissions = data.registeredHackathons ? 
+                  data.registeredHackathons.filter(hackathon => 
+                    hackathon.submissions && hackathon.submissions.length > 0
+                  ).length : 0;
+                
                 setProfile({
-                    name: response.data.name || "",
-                    email: response.data.email || "",
-                    institution: response.data.institution || "",
-                    grade: response.data.grade || "",
-                    registeredHackathons: response.data.registeredHackathons?.length || 0,
-                    completedHackathons: response.data.completedHackathons || 0
+                    name: data.name || "",
+                    email: data.email || "",
+                    institution: data.institution || "",
+                    grade: data.grade || "",
+                    registeredHackathons: data.registeredHackathons?.length || 0,
+                    submissions: submissions
                 });
             }
             setLoading(false);
@@ -209,13 +219,13 @@ const StudentProfile = () => {
                                 
                                 <div>
                                     <div className="flex justify-between mb-1">
-                                        <span className="text-sm font-medium text-gray-700">Completed Hackathons</span>
-                                        <span className="text-sm font-medium text-gray-700">{profile.completedHackathons}</span>
+                                        <span className="text-sm font-medium text-gray-700">Submissions</span>
+                                        <span className="text-sm font-medium text-gray-700">{profile.submissions}</span>
                                     </div>
                                     <div className="w-full bg-gray-200 rounded-full h-2">
                                         <div 
                                             className="bg-green-500 h-2 rounded-full" 
-                                            style={{ width: `${Math.min(100, profile.completedHackathons * 20)}%` }}
+                                            style={{ width: `${Math.min(100, profile.submissions * 20)}%` }}
                                         ></div>
                                     </div>
                                 </div>
