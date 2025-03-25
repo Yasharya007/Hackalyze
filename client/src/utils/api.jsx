@@ -490,9 +490,9 @@ export const getSelectedCriteriaAPI = async (hackathonId) => {
 // add parameters
 export const addParameterAPI = async (hackathonId, name, description) => {
   const toastId = toast.loading("Adding parameter..."); // Show loading toast
-
+  // console.log("hello",hackathonId,name,description)
   try {
-    const response = await API.post(`/api/teacher/${hackathonId}/parameters`, { name, description });
+    const response = await API.post(`/api/teacher/hackathons/${hackathonId}/parameters`, { name, description });
 
     toast.success("Parameter added successfully");
     return response.data;

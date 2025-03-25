@@ -5,23 +5,19 @@ export const addParameter = async (req, res) => {
     try {
         const { hackathonId } = req.params;
         const { name, description } = req.body;
-
         // Validate input
         if (!name || !description) {
             return res.status(400).json({ message: "Name and description are required." });
         }
-
         // Find the hackathon
         const hackathon = await Hackathon.findById(hackathonId);
         if (!hackathon) {
             return res.status(404).json({ message: "Hackathon not found." });
         }
-
         // Check for duplicate parameter
         if (hackathon.parameters.some(param => param.name === name)) {
             return res.status(400).json({ message: "Parameter already exists." });
         }
-
         // Add new parameter to the hackathon
         hackathon.parameters.push({ name, description });
         await hackathon.save();

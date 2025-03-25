@@ -6,7 +6,7 @@ const FrontPage = () => {
         <div className="bg-gray-100">
             {/* Navbar */}
             <nav className="flex justify-between items-center p-5 bg-white shadow-md fixed w-full top-0 z-10">
-                <h1 className="text-xl font-bold">HackathonHub</h1>
+                <h1 className="text-xl font-bold">Hackalyze</h1>
                 <div>
                     <a href="#features" className="mr-4 text-xl">Features</a>
                     <a href="#competitions" className="mr-4 text-xl">Competitions</a>
