@@ -596,7 +596,7 @@ export const deleteParameterAPI = async (hackathonId, parameterId) => {
 
 export const getReviewedSubmissions = async () => {
   try {
-      const response = await axios.get("/api/review/all-reviewed-submissions");
+      const response = await API.get("/api/review/all-reviewed-submissions");
       return response.data;
   } catch (error) {
       console.error("Error fetching reviewed submissions:", error.response?.data || error.message);
@@ -607,7 +607,7 @@ export const getReviewedSubmissions = async () => {
 // mark as review
 export const markSubmissionAsReviewed = async (submissionId) => {
   try {
-      const response = await axios.put(`/api/review/${submissionId}/review`);
+      const response = await API.put(`/api/review/${submissionId}/review`);
       return response.data;
   } catch (error) {
       console.error("Error marking submission as reviewed:", error.response?.data || error.message);
@@ -618,7 +618,7 @@ export const markSubmissionAsReviewed = async (submissionId) => {
 // remove as review
 export const markSubmissionAsPending = async (submissionId) => {
   try {
-      const response = await axios.put(`/api/submissions/${submissionId}/remove-review`);
+      const response = await API.put(`/api/submissions/${submissionId}/remove-review`);
       return response.data;
   } catch (error) {
       console.error("Error marking submission as pending:", error.response?.data || error.message);
@@ -671,12 +671,75 @@ export const getSortedByPreferenceAPI = async (teacherId) => {
 // particular submission 
 export const getSubmissionDetailsAPI = async (submissionId) => {
   try {
-    console.log("call")
-    const response = await API.get(`/api/hackathon/submission/${submissionId}`);
-    console.log("called")
-    return { success: true, data: response.data };
+    const response = await API.get(`/api/teacher/submissions/${submissionId}`);
+    return { success: true, data: response.data.submission };
   } catch (error) {
     console.error("Failed to fetch submission details:", error);
     return { success: false, message: error.response?.data?.message || "Server error" };
+  }
+};
+
+// AI Evaluation System Functions
+
+// Evaluate a single submission with AI
+export const evaluateSubmissionWithAI = async (submissionId) => {
+  const toastId = toast.loading("AI is evaluating submission...");
+  try {
+    const response = await API.post(`/api/evaluation/submission/${submissionId}`);
+    toast.success("AI evaluation completed");
+    return response.data;
+  } catch (error) {
+    toast.error(error.response?.data?.message || "AI evaluation failed");
+    throw error.response?.data || "AI evaluation failed";
+  } finally {
+    toast.dismiss(toastId);
+  }
+};
+
+// Batch evaluate all submissions for a hackathon
+export const batchEvaluateHackathon = async (hackathonId) => {
+  const toastId = toast.loading("Starting batch evaluation...");
+  try {
+    const response = await API.post(`/api/evaluation/hackathon/${hackathonId}`);
+    toast.success("Batch evaluation process started");
+    return response.data;
+  } catch (error) {
+    toast.error(error.response?.data?.message || "Batch evaluation failed to start");
+    throw error.response?.data || "Batch evaluation failed";
+  } finally {
+    toast.dismiss(toastId);
+  }
+};
+
+// Manual override of AI scores
+export const manualOverrideScores = async (submissionId, scores, totalScore, feedback) => {
+  const toastId = toast.loading("Updating scores...");
+  try {
+    const response = await API.put(`/api/evaluation/submission/${submissionId}/override`, {
+      scores,
+      totalScore,
+      feedback
+    });
+    toast.success("Scores updated successfully");
+    return response.data;
+  } catch (error) {
+    toast.error(error.response?.data?.message || "Failed to update scores");
+    throw error.response?.data || "Score update failed";
+  } finally {
+    toast.dismiss(toastId);
+  }
+};
+
+// Get evaluation history for a submission
+export const getEvaluationHistory = async (submissionId) => {
+  const toastId = toast.loading("Loading evaluation history...");
+  try {
+    const response = await API.get(`/api/evaluation/submission/${submissionId}/history`);
+    return response.data;
+  } catch (error) {
+    toast.error(error.response?.data?.message || "Failed to load evaluation history");
+    throw error.response?.data || "Loading history failed";
+  } finally {
+    toast.dismiss(toastId);
   }
 };

@@ -34,3 +34,27 @@ export const verifyUser = async (req, res, next) => {
         next(error);
     }
 };
+
+// Alias for verifyUser - to maintain consistency with route naming
+export const isAuthenticated = verifyUser;
+
+// Admin role check middleware
+export const isAdmin = (req, res, next) => {
+    try {
+        // User has already been attached by verifyUser middleware
+        const user = req.user;
+        
+        if (!user) {
+            throw new ApiError(401, "Authentication required");
+        }
+        
+        // Check if user is an Admin
+        if (user.constructor.modelName !== "Admin") {
+            throw new ApiError(403, "Admin access required");
+        }
+        
+        next();
+    } catch (error) {
+        next(error);
+    }
+};

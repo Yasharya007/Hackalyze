@@ -1,6 +1,6 @@
 import express from 'express';
 import evaluationService from '../services/evaluationService.js';
-import { isAuthenticated } from '../middleware/auth.middleware.js';
+import { isAuthenticated } from '../middleware/auth.js';
 import { isAdmin } from '../middleware/admin.middleware.js';
 
 const router = express.Router();
