@@ -56,13 +56,13 @@ function Table() {
 
   
 
-  const handleCheckboxChange = (id, field) => {
-    setSubmissions(prevSubmissions => 
-      prevSubmissions.map(submission => 
-        submission.id === id ? { ...submission, [field]: !submission[field] } : submission
-      )
-    );
-  };  
+  // const handleCheckboxChange = (id, field) => {
+  //   setSubmissions(prevSubmissions => 
+  //     prevSubmissions.map(submission => 
+  //       submission.id === id ? { ...submission, [field]: !submission[field] } : submission
+  //     )
+  //   );
+  // };  
 
   const nextPage = () => {
     if (currentPage < Math.ceil(filteredSubmissions.length / submissionsPerPage)) {
@@ -106,7 +106,7 @@ function Table() {
               <th className="p-2 border border-gray-300">File</th>
               <th className="p-2 border border-gray-300 text-center">AI Score</th>
               <th className="p-2 border border-gray-300 text-center">Manual Score</th>
-              <th className="p-2 border border-gray-300 text-center">Reviewed</th>
+              <th className="p-15 border border-gray-300 text-center">Description</th>
               <th className="p-2 border border-gray-300 text-center">Status</th>
             </tr>
           </thead>
@@ -114,20 +114,13 @@ function Table() {
             {currentSubmissions.map((submission, index) => (
               <tr key={submission.id} className={`border border-gray-200 ${index % 2 === 0 ? "bg-gray-50" : "bg-white"}`}>
                 <td className="p-2 border border-gray-300 text-center">{index+1}</td>
-                <td className="p-2 border border-gray-300">{submission.studentId.name}</td>
+                <td className="p-2 border border-gray-300 hover:text-blue-900 cursor-pointer" onClick={()=>{navigate("/teacher/individualSubmission")}}>{submission.studentId.name}</td>
                 <td className="p-2 border border-gray-300">
                   <a href={submission.files[0].fileUrl} className="text-indigo-600 hover:underline">file {index+1}</a>
                 </td>
                 <td className="p-2 border border-gray-300 text-center">{submission.totalAIScore}</td>
                 <td className="p-2 border border-gray-300 text-center">{submission.totalScore}</td>
-                <td className="p-2 border border-gray-300 text-center">
-  <input
-    type="checkbox"
-    checked={submission.reviewed}
-    onChange={() => handleCheckboxChange(submission.id, "reviewed")}
-    className="cursor-pointer"
-  />
-</td>
+                <td className="p-2 border border-gray-300 text-center text-black">{submission.description}</td>
 <td className="p-2 border border-gray-300 text-center">
   {submission.status}
 </td>
