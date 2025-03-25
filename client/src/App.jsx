@@ -13,6 +13,8 @@ import CreateHackathon from "./pages/CreateHackathon.jsx";
 import FAQPage from "./pages/FAQPage.jsx";
 import StudentDashboard from "./pages/StudentDashboard.jsx";
 import TeacherHackathonPage from "./pages/TeacherHackathonPage.jsx";
+import TeacherHackathonsPage from "./pages/TeacherHackathonsPage.jsx";
+import TeacherHackathonDetailPage from "./pages/TeacherHackathonDetailPage.jsx";
 import StudentDetails from "./pages/IndividualSubmission.jsx";
 import DetailedAnalysis from "./pages/DetailedAnalysis.jsx";
 import StudentProfile from "./pages/StudentProfile.jsx";
@@ -47,6 +49,8 @@ function App() {
             <Route path="/teacher/hackathon" element={<TeacherHackathonPage/>}/>
             <Route path="/teacher/individualSubmission" element={<StudentDetails/>}/>
             <Route path="/teacher/detailedAnalysis" element={<DetailedAnalysis/>}/>
+            <Route path="/view-hackathons" element={<TeacherHackathonsPage/>}/>
+            <Route path="/teacher/hackathon/:id/details" element={<TeacherHackathonDetailPage/>}/>
         </Routes>
       </div>
     </>

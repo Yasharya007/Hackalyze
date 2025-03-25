@@ -743,3 +743,19 @@ export const getEvaluationHistory = async (submissionId) => {
     toast.dismiss(toastId);
   }
 };
+
+// Get submission statistics for a hackathon (for teacher analytics)
+export const getSubmissionStatsAPI = async (hackathonId) => {
+  const toastId = toast.loading("Loading submission statistics...");
+  try {
+    const response = await API.get(`/api/hackathon/${hackathonId}/stats`);
+    toast.success("Statistics loaded successfully");
+    return response.data;
+  } catch (error) {
+    console.error("Error loading submission statistics:", error);
+    toast.error(error.response?.data?.message || "Failed to load statistics");
+    throw error;
+  } finally {
+    toast.dismiss(toastId);
+  }
+};
