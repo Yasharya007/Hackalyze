@@ -360,16 +360,12 @@ const DetailedAnalysis = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* All Parameters */}
             <div className="bg-white p-6 rounded-lg shadow-md">
-              <h2 className="text-xl font-bold mb-4 text-gray-800">All Parameters</h2>
-              <p className="text-sm text-gray-600 mb-4">
-                Select parameters to include in your evaluation. Click a parameter to toggle it.
-              </p>
-              
-              {/* Refresh Parameters Button */}
-              <div className="flex justify-end mb-4">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold text-gray-800">All Parameters</h2>
+                {/* Refresh Parameters Button */}
                 <button
                   onClick={fetchParameters}
-                  className="flex items-center text-blue-600 hover:text-blue-800 focus:outline-none"
+                  className="flex items-center text-blue-600 hover:text-blue-800 focus:outline-none text-sm"
                 >
                   <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
@@ -377,6 +373,9 @@ const DetailedAnalysis = () => {
                   Refresh Parameters
                 </button>
               </div>
+              <p className="text-sm text-gray-600 mb-4">
+                Select parameters to include in your evaluation. Click a parameter to toggle it.
+              </p>
               
               {/* Parameters Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
@@ -400,7 +399,7 @@ const DetailedAnalysis = () => {
                         param.enabled ? 'bg-blue-50 border-blue-200' : 'bg-gray-50 border-gray-200'
                       } border p-4 rounded-lg cursor-pointer transition-all hover:shadow-md relative`}
                     >
-                      <div className="flex justify-between items-start mb-2">
+                      <div className="flex justify-between items-start mb-1">
                         <h3 
                           className={`font-bold ${param.enabled ? 'text-blue-700' : 'text-gray-700'}`}
                           onClick={() => toggleParameter(param.id)}
@@ -445,7 +444,7 @@ const DetailedAnalysis = () => {
                 {!showAddForm ? (
                   <button
                     onClick={() => setShowAddForm(true)}
-                    className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none"
+                    className="flex items-center justify-center w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none"
                   >
                     <FaPlus className="mr-2" />
                     Add Parameter
@@ -492,7 +491,7 @@ const DetailedAnalysis = () => {
                             ...prev,
                             weight: Number(e.target.value) / 100
                           }))}
-                          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                          className="w-full h-2.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
                         />
                       </div>
                       <div className="flex justify-end space-x-2">
@@ -535,16 +534,16 @@ const DetailedAnalysis = () => {
                   <p className="text-gray-500 text-center">No parameters selected. Please select parameters from the left panel.</p>
                 </div>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {activeParameters.map(param => (
-                    <div key={param.id} className="border border-blue-200 bg-blue-50 p-4 rounded-lg">
-                      <div className="flex justify-between items-center mb-3">
-                        <h3 className="font-bold text-blue-700">{param.name}</h3>
-                        <span className="text-sm font-bold">{(param.weight * 100).toFixed(0)}%</span>
+                    <div key={param.id} className="border border-blue-200 bg-blue-50 p-3 rounded-lg flex flex-col h-20">
+                      <div className="flex justify-between items-center">
+                        <h3 className="font-bold text-blue-700 text-sm">{param.name}</h3>
+                        <span className="text-xs font-bold">{(param.weight * 100).toFixed(0)}%</span>
                       </div>
                       
-                      {/* Weight adjustment slider - smooth without steps */}
-                      <div className="mt-2">
+                      {/* Weight adjustment slider - centered vertically */}
+                      <div className="flex items-center justify-center flex-grow">
                         <input
                           type="range"
                           min="1"
@@ -556,33 +555,27 @@ const DetailedAnalysis = () => {
                               p.id === param.id ? { ...p, weight: newWeight } : p
                             ));
                           }}
-                          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                          className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
                         />
-                      </div>
-                      
-                      {/* Plus/minus buttons for fine adjustment */}
-                      <div className="flex justify-end mt-2">
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            adjustWeight(param.id, -0.01);
-                          }}
-                          className="p-1 bg-gray-200 rounded-full hover:bg-gray-300 mr-2"
-                        >
-                          <FaMinus size={10} />
-                        </button>
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            adjustWeight(param.id, 0.01);
-                          }}
-                          className="p-1 bg-gray-200 rounded-full hover:bg-gray-300"
-                        >
-                          <FaPlus size={10} />
-                        </button>
                       </div>
                     </div>
                   ))}
+                  
+                  {/* AI Evaluation Button */}
+                  <div className="mt-4">
+                    <button
+                      className="w-full flex items-center justify-center px-4 py-2.5 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors shadow-sm"
+                      onClick={() => {
+                        // TODO: Implement AI evaluation
+                        alert('AI evaluation feature will be implemented soon');
+                      }}
+                    >
+                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                      </svg>
+                      Evaluate with AI
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
