@@ -5,10 +5,12 @@ import {getHackathonDetails,
     getHackathonStudents,
     getSubmissionDetails,
     getTopSubmissions,
-    addEvaluationCriteria,
-    getAllCriteria,
-    getSelectedEvaluationCriteria,
-    updateSelectedCriteria} from "../controllers/hackathonController.js";
+   // getAllCriteria,
+   // getSelectedEvaluationCriteria,
+  //  addEvaluationCriteria,
+   // updateSelectedCriteria
+}
+    from "../controllers/hackathonController.js";
 
 const router = express.Router();
 
@@ -31,16 +33,16 @@ router.get("/submission/:submissionId", getSubmissionDetails);
 router.get("/:hackathonId/top-submissions", getTopSubmissions);
 
 // Add parameters to judge the submissions
-    router.post("/:hackathonId/add-criteria", addEvaluationCriteria);
+   // router.post("/:hackathonId/add-criteria", addEvaluationCriteria);
 
 // Get criteria listed on which evaluation has been done
-router.get("/:hackathonId/criteria", getAllCriteria);
+//router.get("/:hackathonId/criteria", getAllCriteria);
 
 // Get only selected (ticked) criteria
-router.get("/:hackathonId/selected-criteria", getSelectedEvaluationCriteria);
+//router.get("/:hackathonId/selected-criteria", getSelectedEvaluationCriteria);
 
 // Update selected criteria
-router.put("/:hackathonId/selected-criteria", updateSelectedCriteria);
+//router.put("/:hackathonId/selected-criteria", updateSelectedCriteria);
 
 export default router;
 

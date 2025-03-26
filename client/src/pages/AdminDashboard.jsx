@@ -103,15 +103,18 @@ const AdminDashboard = () => {
 
     // Handle sorting
     const handleSort = (field) => {
+        console.log("Sort requested for field:", field);
         setSortConfig(prevConfig => {
             // If clicking on the same field, toggle direction
             if (prevConfig.field === field) {
+                console.log("Toggling direction from", prevConfig.direction, "to", prevConfig.direction === 'asc' ? 'desc' : 'asc');
                 return {
                     field,
                     direction: prevConfig.direction === 'asc' ? 'desc' : 'asc'
                 };
             }
             // If clicking on a new field, sort ascending by default
+            console.log("New sort field, setting direction to asc");
             return {
                 field,
                 direction: 'asc'
@@ -121,15 +124,18 @@ const AdminDashboard = () => {
 
     // Handle sorting for teachers
     const handleTeacherSort = (field) => {
+        console.log("Teacher sort requested for field:", field);
         setTeacherSortConfig(prevConfig => {
             // If clicking on the same field, toggle direction
             if (prevConfig.field === field) {
+                console.log("Toggling teacher sort direction from", prevConfig.direction, "to", prevConfig.direction === 'asc' ? 'desc' : 'asc');
                 return {
                     field,
                     direction: prevConfig.direction === 'asc' ? 'desc' : 'asc'
                 };
             }
             // If clicking on a new field, sort ascending by default
+            console.log("New teacher sort field, setting direction to asc");
             return {
                 field,
                 direction: 'asc'

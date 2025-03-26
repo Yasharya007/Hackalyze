@@ -1,26 +1,28 @@
 import React from "react";
-import { Link,useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Bar } from "react-chartjs-2";
-import { useDispatch,useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import "chart.js/auto";
-import { HackathonByTeacherAPI } from "../utils/api.jsx";
-import { useState,useEffect } from "react";
+import { HackathonByTeacherAPI, logoutAPI } from "../utils/api.jsx";
+import { useState, useEffect } from "react";
+
 import { setHackathon } from "../slices/hackathonSlice.js";
 import axios from "axios";
 import toast from "react-hot-toast";
+import { FaChartBar, FaLaptopCode, FaCogs, FaClipboardList, FaTrophy, FaUserCog } from "react-icons/fa";
 
 const TeacherDashboard = () => {
-    const dispatch=useDispatch()
-    const navigate=useNavigate()
+    const dispatch = useDispatch();
+    const navigate = useNavigate();
+    const [visible, setVisible] = useState(true);
     const teacherId = useSelector((state) => state.student.studentId);
-    // console.log(teacherId)
     const formatDate = (isoString) => isoString.split("T")[0];
     const [assignedHackathons, setassignedHackathons] = useState([]);
+
     useEffect(() => {
             const fetchHackathons = async () => {
               HackathonByTeacherAPI(teacherId)
               .then((res)=>{
-                console.log(res)
                 // console.log(hackathons.length);
                 setassignedHackathons(res);
                 // console.log("hello");
@@ -30,7 +32,6 @@ const TeacherDashboard = () => {
             fetchHackathons();
           }, []);
     const handleClick = (hackathon) => {
-        console.log(hackathon)
             dispatch(setHackathon(hackathon));
             navigate("/teacher/hackathon");
           };
@@ -48,36 +49,104 @@ const TeacherDashboard = () => {
     return (
         <div className="flex w-full h-screen bg-gray-100">
             {/* Sidebar */}
-            <aside className="w-64 bg-white p-5 shadow-lg">
-                <h2 className="text-xl font-bold mb-6">Teacher Portal</h2>
-                <nav>
-                    <ul className="space-y-4">
+            <aside className="w-64 bg-white shadow-lg flex flex-col h-screen sticky top-0">
+                <div className="p-6">
+                    <h2 className="text-2xl font-bold">Teacher Portal</h2>
+                </div>
+                <nav className="flex-grow px-4">
+                    <ul className="space-y-2">
                         <li>
-                            <Link to="/dashboard" className="block text-gray-900 font-semibold hover:text-gray-600">Dashboard</Link>
+                            <Link 
+                                to="/teacher/dashboard" 
+                                className="flex items-center p-2 rounded-md hover:bg-gray-100 text-gray-900 font-semibold"
+                            >
+                                <FaChartBar className="h-5 w-5 mr-3" />
+                                <span>Dashboard</span>
+                            </Link>
                         </li>
                         <li>
-                            <Link to="/view-hackathons" className="block text-gray-600 hover:text-gray-400">View Hackathons</Link>
+                            <Link 
+                                to="/view-hackathons" 
+                                className="flex items-center p-2 rounded-md hover:bg-gray-100 text-gray-600"
+                            >
+                                <FaLaptopCode className="h-5 w-5 mr-3" />
+                                <span>View Hackathons</span>
+                            </Link>
                         </li>
                         <li>
-                            <Link to="/set-parameters" className="block text-gray-600 hover:text-gray-400">Set Parameters</Link>
+                            <Link 
+                                to="/set-parameters" 
+                                className="flex items-center p-2 rounded-md hover:bg-gray-100 text-gray-600"
+                            >
+                                <FaCogs className="h-5 w-5 mr-3" />
+                                <span>Set Parameters</span>
+                            </Link>
                         </li>
                         <li>
-                            <Link to="/view-submissions" className="block text-gray-600 hover:text-gray-400">View Submissions</Link>
+                            <Link 
+                                to="/teacher/submissions" 
+                                className="flex items-center p-2 rounded-md hover:bg-gray-100 text-gray-600"
+                            >
+                                <FaClipboardList className="h-5 w-5 mr-3" />
+                                <span>View Submissions</span>
+                            </Link>
                         </li>
                         <li>
-                            <Link to="/view-shortlist" className="block text-gray-600 hover:text-gray-400">View Shortlist</Link>
+                            <Link 
+                                to="/teacher/shortlist" 
+                                className="flex items-center p-2 rounded-md hover:bg-gray-100 text-gray-600"
+                            >
+                                <FaTrophy className="h-5 w-5 mr-3" />
+                                <span>View Shortlist</span>
+                            </Link>
                         </li>
                         <li>
-                            <Link to="/settings" className="block text-gray-600 hover:text-gray-400">Settings</Link>
+                            <Link 
+                                to="/teacher/settings" 
+                                className="flex items-center p-2 rounded-md hover:bg-gray-100 text-gray-600"
+                            >
+                                <FaUserCog className="h-5 w-5 mr-3" />
+                                <span>Settings</span>
+                            </Link>
                         </li>
                     </ul>
                 </nav>
-                <button className="mt-10 w-full py-2 bg-gray-200 rounded-lg">Logout</button>
+
+                {/* Logout Button */}
+                <div className="mt-auto mb-6 px-4">
+                    <a
+                        href="#"
+                        className="flex items-center p-2 rounded-md text-red-600 hover:bg-red-50 w-full"
+                        onClick={() => {
+                            logoutAPI().then(() => {
+                                window.location.href = "/";
+                            });
+                        }}
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        </svg>
+                        <span>Logout</span>
+                    </a>
+                </div>
+
             </aside>
 
             {/* Main Content */}
             <main className="flex-1 p-8">
-                <div className="flex justify-between items-center">
+                {/* Notification */}
+                {visible && (
+                    <div className="bg-white p-4 shadow-md flex justify-between items-center">
+                        <div>
+                            <p className="text-gray-800 font-semibold">Important Announcement for Teachers</p>
+                            <p className="text-gray-500">Dear Teachers, please submit the student performance reports by the end of this week.</p>
+                        </div>
+                        <button className="text-gray-800" onClick={() => setVisible(false)}>
+                            Dismiss
+                        </button>
+                    </div>
+                )}
+                <div className="flex mt-4 justify-between items-center">
                     <h1 className="text-4xl font-bold">Teacher Dashboard</h1>
                     <button className="bg-gray-200 px-4 py-2 rounded-lg">Export Data</button>
                 </div>
@@ -97,7 +166,13 @@ const TeacherDashboard = () => {
                         <p className="text-2xl font-bold">78%</p>
                     </div>
                 </div>
-                <div class="mt-6 grid grid-cols-2 gap-6">
+
+                {/* Hackathon Analysis & Scheduling */}
+                <div className="mt-6 grid grid-cols-2 gap-6">
+                    {/* <div className="bg-white p-6 rounded-lg shadow">
+                        <h2 className="text-xl font-semibold">Hackathon Analysis</h2>
+                        <Bar data={chartData} className="mt-4" />
+                    </div> */}
                     <div class="bg-white p-6 rounded-lg shadow">
                         <h2 class="text-xl font-semibold">Assigned Hackathons</h2>
                         <div class="mt-4 space-y-4">
@@ -109,24 +184,34 @@ const TeacherDashboard = () => {
                             ))}
                         </div>
                     </div>
-                    <div class="bg-white p-6 rounded-lg shadow">
-                        <h2 class="text-xl font-semibold">Recent Activity</h2>
-                        <div class="mt-4 space-y-4">
-                            <div class="p-3 bg-gray-50 rounded-lg">New Submission Received - 2 hours ago</div>
-                            <div class="p-3 bg-gray-50 rounded-lg">Deadline Extended - 1 day ago</div>
-                            <div class="p-3 bg-gray-50 rounded-lg">Results Published</div>
-                        </div>
+                    
+                    <div className="bg-white p-6 rounded-lg shadow">
+                        <h2 className="text-xl font-semibold">Scheduling Calendar</h2>
+                        <p className="text-gray-500">Upcoming Hackathons and deadlines will be displayed here.</p>
+                        {/* Add calendar component here */}
+                        <ul className="space-y-2 mt-2">
+                            <li className="flex justify-between bg-gray-100 p-2 rounded">
+                                <span className="font-semibold">AI Innovation Challenge</span>
+                                <span className="text-gray-600">April 10, 2025</span>
+                            </li>
+                            <li className="flex justify-between bg-gray-100 p-2 rounded">
+                                <span className="font-semibold">Sustainability Hack</span>
+                                <span className="text-gray-600">May 5, 2025</span>
+                            </li>
+                            <li className="flex justify-between bg-gray-100 p-2 rounded">
+                                <span className="font-semibold">FinTech Revolution</span>
+                                <span className="text-gray-600">June 18, 2025</span>
+                            </li>
+                        </ul>
                     </div>
                 </div>
-                {/* Hackathon Analysis Chart */}
-                <div className="mt-6 bg-white p-6 rounded-lg shadow">
-                    <h2 className="text-xl font-semibold">Hackathon Analysis</h2>
-                    <Bar data={chartData} className="mt-4" />
-                </div>
+                <div className="bg-white p-6 rounded-lg shadow">
+                        <h2 className="text-xl font-semibold">Hackathon Analysis</h2>
+                        <Bar data={chartData} className="mt-4" />
+                    </div>
             </main>
-
         </div>
     );
 };
 
-export default TeacherDashboard;
+export default TeacherDashboard;  

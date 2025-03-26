@@ -55,7 +55,8 @@ const SubmissionSchema = new mongoose.Schema(
         totalAIScore: {
             type: Number,
             default: 0
-        },
+        }, // Automatically calculates the total AI score
+
         grade: {
             type: String,
             enum: ["Low", "Mid", "High"],
@@ -75,9 +76,14 @@ const SubmissionSchema = new mongoose.Schema(
 
         status: {
             type: String,
-            enum: ["Pending", "Reviewed", "Shortlisted", "Rejected"],
+            enum: ["Pending", "Approved", "Rejected", "Shortlisted", "Reviewed"],
             default: "Pending"
-        }, // Tracks submission review progress
+        }, // Status of the submission
+
+        rank: {
+            type: Number,
+            default: null
+        }, // Rank in shortlist order
 
         submissionTime: {
             type: Date,

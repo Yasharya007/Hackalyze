@@ -64,18 +64,6 @@ export const createHackathon = async (req, res) => {
         
         const hackathon = await Hackathon.create(hackathonData);
 
-         // Notify students about the new hackathon
-         const students = await Student.find();
-         await Promise.all(
-             students.map(student =>
-                 Notification.create({
-                     studentId: student._id,
-                     message: `A new hackathon "${title}" is upcoming. Start preparing!`,
-                     typeofmessage: "Hackathon Announcement"
-                 })
-             )
-         );
-
        return res.status(201).json({
         message: 'Hackathon Created Successfully',
         hackathon,
@@ -89,7 +77,6 @@ export const createHackathon = async (req, res) => {
         });
     }
 };
-
 export const getAllHackathons = async (req, res) => {
     try {
         const hackathons = await Hackathon.find()
@@ -186,12 +173,12 @@ export const assignTeacher = async (req, res) => {
             { new: true }
         );
 
-         //Notify the teacher
-         const notification = await Notification.create({
-            teacherId,
-            message: "You have been assigned to a hackathon.",
-            typeofmessage: "Hackathon Update"
-        });
+        //  Notify the teacher
+        //  const notification = await Notification.create({
+        //     teacherId,
+        //     message: "You have been assigned to a hackathon.",
+        //     typeofmessage: "Hackathon Update"
+        // });
 
         res.json({
              message: 'Teachers updated successfully',
@@ -262,7 +249,6 @@ export const getAssignedTeachers = async (req, res) => {
     }
 };
 
-
 // Student Management
 export const getRegisteredStudents = async (req, res) => {
     try {
@@ -307,18 +293,15 @@ export const acceptFormat = async (req, res) => {
             success: true,
             hackathon: updatedHackathon
          });
-
     } catch (error) {
         console.error("Server error in acceptFormat:", error);
         res.status(500).json({ 
             message: 'Error in updating media types', 
             error: error.message,
             success: false
-
         });
     }
 };
-
 
 // Submission Review
 export const getAllSubmissions = async (req, res) => {
@@ -356,46 +339,46 @@ export const getSubmissionById = async (req, res) => {
 
 export const shortlistSubmission = async (req, res) => {
     try {
-        const submission = await Submission.findById(req.params.id);
-        if (!submission) {
-            return res.status(404).json({
-                message: "Submission not found",
-                success: false
-            });
-        }
-
-        submission.status = "Shortlisted";  
-        await submission.save();
-
-        res.json({
-            message: "Submission shortlisted successfully",
-            submission,
+        const submission = await Submission.findByIdAndUpdate(req.params.id, { shortlisted: true }, { new: true });
+        res.json({ 
+            message: 'Submission shortlisted successfully',
+             submission,
             success: true
-        });
-
+         });
     } catch (error) {
-        res.status(500).json({
-            message: "Error shortlisting submission",
-            error,
-            success: false
-        });
+        res.status(500).json({ 
+            message: 'Error shortlisting submission',
+             error,
+             success: false
+             });
     }
 };
-
-
 export const notifyStudents = async (req, res) => {
     try {
+        // console.log("hello")
         const { hackathonId, message } = req.body;
-        const students = await Student.find({ hackathonId });
+        // const students = await Student.find({ hackathonId });
         
-        const notifications = await Promise.all(
-            students.map(student => Notification.create({
-                studentId: student._id,
-                message,
-                typeofmessage: "Announcement"
-            }))
-        );
+        const hackathon = await Hackathon.findById(hackathonId).select("registeredStudents");
 
+        if (!hackathon) {
+            return res.status(404).json({ error: "Hackathon not found" });
+        }
+
+        if (hackathon.registeredStudents.length === 0) {
+            return res.status(400).json({ error: "No registered students found" });
+        }
+       
+        // Create notifications for each student
+        const notifications = await Promise.all(
+            hackathon.registeredStudents.map(studentId =>
+                Notification.create({
+                    studentId,
+                    message,
+                    typeofmessage: "Announcement"
+                })
+            )
+        );
         res.json({ 
             message: 'Notifications sent successfully', 
             notifications
@@ -463,5 +446,29 @@ export const removeAssignedTeacher = async (req, res) => {
       error,
     success: false
       });
+    }
+};
+
+// Get active participants count
+export const getActiveParticipantsCount = async (req, res) => {
+    try {
+        // Count students who have at least one hackathon in their hackathonsParticipated array
+        const activeParticipantsCount = await Student.countDocuments({
+            'hackathonsParticipated.0': { $exists: true }  // At least one element exists in the array
+        });
+        
+        console.log(`Found ${activeParticipantsCount} active participants`);
+        
+        res.status(200).json({
+            success: true,
+            activeParticipantsCount
+        });
+    } catch (error) {
+        console.error("Error getting active participants count:", error);
+        res.status(500).json({
+            success: false,
+            message: "Failed to get active participants count",
+            error: error.message
+        });
     }
 };

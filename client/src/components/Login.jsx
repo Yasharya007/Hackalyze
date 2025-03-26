@@ -41,7 +41,7 @@ export default function Login() {
           <span onClick={() => navigate("/faq")}className="text-gray-600 hover:text-gray-900 hover:cursor-pointer">FAQ </span>
           <span onClick={() => navigate("/annoucements")}className="text-gray-600 hover:text-gray-900 hover:cursor-pointer">Announcements</span>
         </div>
-        <button className="bg-indigo-500 text-white px-4 py-2 rounded-md hover:bg-indigo-600 hover:cursor-pointer" onClick={() => setIsModalOpen(true)} >
+        <button className="bg-black text-white px-4 py-2 rounded-md hover:cursor-pointer" onClick={() => setIsModalOpen(true)} >
         Contact Support
         </button>
       </nav>
@@ -59,14 +59,14 @@ export default function Login() {
       <input
         type="email"
         placeholder="Email"
-        className="w-full border px-4 py-2 rounded-md mb-4 focus:ring-2 focus:ring-indigo-400 outline-none"
+        className="w-full border px-4 py-2 rounded-md mb-4 focus:ring-2 focus:ring-gray-400 outline-none"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
       />
       <input
         type="password"
         placeholder="Password"
-        className="w-full border px-4 py-2 rounded-md mb-4 focus:ring-2 focus:ring-indigo-400 outline-none"
+        className="w-full border px-4 py-2 rounded-md mb-4 focus:ring-2 focus:ring-gray-400 outline-none"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
       />
@@ -85,21 +85,21 @@ export default function Login() {
   </select>
 </div> */}
 
-      <button onClick={handleLogin} className="w-full bg-indigo-500 text-white py-2 rounded-md hover:bg-indigo-600">
+      <button onClick={handleLogin} className="w-full bg-black text-white py-2 rounded-md hover:bg-gray-800">
         Sign in
       </button>
 
       <p className="mt-4 text-gray-600 text-center">
-        Don't have an account? <span onClick={() => navigate("/student/register")} className="text-indigo-500 hover:cursor-pointer">Sign up</span>
+        Don't have an account? <span onClick={() => navigate("/student/register")} className="text-blue-600 hover:cursor-pointer">Sign up</span>
       </p>
     </div>
   </div>
 
   {/* Right Side: Large Blue Square */}
   <div className="w-1/2 flex justify-center items-center">
-    <div className="bg-indigo-500 text-white rounded-lg w-[99%] aspect-square flex flex-col items-center justify-center">
-      <h2 className="text-2xl font-bold text-center">"Innovation distinguishes between a leader and a follower"</h2>
-      <p className="mt-2 text-center pl-10 pr-10">
+    <div className="bg-gray-200 text-white rounded-lg w-[99%] aspect-square flex flex-col items-center justify-center">
+      <h2 className="text-5xl text-center text-black">Innovation sets leaders apart</h2>
+      <p className="text-xl mt-2 text-center pl-10 pr-10 text-gray-700">
       Fairness and innovation go hand in hand. Let's recognize the best ideas with a keen eye and an open mind.
       </p>
     </div>
