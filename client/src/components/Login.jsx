@@ -34,11 +34,12 @@ export default function Login() {
     <div className="h-screen w-screen flex flex-col bg-gray-100">
       {/* Navbar */}
       <nav className="w-[75%] bg-white shadow-md py-3 px-8 flex justify-between items-center fixed top-6 left-1/2 transform -translate-x-1/2 rounded-xl">
-        <h1 className="text-lg font-semibold">Hackalyze</h1>
+        <div className="flex items-center">
+          <img src="/logo.png" alt="Hackalyze Logo" className="h-8 mr-2" />
+          <h1 className="text-lg font-semibold">Hackalyze</h1>
+        </div>
         <div className="space-x-7">
-          <span onClick={() => navigate("/leaderboard")}className="text-gray-600 hover:text-gray-900 hover:cursor-pointer">Leaderboard</span>
-          <span onClick={() => navigate("/Rules")}className="text-gray-600 hover:text-gray-900 hover:cursor-pointer">Hackathon Rules</span>
-          <span onClick={() => navigate("/faq")}className="text-gray-600 hover:text-gray-900 hover:cursor-pointer">FAQ </span>
+          <span onClick={() => navigate("/faq")}className="text-gray-600 hover:text-gray-900 hover:cursor-pointer">FAQ</span>
           <span onClick={() => navigate("/annoucements")}className="text-gray-600 hover:text-gray-900 hover:cursor-pointer">Announcements</span>
         </div>
         <button className="bg-black text-white px-4 py-2 rounded-md hover:cursor-pointer" onClick={() => setIsModalOpen(true)} >
