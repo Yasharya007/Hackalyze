@@ -3,11 +3,13 @@ import { Link, useNavigate } from "react-router-dom";
 import { Bar } from "react-chartjs-2";
 import { useDispatch, useSelector } from "react-redux";
 import "chart.js/auto";
-import { HackathonByTeacherAPI,logoutAPI } from "../utils/api.jsx";
-import { useState,useEffect } from "react";
+import { HackathonByTeacherAPI, logoutAPI } from "../utils/api.jsx";
+import { useState, useEffect } from "react";
+
 import { setHackathon } from "../slices/hackathonSlice.js";
 import axios from "axios";
 import toast from "react-hot-toast";
+import { FaChartBar, FaLaptopCode, FaCogs, FaClipboardList, FaTrophy, FaUserCog } from "react-icons/fa";
 
 const TeacherDashboard = () => {
     const dispatch = useDispatch();
@@ -47,35 +49,87 @@ const TeacherDashboard = () => {
     return (
         <div className="flex w-full h-screen bg-gray-100">
             {/* Sidebar */}
-            <aside className="w-64 bg-white p-5 shadow-lg">
-                <h2 className="text-xl font-bold mb-6">Teacher Portal</h2>
-                <nav>
-                    <ul className="space-y-4">
+            <aside className="w-64 bg-white shadow-lg flex flex-col h-screen sticky top-0">
+                <div className="p-6">
+                    <h2 className="text-2xl font-bold">Teacher Portal</h2>
+                </div>
+                <nav className="flex-grow px-4">
+                    <ul className="space-y-2">
                         <li>
-                            <Link to="/dashboard" className="block text-gray-900 font-semibold hover:text-gray-600">Dashboard</Link>
+                            <Link 
+                                to="/teacher/dashboard" 
+                                className="flex items-center p-2 rounded-md hover:bg-gray-100 text-gray-900 font-semibold"
+                            >
+                                <FaChartBar className="h-5 w-5 mr-3" />
+                                <span>Dashboard</span>
+                            </Link>
                         </li>
                         <li>
-                            <Link to="/view-hackathons" className="block text-gray-600 hover:text-gray-400">View Hackathons</Link>
+                            <Link 
+                                to="/view-hackathons" 
+                                className="flex items-center p-2 rounded-md hover:bg-gray-100 text-gray-600"
+                            >
+                                <FaLaptopCode className="h-5 w-5 mr-3" />
+                                <span>View Hackathons</span>
+                            </Link>
                         </li>
                         <li>
-                            <Link to="/set-parameters" className="block text-gray-600 hover:text-gray-400">Set Parameters</Link>
+                            <Link 
+                                to="/set-parameters" 
+                                className="flex items-center p-2 rounded-md hover:bg-gray-100 text-gray-600"
+                            >
+                                <FaCogs className="h-5 w-5 mr-3" />
+                                <span>Set Parameters</span>
+                            </Link>
                         </li>
                         <li>
-                            <Link to="/view-submissions" className="block text-gray-600 hover:text-gray-400">View Submissions</Link>
+                            <Link 
+                                to="/teacher/submissions" 
+                                className="flex items-center p-2 rounded-md hover:bg-gray-100 text-gray-600"
+                            >
+                                <FaClipboardList className="h-5 w-5 mr-3" />
+                                <span>View Submissions</span>
+                            </Link>
                         </li>
                         <li>
-                            <Link to="/view-shortlist" className="block text-gray-600 hover:text-gray-400">View Shortlist</Link>
+                            <Link 
+                                to="/teacher/shortlist" 
+                                className="flex items-center p-2 rounded-md hover:bg-gray-100 text-gray-600"
+                            >
+                                <FaTrophy className="h-5 w-5 mr-3" />
+                                <span>View Shortlist</span>
+                            </Link>
                         </li>
                         <li>
-                            <Link to="/settings" className="block text-gray-600 hover:text-gray-400">Settings</Link>
+                            <Link 
+                                to="/teacher/settings" 
+                                className="flex items-center p-2 rounded-md hover:bg-gray-100 text-gray-600"
+                            >
+                                <FaUserCog className="h-5 w-5 mr-3" />
+                                <span>Settings</span>
+                            </Link>
                         </li>
                     </ul>
                 </nav>
-                <button className="mt-10 w-full py-2 bg-gray-200 rounded-lg hover:bg-gray-400" onClick={() => {
-                                            logoutAPI().then(() => {
-                                                window.location.href = "/";
-                                            });
-                                        }}>Logout</button>
+
+                {/* Logout Button */}
+                <div className="mt-auto mb-6 px-4">
+                    <a
+                        href="#"
+                        className="flex items-center p-2 rounded-md text-red-600 hover:bg-red-50 w-full"
+                        onClick={() => {
+                            logoutAPI().then(() => {
+                                window.location.href = "/";
+                            });
+                        }}
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        </svg>
+                        <span>Logout</span>
+                    </a>
+                </div>
+
             </aside>
 
             {/* Main Content */}

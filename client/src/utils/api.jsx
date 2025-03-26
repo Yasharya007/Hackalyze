@@ -118,6 +118,9 @@ export const TeacherRegisterAPI = async (formData) => {
       
       // For getting all submissions to calculate participation stats
       const submissionsResponse = await API.get("/api/admin/submissions");
+
+      // Get active participants count from the new endpoint
+      const activeParticipantsResponse = await API.get("/api/admin/active-participants");
       
       // Calculate stats based on the responses
       const hackathons = hackathonsResponse.data.hackathons || [];
@@ -131,18 +134,21 @@ export const TeacherRegisterAPI = async (formData) => {
       
       // Calculate submission rate (if available)
       const totalSubmissions = submissions.length;
-      const totalParticipants = hackathons.reduce(
-        (sum, hackathon) => sum + (hackathon.students?.length || 0), 
-        0
-      );
       
-      const submissionRate = totalParticipants > 0 
-        ? Math.round((totalSubmissions / totalParticipants) * 100) 
+      // Get active participants count from the dedicated endpoint
+      const activeParticipants = activeParticipantsResponse.data.activeParticipantsCount || 0;
+      
+      // Calculate total possible submissions (active students * total hackathons)
+      const totalPossibleSubmissions = activeParticipants * hackathons.length;
+      
+      // Calculate submission rate as a percentage of actual submissions compared to total possible submissions
+      const submissionRate = totalPossibleSubmissions > 0 
+        ? Math.round((totalSubmissions / totalPossibleSubmissions) * 100) 
         : 0;
       
       return {
         totalHackathons: hackathons.length,
-        activeParticipants: totalParticipants,
+        activeParticipants: activeParticipants,
         upcomingEvents,
         submissionRate
       };
@@ -520,6 +526,33 @@ export const getTopSubmissionsAPI = async (hackathonId) => {
 /*teacher landing page end*/
 
 
+// Get teacher profile
+export const getTeacherProfileAPI = async (teacherId) => {
+  try {
+    const response = await API.get(`/api/teacher/profile/${teacherId}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching teacher profile:", error);
+    throw error.response?.data || "Failed to load teacher profile";
+  }
+};
+
+// Update teacher profile
+export const updateTeacherProfileAPI = async (teacherId, profileData) => {
+  const toastId = toast.loading("Updating profile...");
+  try {
+    const response = await API.put(`/api/teacher/update/${teacherId}`, profileData);
+    toast.success("Profile updated successfully");
+    return response.data;
+  } catch (error) {
+    console.error("Error updating teacher profile:", error);
+    toast.error(error.response?.data?.message || "Failed to update profile");
+    throw error.response?.data || "Failed to update teacher profile";
+  } finally {
+    toast.dismiss(toastId);
+  }
+};
+
 // show all parameters 
 export const getSelectedCriteriaAPI = async (hackathonId) => {
   try {
@@ -536,11 +569,11 @@ export const getSelectedCriteriaAPI = async (hackathonId) => {
 
 
 // add parameters
-export const addParameterAPI = async (hackathonId, name, description) => {
+export const addParameterAPI = async (hackathonId, name, description, weight = 100) => {
   const toastId = toast.loading("Adding parameter..."); // Show loading toast
   // console.log("hello",hackathonId,name,description)
   try {
-    const response = await API.post(`/api/teacher/hackathons/${hackathonId}/parameters`, { name, description });
+    const response = await API.post(`/api/teacher/hackathons/${hackathonId}/parameters`, { name, description, weight });
 
     toast.success("Parameter added successfully");
     return response.data;
@@ -598,21 +631,53 @@ export const updateSelectedCriteriaAPI = async (hackathonId, criteriaData) => {
 
 // remove parameters
 export const deleteParameterAPI = async (hackathonId, parameterId) => {
+  const toastId = toast.loading("Deleting parameter..."); // Show loading toast
   try {
-    const response = await API.delete(`/api/teacher/${hackathonId}/parameters/${parameterId}`);
+    const response = await API.delete(`/api/teacher/hackathons/${hackathonId}/parameters/${parameterId}`);
+    toast.success("Parameter deleted successfully");
     return response.data;
   } catch (error) {
     console.error("Error deleting parameter:", error);
-    throw error;
+    const errorMessage = error.response?.data?.message || "Failed to delete parameter";
+    toast.error(errorMessage);
+    throw error.response?.data || "Failed to delete parameter";
+  } finally {
+    toast.dismiss(toastId);
   }
 };
+
+/**
+ * Update a parameter in a hackathon
+ * @param {string} hackathonId - Hackathon ID
+ * @param {string} parameterId - Parameter ID
+ * @param {Object} paramData - Parameter data to update
+ * @returns {Promise} - API response
+ */
+export const updateParameterAPI = async (hackathonId, parameterId, paramData) => {
+  const toastId = toast.loading("Updating parameter...");
+  try {
+    const response = await API.patch(
+      `/api/teacher/hackathons/${hackathonId}/parameters/${parameterId}`, 
+      paramData
+    );
+    
+    toast.success("Parameter updated successfully");
+    return response.data;
+  } catch (error) {
+    toast.error(`Failed to update parameter: ${error.response?.data?.message || error.message}`);
+    throw error;
+  } finally {
+    toast.dismiss(toastId);
+  }
+};
+
 // apply aii
 
 // show only sumbmisions to be reviewed
 
 export const getReviewedSubmissions = async () => {
   try {
-      const response = await axios.get("/api/review/all-reviewed-submissions");
+      const response = await API.get("/api/review/all-reviewed-submissions");
       return response.data;
   } catch (error) {
       console.error("Error fetching reviewed submissions:", error.response?.data || error.message);
@@ -623,7 +688,7 @@ export const getReviewedSubmissions = async () => {
 // mark as review
 export const markSubmissionAsReviewed = async (submissionId) => {
   try {
-      const response = await axios.put(`/api/review/${submissionId}/review`);
+      const response = await API.put(`/api/review/${submissionId}/review`);
       return response.data;
   } catch (error) {
       console.error("Error marking submission as reviewed:", error.response?.data || error.message);
@@ -634,7 +699,7 @@ export const markSubmissionAsReviewed = async (submissionId) => {
 // remove as review
 export const markSubmissionAsPending = async (submissionId) => {
   try {
-      const response = await axios.put(`/api/submissions/${submissionId}/remove-review`);
+      const response = await API.put(`/api/submissions/${submissionId}/remove-review`);
       return response.data;
   } catch (error) {
       console.error("Error marking submission as pending:", error.response?.data || error.message);
@@ -687,12 +752,177 @@ export const getSortedByPreferenceAPI = async (teacherId) => {
 // particular submission 
 export const getSubmissionDetailsAPI = async (submissionId) => {
   try {
-    console.log("call")
-    const response = await API.get(`/api/hackathon/submission/${submissionId}`);
-    console.log("called")
-    return { success: true, data: response.data };
+    const response = await API.get(`/api/teacher/submissions/${submissionId}`);
+    return { success: true, data: response.data.submission };
   } catch (error) {
     console.error("Failed to fetch submission details:", error);
     return { success: false, message: error.response?.data?.message || "Server error" };
   }
 };
+
+// AI Evaluation System Functions
+
+// Evaluate a single submission with AI
+export const evaluateSubmissionWithAI = async (submissionId) => {
+  const toastId = toast.loading("AI is evaluating submission...");
+  try {
+    const response = await API.post(`/api/evaluation/submission/${submissionId}`);
+    toast.success("AI evaluation completed");
+    return response.data;
+  } catch (error) {
+    toast.error(error.response?.data?.message || "AI evaluation failed");
+    throw error.response?.data || "AI evaluation failed";
+  } finally {
+    toast.dismiss(toastId);
+  }
+};
+
+// Batch evaluate all submissions for a hackathon
+export const batchEvaluateHackathon = async (hackathonId) => {
+  const toastId = toast.loading("Starting batch evaluation...");
+  try {
+    const response = await API.post(`/api/evaluation/hackathon/${hackathonId}`);
+    toast.success("Batch evaluation process started");
+    return response.data;
+  } catch (error) {
+    toast.error(error.response?.data?.message || "Batch evaluation failed to start");
+    throw error.response?.data || "Batch evaluation failed";
+  } finally {
+    toast.dismiss(toastId);
+  }
+};
+
+// Manual override of AI scores
+export const manualOverrideScores = async (submissionId, scores, totalScore, feedback) => {
+  const toastId = toast.loading("Updating scores...");
+  try {
+    const response = await API.put(`/api/evaluation/submission/${submissionId}/override`, {
+      scores,
+      totalScore,
+      feedback
+    });
+    toast.success("Scores updated successfully");
+    return response.data;
+  } catch (error) {
+    toast.error(error.response?.data?.message || "Failed to update scores");
+    throw error.response?.data || "Score update failed";
+  } finally {
+    toast.dismiss(toastId);
+  }
+};
+
+// Evaluate submissions with custom parameters
+export const evaluateWithCustomParameters = async (hackathonId, submissionIds, parameters) => {
+  const toastId = toast.loading("AI is evaluating submissions with custom parameters...");
+  try {
+    const parametersData = parameters.map(param => ({
+      name: param.name,
+      description: param.description,
+      weight: param.weight
+    }));
+    
+    const response = await API.post(`/api/teacher/hackathons/${hackathonId}/evaluate-with-parameters`, {
+      submissionIds,
+      parameters: parametersData
+    });
+    
+    toast.success("AI evaluation with custom parameters completed");
+    return response.data;
+  } catch (error) {
+    toast.error(error.response?.data?.message || "AI evaluation with custom parameters failed");
+    throw error.response?.data || "AI evaluation failed";
+  } finally {
+    toast.dismiss(toastId);
+  }
+};
+
+// Get evaluation history for a submission
+export const getEvaluationHistory = async (submissionId) => {
+  const toastId = toast.loading("Loading evaluation history...");
+  try {
+    const response = await API.get(`/api/evaluation/submission/${submissionId}/history`);
+    return response.data;
+  } catch (error) {
+    toast.error(error.response?.data?.message || "Failed to load evaluation history");
+    throw error.response?.data || "Loading history failed";
+  } finally {
+    toast.dismiss(toastId);
+  }
+};
+
+// Get submission statistics for a hackathon (for teacher analytics)
+export const getSubmissionStatsAPI = async (hackathonId) => {
+  const toastId = toast.loading("Loading submission statistics...");
+  try {
+    const response = await API.get(`/api/hackathon/${hackathonId}/stats`);
+    toast.success("Statistics loaded successfully");
+    return response.data;
+  } catch (error) {
+    console.error("Error loading submission statistics:", error);
+    toast.error(error.response?.data?.message || "Failed to load statistics");
+    throw error;
+  } finally {
+    toast.dismiss(toastId);
+  }
+};
+
+/**
+ * Get shortlisted submissions for a hackathon
+ * @param {string} hackathonId - Hackathon ID
+ * @returns {Promise} - API response with shortlisted submissions
+ */
+export const getShortlistedSubmissions = async (hackathonId) => {
+  const toastId = toast.loading("Loading shortlisted submissions...");
+  try {
+    const response = await API.get(`/api/teacher/hackathons/${hackathonId}/shortlist`);
+    toast.success("Shortlisted submissions loaded");
+    return response.data;
+  } catch (error) {
+    toast.error(`Failed to load shortlisted submissions: ${error.response?.data?.message || error.message}`);
+    throw error;
+  } finally {
+    toast.dismiss(toastId);
+  }
+};
+
+/**
+ * Update the order of shortlisted submissions
+ * @param {string} hackathonId - Hackathon ID
+ * @param {Array} orderData - Array of objects with submissionId and rank
+ * @returns {Promise} - API response
+ */
+export const updateShortlistOrder = async (hackathonId, orderData) => {
+  const toastId = toast.loading("Updating shortlist order...");
+  try {
+    const response = await API.patch(`/api/teacher/hackathons/${hackathonId}/shortlist/order`, { 
+      submissions: orderData 
+    });
+    toast.success("Shortlist order updated successfully");
+    return response.data;
+  } catch (error) {
+    toast.error(`Failed to update shortlist order: ${error.response?.data?.message || error.message}`);
+    throw error;
+  } finally {
+    toast.dismiss(toastId);
+  }
+};
+
+/**
+ * Send shortlist to admin for review
+ * @param {string} hackathonId - Hackathon ID
+ * @returns {Promise} - API response
+ */
+export const sendShortlistToAdmin = async (hackathonId) => {
+  const toastId = toast.loading("Sending shortlist to admin...");
+  try {
+    const response = await API.post(`/api/teacher/hackathons/${hackathonId}/shortlist/send-to-admin`);
+    toast.success("Shortlist sent to admin successfully");
+    return response.data;
+  } catch (error) {
+    toast.error(`Failed to send shortlist to admin: ${error.response?.data?.message || error.message}`);
+    throw error;
+  } finally {
+    toast.dismiss(toastId);
+  }
+};
+

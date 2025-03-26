@@ -448,3 +448,27 @@ export const removeAssignedTeacher = async (req, res) => {
       });
     }
 };
+
+// Get active participants count
+export const getActiveParticipantsCount = async (req, res) => {
+    try {
+        // Count students who have at least one hackathon in their hackathonsParticipated array
+        const activeParticipantsCount = await Student.countDocuments({
+            'hackathonsParticipated.0': { $exists: true }  // At least one element exists in the array
+        });
+        
+        console.log(`Found ${activeParticipantsCount} active participants`);
+        
+        res.status(200).json({
+            success: true,
+            activeParticipantsCount
+        });
+    } catch (error) {
+        console.error("Error getting active participants count:", error);
+        res.status(500).json({
+            success: false,
+            message: "Failed to get active participants count",
+            error: error.message
+        });
+    }
+};

@@ -14,6 +14,7 @@ import { getHackathonById } from "../controllers/Admin.controllers.js";
 import { notifyStudents } from "../controllers/Admin.controllers.js";
 import { publishFinalResults } from "../controllers/Admin.controllers.js";
 import { removeAssignedTeacher } from "../controllers/Admin.controllers.js";
+import { getActiveParticipantsCount } from "../controllers/Admin.controllers.js";
 const router = express.Router();
 
 // Hackathon Management
@@ -31,7 +32,7 @@ router.get('/hackathon/teachers', getAssignedTeachers);
 router.get('/hackathon/:id/students', getRegisteredStudents);
 router.post('/hackathon/:id/accept-format', acceptFormat);
 router.patch('/hackathon/:id/updatemedia-formats', acceptFormat);
-
+router.get('/active-participants', getActiveParticipantsCount); // New endpoint for active participants count
 
 // Submission 
 router.get('/submissions', getAllSubmissions);// swagger documented

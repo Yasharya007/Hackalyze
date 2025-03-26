@@ -13,11 +13,17 @@ import CreateHackathon from "./pages/CreateHackathon.jsx";
 import FAQPage from "./pages/FAQPage.jsx";
 import StudentDashboard from "./pages/StudentDashboard.jsx";
 import TeacherHackathonPage from "./pages/TeacherHackathonPage.jsx";
+import TeacherHackathonsPage from "./pages/TeacherHackathonsPage.jsx";
+import TeacherHackathonDetailPage from "./pages/TeacherHackathonDetailPage.jsx";
 import StudentDetails from "./pages/IndividualSubmission.jsx";
 import DetailedAnalysis from "./pages/DetailedAnalysis.jsx";
 import StudentProfile from "./pages/StudentProfile.jsx";
 import EnrolledHackathons from "./pages/EnrolledHackathons.jsx";
 import StudentSettings from "./pages/StudentSettings.jsx";
+import TeacherSettings from "./pages/TeacherSettings.jsx";
+import TeacherSubmissionsPage from "./pages/TeacherSubmissionsPage.jsx";
+import ViewShortlistPage from "./pages/ViewShortlistPage.jsx";
+import ShortlistDetailPage from "./pages/ShortlistDetailPage.jsx";
 
 function App() {
   
@@ -42,11 +48,17 @@ function App() {
             <Route path="/student/profile" element={<StudentProfile/>}/>
             <Route path="/student/enrolled-hackathons" element={<EnrolledHackathons/>}/>
             <Route path="/student/settings" element={<StudentSettings/>}/>
+            <Route path="/teacher/settings" element={<TeacherSettings/>}/>
+            <Route path="/teacher/submissions" element={<TeacherSubmissionsPage/>}/>
+            <Route path="/teacher/shortlist" element={<ViewShortlistPage/>}/>
+            <Route path="/teacher/shortlist/view/:hackathonId" element={<ShortlistDetailPage/>}/>
             <Route path="/admin/dashboard" element={<AdminDashboard/>}/>
             <Route path="/main" element={<FrontPage/>}/>
             <Route path="/teacher/hackathon" element={<TeacherHackathonPage/>}/>
             <Route path="/teacher/individualSubmission" element={<StudentDetails/>}/>
             <Route path="/teacher/detailedAnalysis" element={<DetailedAnalysis/>}/>
+            <Route path="/view-hackathons" element={<TeacherHackathonsPage/>}/>
+            <Route path="/teacher/hackathon/:id/details" element={<TeacherHackathonDetailPage/>}/>
         </Routes>
       </div>
     </>
