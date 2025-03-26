@@ -5,6 +5,7 @@ import { getHackathonSubmissionsAPI, shortlistStudents, updateSubmissionAPI } fr
 import { useDispatch } from "react-redux";
 import { setSelectedSubmissionId } from "../slices/submissionSlice.js";
 import Controls from "./Controls";
+import toast from 'react-hot-toast';
 
 const BroadTable = forwardRef(({ onSubmissionSelect }, ref) => {
   const hackathon = useSelector((state) => state.hackathon.selectedHackathon);
@@ -112,8 +113,13 @@ const BroadTable = forwardRef(({ onSubmissionSelect }, ref) => {
     console.log("id is" ,submissionIds)
 
    shortlistStudents(submissionIds)
-   .then(()=>{navigate("/teacher/hackathon")})
-   .catch(()=>{})
+   .then(()=>{
+     toast.success("Shortlist finalized successfully!");
+     navigate("/teacher/shortlist");
+   })
+   .catch((err)=>{
+     toast.error("Failed to finalize shortlist: " + (err.message || "Unknown error"));
+   });
 };
 const updateSubmission= async () => {
   // Extract all submissions with _id and status

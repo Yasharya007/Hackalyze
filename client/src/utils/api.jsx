@@ -843,3 +843,63 @@ export const getSubmissionStatsAPI = async (hackathonId) => {
     toast.dismiss(toastId);
   }
 };
+
+/**
+ * Get shortlisted submissions for a hackathon
+ * @param {string} hackathonId - Hackathon ID
+ * @returns {Promise} - API response with shortlisted submissions
+ */
+export const getShortlistedSubmissions = async (hackathonId) => {
+  const toastId = toast.loading("Loading shortlisted submissions...");
+  try {
+    const response = await API.get(`/api/teacher/hackathons/${hackathonId}/shortlist`);
+    toast.success("Shortlisted submissions loaded");
+    return response.data;
+  } catch (error) {
+    toast.error(`Failed to load shortlisted submissions: ${error.response?.data?.message || error.message}`);
+    throw error;
+  } finally {
+    toast.dismiss(toastId);
+  }
+};
+
+/**
+ * Update the order of shortlisted submissions
+ * @param {string} hackathonId - Hackathon ID
+ * @param {Array} orderData - Array of objects with submissionId and rank
+ * @returns {Promise} - API response
+ */
+export const updateShortlistOrder = async (hackathonId, orderData) => {
+  const toastId = toast.loading("Updating shortlist order...");
+  try {
+    const response = await API.patch(`/api/teacher/hackathons/${hackathonId}/shortlist/order`, { 
+      submissions: orderData 
+    });
+    toast.success("Shortlist order updated successfully");
+    return response.data;
+  } catch (error) {
+    toast.error(`Failed to update shortlist order: ${error.response?.data?.message || error.message}`);
+    throw error;
+  } finally {
+    toast.dismiss(toastId);
+  }
+};
+
+/**
+ * Send shortlist to admin for review
+ * @param {string} hackathonId - Hackathon ID
+ * @returns {Promise} - API response
+ */
+export const sendShortlistToAdmin = async (hackathonId) => {
+  const toastId = toast.loading("Sending shortlist to admin...");
+  try {
+    const response = await API.post(`/api/teacher/hackathons/${hackathonId}/shortlist/send-to-admin`);
+    toast.success("Shortlist sent to admin successfully");
+    return response.data;
+  } catch (error) {
+    toast.error(`Failed to send shortlist to admin: ${error.response?.data?.message || error.message}`);
+    throw error;
+  } finally {
+    toast.dismiss(toastId);
+  }
+};

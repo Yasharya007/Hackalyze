@@ -484,3 +484,144 @@ export const evaluateWithParameters = async (req, res) => {
     });
   }
 };
+
+// Update parameter (weight, etc.)
+export const updateParameter = async (req, res) => {
+    try {
+        const { hackathonId, parameterId } = req.params;
+        const updateData = req.body;
+        
+        // Find the hackathon
+        const hackathon = await Hackathon.findById(hackathonId);
+        if (!hackathon) {
+            return res.status(404).json({ message: "Hackathon not found." });
+        }
+        
+        // Find and update the parameter
+        const paramIndex = hackathon.parameters.findIndex(
+            param => param._id.toString() === parameterId
+        );
+        
+        if (paramIndex === -1) {
+            return res.status(404).json({ message: "Parameter not found." });
+        }
+        
+        // Update parameter fields
+        Object.keys(updateData).forEach(key => {
+            hackathon.parameters[paramIndex][key] = updateData[key];
+        });
+        
+        await hackathon.save();
+        
+        res.status(200).json({ 
+            message: "Parameter updated successfully.", 
+            parameter: hackathon.parameters[paramIndex] 
+        });
+    } catch (error) {
+        res.status(500).json({ message: "Internal server error.", error: error.message });
+    }
+};
+
+// Get detailed shortlist for a hackathon
+export const getShortlist = async (req, res) => {
+    try {
+        const { hackathonId } = req.params;
+        
+        // Find shortlisted submissions for the hackathon
+        const submissions = await Submission.find({
+            hackathonId,
+            status: "Shortlisted"
+        })
+        .populate('studentId', 'name email') // Populate student details
+        .sort({ rank: 1 }); // Sort by rank if available
+        
+        if (!submissions || submissions.length === 0) {
+            return res.status(200).json([]); // Return empty array if no shortlisted submissions
+        }
+        
+        // Format response with student name and scores
+        const formattedSubmissions = submissions.map(submission => {
+            return {
+                _id: submission._id,
+                studentId: submission.studentId?._id,
+                studentName: submission.studentId?.name || 'Unknown Student',
+                title: submission.title,
+                description: submission.description,
+                githubRepo: submission.githubRepo,
+                tags: submission.tags,
+                hackathonId: submission.hackathonId,
+                aiScore: submission.totalAIScore || 0,
+                manualScore: submission.totalScore || 0,
+                status: submission.status,
+                rank: submission.rank || 999, // Default high rank if not set
+                submittedAt: submission.createdAt
+            };
+        });
+        
+        res.status(200).json(formattedSubmissions);
+    } catch (error) {
+        console.error("Error fetching shortlist:", error);
+        res.status(500).json({ message: "Internal server error.", error: error.message });
+    }
+};
+
+// Update the order of shortlisted submissions
+export const updateShortlistOrder = async (req, res) => {
+    try {
+        const { hackathonId } = req.params;
+        const { submissions } = req.body; // Array of {submissionId, rank}
+        
+        if (!submissions || !Array.isArray(submissions)) {
+            return res.status(400).json({ message: "Invalid data. Expected array of submissions with ranks." });
+        }
+        
+        // Update each submission with its new rank
+        const updatePromises = submissions.map(item => 
+            Submission.findByIdAndUpdate(
+                item.submissionId,
+                { rank: item.rank },
+                { new: true }
+            )
+        );
+        
+        const updatedSubmissions = await Promise.all(updatePromises);
+        
+        res.status(200).json({
+            message: "Shortlist order updated successfully",
+            updatedSubmissions
+        });
+    } catch (error) {
+        console.error("Error updating shortlist order:", error);
+        res.status(500).json({ message: "Failed to update shortlist order", error: error.message });
+    }
+};
+
+// Send shortlisted submissions to admin for review
+export const sendShortlistToAdmin = async (req, res) => {
+    try {
+        const { hackathonId } = req.params;
+        
+        // Find the hackathon
+        const hackathon = await Hackathon.findById(hackathonId);
+        if (!hackathon) {
+            return res.status(404).json({ message: "Hackathon not found." });
+        }
+        
+        // Update hackathon status to indicate shortlist sent to admin
+        hackathon.shortlistSentToAdmin = true;
+        hackathon.shortlistSentDate = new Date();
+        
+        await hackathon.save();
+        
+        // Here you would typically send a notification to admin
+        // This could involve creating a notification in the database
+        // or sending an email, etc.
+        
+        res.status(200).json({ 
+            message: "Shortlist sent to admin for review successfully.",
+            shortlistSentDate: hackathon.shortlistSentDate
+        });
+    } catch (error) {
+        res.status(500).json({ message: "Internal server error.", error: error.message });
+    }
+};
