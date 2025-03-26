@@ -92,12 +92,12 @@ function TeacherHackathonPage() {
         if (sortConfig.field === 'studentName') {
           valueA = a.studentId?.name || '';
           valueB = b.studentId?.name || '';
-        } else if (sortConfig.field === 'manualScore') {
-          valueA = a.manualScore || 0;
-          valueB = b.manualScore || 0;
-        } else if (sortConfig.field === 'aiScore') {
-          valueA = a.aiScore || 0;
-          valueB = b.aiScore || 0;
+        } else if (sortConfig.field === 'totalAIScore') {
+          valueA = a.totalAIScore || 0;
+          valueB = b.totalAIScore || 0;
+        } else if (sortConfig.field === 'totalScore') {
+          valueA = a.totalScore || 0;
+          valueB = b.totalScore || 0;
         } else {
           valueA = a[sortConfig.field] || '';
           valueB = b[sortConfig.field] || '';
@@ -568,8 +568,8 @@ function TeacherHackathonPage() {
                   >
                     <option value="displayId">ID</option>
                     <option value="studentName">Name</option>
-                    <option value="aiScore">AI Score</option>
-                    <option value="manualScore">Manual Score</option>
+                    <option value="totalAIScore">AI Score</option>
+                    <option value="totalScore">Manual Score</option>
                     <option value="submittedAt">Submission Date</option>
                   </select>
                   <button
@@ -631,14 +631,14 @@ function TeacherHackathonPage() {
                               Overview
                             </div>
                           </th>
-                          <th className="p-3 border border-gray-300 cursor-pointer" onClick={() => handleSort('aiScore')}>
+                          <th className="p-3 border border-gray-300 cursor-pointer" onClick={() => handleSort('totalAIScore')}>
                             <div className="flex items-center justify-center">
-                              AI Score {getSortIcon('aiScore')}
+                              AI Score {getSortIcon('totalAIScore')}
                             </div>
                           </th>
-                          <th className="p-3 border border-gray-300 cursor-pointer" onClick={() => handleSort('manualScore')}>
+                          <th className="p-3 border border-gray-300 cursor-pointer" onClick={() => handleSort('totalScore')}>
                             <div className="flex items-center justify-center">
-                              Manual Score {getSortIcon('manualScore')}
+                              Manual Score {getSortIcon('totalScore')}
                             </div>
                           </th>
                           <th className="p-3 border border-gray-300">
@@ -694,24 +694,24 @@ function TeacherHackathonPage() {
                               <td className="p-3 border border-gray-300 text-center">
                                 <div className="flex justify-center items-center">
                                   <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                    (submission.aiScore >= 80) ? 'bg-green-100 text-green-800' :
-                                    (submission.aiScore >= 60) ? 'bg-blue-100 text-blue-800' :
-                                    (submission.aiScore >= 40) ? 'bg-yellow-100 text-yellow-800' :
+                                    (submission.totalAIScore >= 80) ? 'bg-green-100 text-green-800' :
+                                    (submission.totalAIScore >= 60) ? 'bg-blue-100 text-blue-800' :
+                                    (submission.totalAIScore >= 40) ? 'bg-yellow-100 text-yellow-800' :
                                     'bg-red-100 text-red-800'
                                   }`}>
-                                    {submission.aiScore || '0'}/100
+                                    {submission.totalAIScore || '0'}/100
                                   </span>
                                 </div>
                               </td>
                               <td className="p-3 border border-gray-300 text-center">
                                 <div className="flex justify-center items-center">
                                   <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                    (submission.manualScore >= 80) ? 'bg-green-100 text-green-800' :
-                                    (submission.manualScore >= 60) ? 'bg-blue-100 text-blue-800' :
-                                    (submission.manualScore >= 40) ? 'bg-yellow-100 text-yellow-800' :
+                                    (submission.totalScore >= 80) ? 'bg-green-100 text-green-800' :
+                                    (submission.totalScore >= 60) ? 'bg-blue-100 text-blue-800' :
+                                    (submission.totalScore >= 40) ? 'bg-yellow-100 text-yellow-800' :
                                     'bg-red-100 text-red-800'
                                   }`}>
-                                    {submission.manualScore || '0'}/100
+                                    {submission.totalScore || '0'}/100
                                   </span>
                                 </div>
                               </td>

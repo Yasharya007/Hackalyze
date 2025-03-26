@@ -145,7 +145,7 @@ const sortByAIScore = () => {
   setSubmissions(sortedSubmissions);
 };
 // totalScore
-const sortBytotalScore = () => {
+const sortByManualScore = () => {
   const sortedSubmissions = [...submissions].sort((a, b) => b.totalScore - a.totalScore);
   setSubmissions(sortedSubmissions);
 };
@@ -185,7 +185,7 @@ const sortBytotalScore = () => {
               Sort by AI
             </button>
             <button
-              onClick={() => sortBytotalScore()}
+              onClick={() => sortByManualScore()}
               className="px-3 py-1 bg-gray-900 text-white rounded-md hover:bg-gray-700"
             >
               Sort by Manual score
@@ -271,8 +271,30 @@ const sortBytotalScore = () => {
                 <td className="py-3 px-6">
                   <span className="px-2 py-1 bg-gray-100 text-black rounded-full text-xs">{submission.tags}</span>
                 </td>
-                <td className="py-3 px-6">{submission.totalAIScore}</td>
-                <td className="py-3 px-6">{submission.totalScore}</td>
+                <td className="py-3 px-6">
+                  <div className="flex justify-center items-center">
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      (submission.totalAIScore >= 80) ? 'bg-green-100 text-green-800' :
+                      (submission.totalAIScore >= 60) ? 'bg-blue-100 text-blue-800' :
+                      (submission.totalAIScore >= 40) ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-red-100 text-red-800'
+                    }`}>
+                      {submission.totalAIScore || '0'}/100
+                    </span>
+                  </div>
+                </td>
+                <td className="py-3 px-6">
+                  <div className="flex justify-center items-center">
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      (submission.totalScore >= 80) ? 'bg-green-100 text-green-800' :
+                      (submission.totalScore >= 60) ? 'bg-blue-100 text-blue-800' :
+                      (submission.totalScore >= 40) ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-red-100 text-red-800'
+                    }`}>
+                      {submission.totalScore || '0'}/100
+                    </span>
+                  </div>
+                </td>
                 <td className="py-3 px-6">
                   <input
                     type="checkbox"
