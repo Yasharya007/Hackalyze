@@ -2,9 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { FaChartBar, FaLaptopCode, FaCogs, FaClipboardList, FaTrophy, FaUserCog, FaArrowLeft, 
-         FaWeight, FaPercentage, FaCheck, FaPlus, FaMinus, FaInfoCircle, FaTimes } from 'react-icons/fa';
+         FaWeight, FaPercentage, FaCheck, FaPlus, FaMinus, FaInfoCircle, FaTimes, FaTrash } from 'react-icons/fa';
 import BroadTable from "../components/BroadTable.jsx";
-import { logoutAPI } from '../utils/api.jsx';
+import { logoutAPI, addParameterAPI, deleteParameterAPI, getParametersAPI } from '../utils/api.jsx';
 
 const DetailedAnalysis = () => {
   const navigate = useNavigate();
@@ -17,16 +17,9 @@ const DetailedAnalysis = () => {
   const [detailsLocked, setDetailsLocked] = useState(false);
   
   // Parameter states
-  const [allParameters, setAllParameters] = useState([
-    { id: 1, name: 'Code Quality', description: 'Evaluates how well-structured and clean the code is', weight: 0.25, enabled: true },
-    { id: 2, name: 'Innovation', description: 'How original and creative the solution is', weight: 0.20, enabled: true },
-    { id: 3, name: 'Problem Solving', description: 'Effectiveness in addressing the hackathon challenge', weight: 0.25, enabled: true },
-    { id: 4, name: 'UI/UX Design', description: 'Quality of user interface and experience', weight: 0.15, enabled: true },
-    { id: 5, name: 'Documentation', description: 'Clarity and completeness of documentation', weight: 0.15, enabled: false },
-    { id: 6, name: 'Scalability', description: 'Potential for the solution to scale', weight: 0.10, enabled: false },
-    { id: 7, name: 'Technical Complexity', description: 'Level of technical challenge in implementation', weight: 0.15, enabled: true },
-    { id: 8, name: 'Completeness', description: 'How fully implemented the solution is', weight: 0.20, enabled: false }
-  ]);
+  const [allParameters, setAllParameters] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
   
   // New parameter form state
   const [showAddForm, setShowAddForm] = useState(false);
@@ -36,6 +29,37 @@ const DetailedAnalysis = () => {
     weight: 0.15,
     enabled: true
   });
+  
+  // Fetch parameters from API
+  const fetchParameters = async () => {
+    if (hackathon?._id) {
+      setIsLoading(true);
+      try {
+        const response = await getParametersAPI(hackathon._id);
+        if (response.parameters && Array.isArray(response.parameters)) {
+          // Transform the API response to match our parameter format
+          const formattedParams = response.parameters.map((param, index) => ({
+            id: param._id || index + 1,
+            name: param.name,
+            description: param.description,
+            weight: param.weight || 0.15, // Default weight if not provided
+            enabled: param.enabled || true, // Default enabled if not provided
+            _id: param._id // Keep the original _id from the server
+          }));
+          setAllParameters(formattedParams);
+        }
+      } catch (err) {
+        console.error("Error fetching parameters:", err);
+        setError("Failed to load parameters");
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  };
+
+  useEffect(() => {
+    fetchParameters();
+  }, [hackathon]);
   
   // Get active sidebar item
   const getActiveSidebarItem = () => {
@@ -47,6 +71,9 @@ const DetailedAnalysis = () => {
   
   // Calculate total weight of active parameters
   const totalWeight = activeParameters.reduce((acc, param) => acc + param.weight, 0);
+  
+  // Check if weight is exactly 100% (or close enough considering floating-point precision)
+  const isWeightValid = Math.abs(totalWeight * 100 - 100) < 0.1;
   
   // Toggle parameter enabled status
   const toggleParameter = (id) => {
@@ -71,31 +98,57 @@ const DetailedAnalysis = () => {
     }));
   };
   
-  // Add new parameter
-  const handleAddParameter = (e) => {
+  // Add new parameter via API
+  const handleAddParameter = async (e) => {
     e.preventDefault();
     if (!newParameter.name || !newParameter.description) {
       alert('Please provide both name and description');
       return;
     }
     
-    const newId = Math.max(...allParameters.map(p => p.id), 0) + 1;
-    setAllParameters(prev => [
-      ...prev,
-      {
-        ...newParameter,
-        id: newId
+    try {
+      const response = await addParameterAPI(
+        hackathon._id,
+        newParameter.name,
+        newParameter.description
+      );
+      
+      // Reset form
+      setNewParameter({
+        name: '',
+        description: '',
+        weight: 0.15,
+        enabled: true
+      });
+      setShowAddForm(false);
+      
+      // Refresh parameters list from the backend
+      await fetchParameters();
+      
+    } catch (err) {
+      console.error("Error adding parameter:", err);
+      alert("Failed to add parameter. Please try again.");
+    }
+  };
+  
+  // Delete parameter
+  const handleDeleteParameter = async (paramId, paramServerId) => {
+    try {
+      // The API expects the server ID (_id), not our local id
+      if (paramServerId) {
+        await deleteParameterAPI(hackathon._id, paramServerId);
+        
+        // Refresh parameters list from the backend after successful deletion
+        await fetchParameters();
+      } else {
+        // If there's no server ID, just remove from local state
+        // This handles parameters that haven't been saved to the server yet
+        setAllParameters(prev => prev.filter(param => param.id !== paramId));
       }
-    ]);
-    
-    // Reset form
-    setNewParameter({
-      name: '',
-      description: '',
-      weight: 0.15,
-      enabled: true
-    });
-    setShowAddForm(false);
+    } catch (err) {
+      console.error("Error deleting parameter:", err);
+      // Error handling is already in the API function with toast notifications
+    }
   };
   
   // Handle logout
@@ -312,115 +365,166 @@ const DetailedAnalysis = () => {
                 Select parameters to include in your evaluation. Click a parameter to toggle it.
               </p>
               
+              {/* Refresh Parameters Button */}
+              <div className="flex justify-end mb-4">
+                <button
+                  onClick={fetchParameters}
+                  className="flex items-center text-blue-600 hover:text-blue-800 focus:outline-none"
+                >
+                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                  </svg>
+                  Refresh Parameters
+                </button>
+              </div>
+              
               {/* Parameters Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                {allParameters.map(param => (
-                  <div 
-                    key={param.id}
-                    onClick={() => toggleParameter(param.id)}
-                    className={`${
-                      param.enabled ? 'bg-blue-50 border-blue-200' : 'bg-gray-50 border-gray-200'
-                    } border p-4 rounded-lg cursor-pointer transition-all hover:shadow-md`}
-                  >
-                    <div className="flex justify-between items-start mb-2">
-                      <h3 className={`font-bold ${param.enabled ? 'text-blue-700' : 'text-gray-700'}`}>
-                        {param.name}
-                      </h3>
-                      <span className={`p-1 rounded-full ${param.enabled ? 'bg-blue-100 text-blue-700' : 'bg-gray-200 text-gray-600'}`}>
-                        {param.enabled ? <FaCheck size={12} /> : ''}
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-600 mb-2">{param.description}</p>
-                    <div className="flex items-center text-sm">
-                      <FaWeight className="mr-1 text-gray-500" size={14} />
-                      <span className="text-gray-700 font-medium">Weight: {(param.weight * 100).toFixed(0)}%</span>
-                    </div>
+                {isLoading ? (
+                  <div className="col-span-2 text-center py-4">
+                    <p>Loading parameters...</p>
                   </div>
-                ))}
+                ) : error ? (
+                  <div className="col-span-2 text-center py-4 text-red-600">
+                    <p>{error}</p>
+                  </div>
+                ) : allParameters.length === 0 ? (
+                  <div className="col-span-2 text-center py-4">
+                    <p>No parameters available. Add your first parameter below.</p>
+                  </div>
+                ) : (
+                  allParameters.map(param => (
+                    <div 
+                      key={param.id}
+                      className={`${
+                        param.enabled ? 'bg-blue-50 border-blue-200' : 'bg-gray-50 border-gray-200'
+                      } border p-4 rounded-lg cursor-pointer transition-all hover:shadow-md relative`}
+                    >
+                      <div className="flex justify-between items-start mb-2">
+                        <h3 
+                          className={`font-bold ${param.enabled ? 'text-blue-700' : 'text-gray-700'}`}
+                          onClick={() => toggleParameter(param.id)}
+                        >
+                          {param.name}
+                        </h3>
+                        <div className="flex items-center">
+                          <span 
+                            className={`p-1 rounded-full ${param.enabled ? 'bg-blue-100 text-blue-700' : 'bg-gray-200 text-gray-600'} mr-2 border ${param.enabled ? 'border-blue-300' : 'border-gray-300'}`}
+                            onClick={() => toggleParameter(param.id)}
+                          >
+                            {param.enabled ? <FaCheck size={12} /> : <div className="w-3 h-3"></div>}
+                          </span>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (window.confirm(`Are you sure you want to delete the parameter "${param.name}"?`)) {
+                                handleDeleteParameter(param.id, param._id);
+                              }
+                            }}
+                            className="p-1 text-red-500 hover:text-red-700 focus:outline-none"
+                            aria-label="Delete parameter"
+                          >
+                            <FaTrash size={14} />
+                          </button>
+                        </div>
+                      </div>
+                      <div onClick={() => toggleParameter(param.id)}>
+                        <p className="text-sm text-gray-600 mb-2">{param.description}</p>
+                        <div className="flex items-center text-sm">
+                          <FaWeight className="mr-1 text-gray-500" size={14} />
+                          <span className="text-gray-700 font-medium">Weight: {(param.weight * 100).toFixed(0)}%</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
               
               {/* Add Parameter Button/Form */}
-              {!showAddForm ? (
-                <button
-                  onClick={() => setShowAddForm(true)}
-                  className="flex items-center justify-center w-full p-3 border border-dashed border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors"
-                >
-                  <FaPlus className="mr-2" size={14} />
-                  <span>Add New Parameter</span>
-                </button>
-              ) : (
-                <div className="border border-gray-300 p-4 rounded-lg">
-                  <h3 className="font-bold text-gray-800 mb-3">Add New Parameter</h3>
-                  <form onSubmit={handleAddParameter}>
-                    <div className="mb-3">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Parameter Name</label>
-                      <input
-                        type="text"
-                        name="name"
-                        value={newParameter.name}
-                        onChange={handleParameterInputChange}
-                        className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="e.g., User Experience"
-                        required
-                      />
-                    </div>
-                    <div className="mb-3">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                      <textarea
-                        name="description"
-                        value={newParameter.description}
-                        onChange={handleParameterInputChange}
-                        className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Describe what this parameter evaluates..."
-                        rows="2"
-                        required
-                      ></textarea>
-                    </div>
-                    <div className="mb-3">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Initial Weight: {(newParameter.weight * 100).toFixed(0)}%
-                      </label>
-                      <input
-                        type="range"
-                        name="weight"
-                        min="1" 
-                        max="50"
-                        value={newParameter.weight * 100}
-                        onChange={(e) => setNewParameter(prev => ({
-                          ...prev,
-                          weight: Number(e.target.value) / 100
-                        }))}
-                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
-                      />
-                    </div>
-                    <div className="flex justify-end space-x-2">
-                      <button
-                        type="button"
-                        onClick={() => setShowAddForm(false)}
-                        className="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        type="submit"
-                        className="px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                      >
-                        Add Parameter
-                      </button>
-                    </div>
-                  </form>
-                </div>
-              )}
+              <div className="mb-6">
+                {!showAddForm ? (
+                  <button
+                    onClick={() => setShowAddForm(true)}
+                    className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none"
+                  >
+                    <FaPlus className="mr-2" />
+                    Add Parameter
+                  </button>
+                ) : (
+                  <div className="p-4 border rounded-lg bg-white">
+                    <h3 className="font-bold text-lg mb-3">Add New Parameter</h3>
+                    <form onSubmit={handleAddParameter}>
+                      <div className="mb-3">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Parameter Name</label>
+                        <input
+                          type="text"
+                          name="name"
+                          value={newParameter.name}
+                          onChange={handleParameterInputChange}
+                          className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="e.g., User Experience"
+                          required
+                        />
+                      </div>
+                      <div className="mb-3">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                        <textarea
+                          name="description"
+                          value={newParameter.description}
+                          onChange={handleParameterInputChange}
+                          className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="Describe what this parameter evaluates..."
+                          rows="2"
+                          required
+                        ></textarea>
+                      </div>
+                      <div className="mb-3">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Initial Weight: {(newParameter.weight * 100).toFixed(0)}%
+                        </label>
+                        <input
+                          type="range"
+                          name="weight"
+                          min="1" 
+                          max="50"
+                          value={newParameter.weight * 100}
+                          onChange={(e) => setNewParameter(prev => ({
+                            ...prev,
+                            weight: Number(e.target.value) / 100
+                          }))}
+                          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                        />
+                      </div>
+                      <div className="flex justify-end space-x-2">
+                        <button 
+                          type="button"
+                          onClick={() => setShowAddForm(false)}
+                          className="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200"
+                        >
+                          Cancel
+                        </button>
+                        <button 
+                          onClick={handleAddParameter}
+                          type="submit" 
+                          className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+                        >
+                          Add Parameter
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                )}
+              </div>
             </div>
             
             {/* Selected Parameters */}
             <div className="bg-white p-6 rounded-lg shadow-md">
               <h2 className="text-xl font-bold mb-4 text-gray-800">Selected Parameters</h2>
               <p className="text-sm mb-4 flex items-center">
-                <span className={`font-medium ${Math.abs(totalWeight * 100 - 100) > 1 ? 'text-red-600' : 'text-gray-600'}`}>
+                <span className={`font-medium ${isWeightValid ? 'text-gray-600' : 'text-red-600'}`}>
                   Total weight: {(totalWeight * 100).toFixed(0)}%
                 </span>
-                {Math.abs(totalWeight * 100 - 100) > 1 && (
+                {!isWeightValid && (
                   <span className="ml-2 text-red-600 text-xs">
                     (Should equal 100%)
                   </span>

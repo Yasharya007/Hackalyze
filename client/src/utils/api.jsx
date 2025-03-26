@@ -609,12 +609,18 @@ export const updateSelectedCriteriaAPI = async (hackathonId, criteriaData) => {
 
 // remove parameters
 export const deleteParameterAPI = async (hackathonId, parameterId) => {
+  const toastId = toast.loading("Deleting parameter..."); // Show loading toast
   try {
-    const response = await API.delete(`/api/teacher/${hackathonId}/parameters/${parameterId}`);
+    const response = await API.delete(`/api/teacher/hackathons/${hackathonId}/parameters/${parameterId}`);
+    toast.success("Parameter deleted successfully");
     return response.data;
   } catch (error) {
     console.error("Error deleting parameter:", error);
-    throw error;
+    const errorMessage = error.response?.data?.message || "Failed to delete parameter";
+    toast.error(errorMessage);
+    throw error.response?.data || "Failed to delete parameter";
+  } finally {
+    toast.dismiss(toastId);
   }
 };
 // apply aii
