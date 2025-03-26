@@ -12,17 +12,17 @@ Teachers also struggle with conducting **personalized assessments** in classroom
 
 ```mermaid
 graph TD;
-    A[Hackathon Creation & Management] --> B[Team Registration & Collaboration]
+    A[Hackathon Creation & Management] --> B[Student Registration & Collaboration]
     B --> C[Project Submission & Evaluation]
     C --> D[Leaderboard & Performance Analytics]
-    D --> E[Mentorship & Support Integration]
+    D --> E[Manual and AI Evaluation]
     E --> F[Automated Judging & Results Calculation]
     F -->|Final Results| G[Winners & Recognition]
     
     subgraph AI  Integration
-      E --> AI[AI Chatbot & Mentor Support]
+      E --> AI[AI Chatbot]
       F --> ML[AI-Driven Evaluation]
-      C --> S3[Cloud Storage for Projects]
+      C --> S3[Cloud Storage for Submissions]
       D --> DB[Leaderboard Data Storage]
     end
 ```
