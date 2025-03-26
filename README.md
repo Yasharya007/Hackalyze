@@ -63,7 +63,7 @@ Hackalyze follows a **microservices-based modular architecture**:
 
 1. **User Authentication** – Secure login and registration
 2. **Hackathon Setup** – Organizers create and configure events
-3. **Team Formation & Project Submission** – Participants collaborate and submit projects
+3. **Criteria Adding** – Judges assess projects based on predefined rubrics for manual, Automated evaluation using machine learning models for AI powered scoring.
 4. **Judging & Evaluation** – Judges assess projects based on predefined criteria
 5. **Leaderboard & Insights** – Real-time leaderboard updates
 
