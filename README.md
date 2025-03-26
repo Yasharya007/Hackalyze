@@ -98,11 +98,35 @@ npm install  # Install dependencies for frontend & backend
 ```
 
 ### **3️⃣ Set Up Environment Variables**
-Create a `.env` file in the backend directory:
+Create a `.env` file in the root of your project and add the following configuration:
+
 ```sh
-MONGO_URI=your_mongodb_connection
-JWT_SECRET=your_secret_key
-```
+# 🛠 Database Configuration
+MONGO_URL="your_mongodb_connection_string"
+PORT="your_port_number"
+
+# 🔐 Security & Authentication
+CORS_ORIGIN="your_frontend_url"
+ACCESS_TOKEN_SECRET="your_access_token_secret"
+ACCESS_TOKEN_EXPIRY="your_access_token_expiry"
+REFRESH_TOKEN_SECRET="your_refresh_token_secret"
+REFRESH_TOKEN_EXPIRY="your_refresh_token_expiry"
+
+# ☁️ Cloudinary Configuration (For Media Uploads)
+CLOUDINARY_CLOUD_NAME="your_cloudinary_cloud_name"
+CLOUDINARY_API_KEY="your_cloudinary_api_key"
+CLOUDINARY_API_SECRET="your_cloudinary_api_secret"
+
+# 📧 Email Service (SMTP Configuration)
+GMAIL_PASS="your_gmail_app_password"  # Securely store and do not expose publicly
+
+# 🔥 Google Gemini AI Configuration
+GEMINI_API_KEY="your_google_gemini_api_key"
+GEMINI_MODEL="your_gemini_model_name"
+
+# 🛑 Note: 
+# Never share your environment variables publicly.
+# Store sensitive values securely using a .env file or a vault service.
 
 ### **4️⃣ Start Development Server**
 ```sh
