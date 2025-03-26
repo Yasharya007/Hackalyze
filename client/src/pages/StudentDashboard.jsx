@@ -26,25 +26,25 @@ const StudentDashboard = () => {
 
     useEffect(() => {
         const fetchHackathons = async () => {
-          AllHackathonAPI()
-          .then((res)=>{
-            // console.log(hackathons.length);
-            for(let y=0;y<res.length;y++){
-                console.log(res[y])
-                for(let x=0;x<res[y].registeredStudents.length;x++){
-                    console.log(res[y].registeredStudents[x])
-                    if(res[y].registeredStudents[x]===studentId){
-                      res[y].status="registered";
-                      console.log("found")
-                      break;
+            AllHackathonAPI()
+                .then((res) => {
+                    // console.log(hackathons.length);
+                    for (let y = 0; y < res.length; y++) {
+                        console.log(res[y])
+                        for (let x = 0; x < res[y].registeredStudents.length; x++) {
+                            console.log(res[y].registeredStudents[x])
+                            if (res[y].registeredStudents[x] === studentId) {
+                                res[y].status = "registered";
+                                console.log("found")
+                                break;
+                            }
+                        }
                     }
-                  }
-            }
-            setHackathons(res);
-            // console.log("hello");
-          }).catch(()=>{})
+                    setHackathons(res);
+                    // console.log("hello");
+                }).catch(() => { })
         };
-    
+
         fetchHackathons();
       }, []);
 
@@ -134,7 +134,7 @@ const StudentDashboard = () => {
                     </button>
                 </div>
             </aside>
-            
+
             {/* Main Content */}
             <main className="flex-1 p-6 overflow-y-auto">
                 {/* Welcome Card */}

@@ -1,7 +1,7 @@
 import React from "react";
-import { Link,useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Bar } from "react-chartjs-2";
-import { useDispatch,useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import "chart.js/auto";
 import { HackathonByTeacherAPI,logoutAPI } from "../utils/api.jsx";
 import { useState,useEffect } from "react";
@@ -10,17 +10,17 @@ import axios from "axios";
 import toast from "react-hot-toast";
 
 const TeacherDashboard = () => {
-    const dispatch=useDispatch()
-    const navigate=useNavigate()
+    const dispatch = useDispatch();
+    const navigate = useNavigate();
+    const [visible, setVisible] = useState(true);
     const teacherId = useSelector((state) => state.student.studentId);
-    // console.log(teacherId)
     const formatDate = (isoString) => isoString.split("T")[0];
     const [assignedHackathons, setassignedHackathons] = useState([]);
+
     useEffect(() => {
             const fetchHackathons = async () => {
               HackathonByTeacherAPI(teacherId)
               .then((res)=>{
-                console.log(res)
                 // console.log(hackathons.length);
                 setassignedHackathons(res);
                 // console.log("hello");
@@ -30,7 +30,6 @@ const TeacherDashboard = () => {
             fetchHackathons();
           }, []);
     const handleClick = (hackathon) => {
-        console.log(hackathon)
             dispatch(setHackathon(hackathon));
             navigate("/teacher/hackathon");
           };
@@ -81,7 +80,19 @@ const TeacherDashboard = () => {
 
             {/* Main Content */}
             <main className="flex-1 p-8">
-                <div className="flex justify-between items-center">
+                {/* Notification */}
+                {visible && (
+                    <div className="bg-white p-4 shadow-md flex justify-between items-center">
+                        <div>
+                            <p className="text-gray-800 font-semibold">Important Announcement for Teachers</p>
+                            <p className="text-gray-500">Dear Teachers, please submit the student performance reports by the end of this week.</p>
+                        </div>
+                        <button className="text-gray-800" onClick={() => setVisible(false)}>
+                            Dismiss
+                        </button>
+                    </div>
+                )}
+                <div className="flex mt-4 justify-between items-center">
                     <h1 className="text-4xl font-bold">Teacher Dashboard</h1>
                     <button className="bg-gray-200 px-4 py-2 rounded-lg">Export Data</button>
                 </div>
@@ -101,36 +112,36 @@ const TeacherDashboard = () => {
                         <p className="text-2xl font-bold">78%</p>
                     </div>
                 </div>
-                <div class="mt-6 grid grid-cols-2 gap-6">
-                    <div class="bg-white p-6 rounded-lg shadow">
-                        <h2 class="text-xl font-semibold">Assigned Hackathons</h2>
-                        <div class="mt-4 space-y-4">
-                        {assignedHackathons.map((hackathon, index) => (
-                              <div key={index} className="p-3 bg-gray-50 rounded-lg">
-                                {hackathon.title} ({formatDate(hackathon.endDate)}) 
-                                <button className="ml-2 text-blue-600" onClick={() => handleClick(hackathon)}>View Details</button>
-                              </div>
-                            ))}
-                        </div>
+
+                {/* Hackathon Analysis & Scheduling */}
+                <div className="mt-6 grid grid-cols-2 gap-6">
+                    <div className="bg-white p-6 rounded-lg shadow">
+                        <h2 className="text-xl font-semibold">Hackathon Analysis</h2>
+                        <Bar data={chartData} className="mt-4" />
                     </div>
-                    <div class="bg-white p-6 rounded-lg shadow">
-                        <h2 class="text-xl font-semibold">Recent Activity</h2>
-                        <div class="mt-4 space-y-4">
-                            <div class="p-3 bg-gray-50 rounded-lg">New Submission Received - 2 hours ago</div>
-                            <div class="p-3 bg-gray-50 rounded-lg">Deadline Extended - 1 day ago</div>
-                            <div class="p-3 bg-gray-50 rounded-lg">Results Published</div>
-                        </div>
+                    <div className="bg-white p-6 rounded-lg shadow">
+                        <h2 className="text-xl font-semibold">Scheduling Calendar</h2>
+                        <p className="text-gray-500">Upcoming Hackathons and deadlines will be displayed here.</p>
+                        {/* Add calendar component here */}
+                        <ul className="space-y-2 mt-2">
+                            <li className="flex justify-between bg-gray-100 p-2 rounded">
+                                <span className="font-semibold">AI Innovation Challenge</span>
+                                <span className="text-gray-600">April 10, 2025</span>
+                            </li>
+                            <li className="flex justify-between bg-gray-100 p-2 rounded">
+                                <span className="font-semibold">Sustainability Hack</span>
+                                <span className="text-gray-600">May 5, 2025</span>
+                            </li>
+                            <li className="flex justify-between bg-gray-100 p-2 rounded">
+                                <span className="font-semibold">FinTech Revolution</span>
+                                <span className="text-gray-600">June 18, 2025</span>
+                            </li>
+                        </ul>
                     </div>
-                </div>
-                {/* Hackathon Analysis Chart */}
-                <div className="mt-6 bg-white p-6 rounded-lg shadow">
-                    <h2 className="text-xl font-semibold">Hackathon Analysis</h2>
-                    <Bar data={chartData} className="mt-4" />
                 </div>
             </main>
-
         </div>
     );
 };
 
-export default TeacherDashboard;
+export default TeacherDashboard;  
