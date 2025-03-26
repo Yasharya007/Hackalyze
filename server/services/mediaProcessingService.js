@@ -300,8 +300,8 @@ class MediaProcessingService {
       
       // Check if it's a PDF file
       if (extension === '.pdf' || urlExt === '.pdf' || fileUrl?.includes('/image/upload/') && fileUrl?.endsWith('.pdf')) {
-        const pdf = await import('pdf-parse');
-        return await pdf.default(await fsPromises.readFile(filePath));
+        // Use the enhanced PDF text extraction method based on image processing
+        return await this.extractTextFromPdfEnhanced(filePath);
       }
       
       // For text-based files, read the content directly
@@ -322,18 +322,74 @@ class MediaProcessingService {
   }
   
   /**
-   * Extract text from a PDF file
+   * Enhanced PDF text extraction using page-by-page image processing
    * @param {string} filePath - Path to the PDF file
    * @returns {Promise<string>} - Extracted text
    */
-  async extractTextFromPdf(filePath) {
+  async extractTextFromPdfEnhanced(filePath) {
     try {
-      const pdf = await import('pdf-parse');
-      const dataBuffer = await fsPromises.readFile(filePath);
-      const pdfData = await pdf.default(dataBuffer);
-      return pdfData.text || '[PDF contained no extractable text]';
+      console.log('Using enhanced PDF text extraction (page-by-page image processing with pdf-to-img)');
+      
+      // Import the pdf function from pdf-to-img
+      const { pdf } = await import('pdf-to-img');
+      
+      // Get PDF document with high scale for better quality
+      const document = await pdf(filePath, { scale: 3.0 });
+      console.log(`PDF has ${document.length} pages. Processing each page as an image...`);
+      
+      // Process each page
+      let allPageText = [];
+      let pageNum = 1;
+      
+      // Process pages as image streams
+      for await (const imageBuffer of document) {
+        try {
+          console.log(`Processing page ${pageNum}...`);
+          
+          // Save the image buffer to a temporary file
+          const tempImagePath = path.join(os.tmpdir(), `pdf-page-${Date.now()}-${pageNum}.png`);
+          await fsPromises.writeFile(tempImagePath, imageBuffer);
+          
+          console.log(`Extracting text from page ${pageNum} image (${tempImagePath})`);
+          
+          // Use our existing image text extraction capability
+          const pageText = await this.extractTextFromImage(tempImagePath);
+          
+          // Add page number for context
+          allPageText.push(`[Page ${pageNum}]\n${pageText}`);
+          
+          // Clean up the temporary image file
+          await fsPromises.unlink(tempImagePath).catch(e => 
+            console.warn(`Warning: Could not delete temporary page image: ${e.message}`)
+          );
+          
+          pageNum++;
+        } catch (pageError) {
+          console.error(`Error processing page ${pageNum}:`, pageError);
+          allPageText.push(`[Page ${pageNum}: Error extracting text: ${pageError.message}]`);
+          pageNum++;
+        }
+      }
+      
+      // Combine all page texts
+      const fullText = allPageText.join('\n\n');
+      console.log(`Extracted ${fullText.length} characters from ${document.length} PDF pages`);
+      
+      return fullText || '[PDF contained no extractable text]';
     } catch (error) {
-      console.error('Error extracting text from PDF:', error);
+      console.error('Error in enhanced PDF text extraction:', error);
+      
+      // Fallback to basic text extraction if the image approach fails
+      try {
+        console.log('Falling back to basic text extraction for PDF');
+        const textContent = await fsPromises.readFile(filePath, 'utf8');
+        if (textContent && textContent.length > 0) {
+          return textContent;
+        }
+      } catch (readError) {
+        console.error('Fallback text extraction failed:', readError);
+      }
+      
       return `[PDF text extraction error: ${error.message}]`;
     }
   }
