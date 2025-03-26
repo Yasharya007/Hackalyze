@@ -23,6 +23,7 @@ import StudentSettings from "./pages/StudentSettings.jsx";
 import TeacherSettings from "./pages/TeacherSettings.jsx";
 import TeacherSubmissionsPage from "./pages/TeacherSubmissionsPage.jsx";
 import ViewShortlistPage from "./pages/ViewShortlistPage.jsx";
+import ShortlistDetailPage from "./pages/ShortlistDetailPage.jsx";
 
 function App() {
   
@@ -50,6 +51,7 @@ function App() {
             <Route path="/teacher/settings" element={<TeacherSettings/>}/>
             <Route path="/teacher/submissions" element={<TeacherSubmissionsPage/>}/>
             <Route path="/teacher/shortlist" element={<ViewShortlistPage/>}/>
+            <Route path="/teacher/shortlist/view/:hackathonId" element={<ShortlistDetailPage/>}/>
             <Route path="/admin/dashboard" element={<AdminDashboard/>}/>
             <Route path="/main" element={<FrontPage/>}/>
             <Route path="/teacher/hackathon" element={<TeacherHackathonPage/>}/>

@@ -145,8 +145,11 @@ const ViewShortlistPage = () => {
             // Store the selected hackathon in Redux
             dispatch(setHackathon(selectedHackathonObject));
             
-            // Navigate to the hackathon page
-            navigate("/teacher/shortlist");
+            // Store the hackathon object in session storage as a backup
+            sessionStorage.setItem('selectedHackathon', JSON.stringify(selectedHackathonObject));
+            
+            // Navigate to the shortlist detail page with hackathonId as a path parameter
+            navigate(`/teacher/shortlist/view/${selectedHackathon}`);
         } else {
             toast.error("Could not find selected hackathon details");
         }
