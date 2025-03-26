@@ -5,6 +5,7 @@ import uploadOnCloudinary from "../utils/cloudinary.js";
 import ApiError from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import bcrypt from "bcryptjs";
+import mediaProcessingService from "../services/mediaProcessingService.js";
 
 export const submitHackathon = async (req, res, next) => {
     try {
@@ -40,6 +41,11 @@ export const submitHackathon = async (req, res, next) => {
         }
         const fileUrl = cloudinaryResponse.secure_url;  // Extract only the URL
 
+        // Extract text from the file
+        console.log(`Extracting text from ${fileType} file: ${fileUrl}`);
+        const extractedText = await mediaProcessingService.extractTextFromMedia(fileUrl, fileType);
+        console.log(`Extracted text length: ${extractedText?.length || 0} characters`);
+
         if (isResubmission === "true" && submissionId) {
             // Handle resubmission - update existing submission
             const existingSubmission = await Submission.findById(submissionId);
@@ -53,8 +59,9 @@ export const submitHackathon = async (req, res, next) => {
                 throw new ApiError(403, "You are not authorized to update this submission");
             }
             
-            // Replace the file in the submission
+            // Replace the file in the submission and update description
             existingSubmission.files = [{ format: fileType, fileUrl }];
+            existingSubmission.description = extractedText || "";
             await existingSubmission.save();
             
             return res.status(200).json(new ApiResponse(200, existingSubmission, "Submission updated successfully"));
@@ -70,11 +77,12 @@ export const submitHackathon = async (req, res, next) => {
                 throw new ApiError(400, "You are already registered for this hackathon. Use the resubmit option to update your submission.");
             }
 
-            // Create new submission
+            // Create new submission with extracted text in description
             const newSubmission = new Submission({
                 studentId,
                 hackathonId,
-                files: [{ format: fileType, fileUrl }], 
+                files: [{ format: fileType, fileUrl }],
+                description: extractedText || "" 
             });
 
             await newSubmission.save();
@@ -93,38 +101,6 @@ export const submitHackathon = async (req, res, next) => {
         }
     } catch (error) {
         next(error);
-    }
-};
-
-export const getSubmissionStatus = async (req, res) => {
-    try {
-      const { hackathonId } = req.body;
-      const studentId = req.user._id;
-      // Validate request
-      if (!studentId || !hackathonId) {
-        return res.status(400).json({ message: "studentId and hackathonId are required." });
-      }
-  
-      // Find submission with only status & result fields
-      const submission = await Submission.findOne({ studentId, hackathonId })
-        .select("_id status result files") // Also include files and _id for resubmission
-        .exec();
-  
-      if (!submission) {
-        return res.json({ 
-          isRegistered: false,
-          message: "No submission found for this student in the given hackathon."
-        });
-      }
-  
-      return res.status(200).json({ 
-        isRegistered: true,
-        status: submission.status || "Registered",
-        submission: submission
-      });
-    } catch (error) {
-      console.error("Error fetching submission status:", error);
-      res.status(500).json({ message: "Internal Server Error", error });
     }
 };
 
@@ -167,11 +143,17 @@ export const submitHackathonNew=async(req,res,next)=>{
               continue;
           }
 
-          // Create new submission using the provided file URL
+          // Extract text from the file
+          console.log(`Extracting text from ${fileType} file: ${fileUrl}`);
+          const extractedText = await mediaProcessingService.extractTextFromMedia(fileUrl, fileType);
+          console.log(`Extracted text length: ${extractedText?.length || 0} characters`);
+
+          // Create new submission using the provided file URL and extracted text
           const newSubmission = new Submission({
               studentId,
               hackathonId,
               files: [{ format: fileType, fileUrl }],
+              description: extractedText || ""
           });
 
           await newSubmission.save();
@@ -226,6 +208,38 @@ export const submitHackathonNew=async(req,res,next)=>{
       next(error);
   }
 }
+
+export const getSubmissionStatus = async (req, res) => {
+    try {
+      const { hackathonId } = req.body;
+      const studentId = req.user._id;
+      // Validate request
+      if (!studentId || !hackathonId) {
+        return res.status(400).json({ message: "studentId and hackathonId are required." });
+      }
+  
+      // Find submission with only status & result fields
+      const submission = await Submission.findOne({ studentId, hackathonId })
+        .select("_id status result files") // Also include files and _id for resubmission
+        .exec();
+  
+      if (!submission) {
+        return res.json({ 
+          isRegistered: false,
+          message: "No submission found for this student in the given hackathon."
+        });
+      }
+  
+      return res.status(200).json({ 
+        isRegistered: true,
+        status: submission.status || "Registered",
+        submission: submission
+      });
+    } catch (error) {
+      console.error("Error fetching submission status:", error);
+      res.status(500).json({ message: "Internal Server Error", error });
+    }
+};
 
 // Get student profile
 export const getStudentProfile = async (req, res, next) => {
