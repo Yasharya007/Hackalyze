@@ -608,6 +608,23 @@ export const sendShortlistToAdmin = async (req, res) => {
             return res.status(404).json({ message: "Hackathon not found." });
         }
         
+        // Fetch all shortlisted submissions for this hackathon
+        // Note: In the Submission model, studentId is used instead of submittedBy
+        const shortlistedSubmissions = await Submission.find({ 
+            hackathonId: hackathonId,
+            status: "Shortlisted"
+        }).sort({ rank: 1 }); // Sort by rank to maintain order
+        
+        console.log(`Found ${shortlistedSubmissions.length} shortlisted submissions for hackathon ${hackathonId}`);
+        
+        // Extract student IDs from the shortlisted submissions
+        const shortlistedStudentIds = shortlistedSubmissions
+            .map(submission => submission.studentId)
+            .filter(Boolean); // Remove any null/undefined values
+        
+        // Update hackathon with the shortlisted students (even if empty)
+        hackathon.shortlistedStudents = shortlistedStudentIds;
+        
         // Update hackathon status to indicate shortlist sent to admin
         hackathon.shortlistSentToAdmin = true;
         hackathon.shortlistSentDate = new Date();
@@ -620,9 +637,11 @@ export const sendShortlistToAdmin = async (req, res) => {
         
         res.status(200).json({ 
             message: "Shortlist sent to admin for review successfully.",
-            shortlistSentDate: hackathon.shortlistSentDate
+            shortlistSentDate: hackathon.shortlistSentDate,
+            shortlistedStudentsCount: shortlistedStudentIds.length
         });
     } catch (error) {
+        console.error("Error sending shortlist to admin:", error);
         res.status(500).json({ message: "Internal server error.", error: error.message });
     }
 };

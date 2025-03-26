@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { FaChartBar, FaLaptopCode, FaCogs, FaClipboardList, FaTrophy, FaUserCog, FaArrowLeft, 
-         FaWeight, FaPercentage, FaCheck, FaPlus, FaMinus, FaInfoCircle, FaTimes, FaTrash, FaRobot } from 'react-icons/fa';
+         FaWeight, FaPercentage, FaCheck, FaPlus, FaMinus, FaInfoCircle, FaTimes, FaTrash, FaRobot,
+         FaSync } from 'react-icons/fa';
 import BroadTable from "../components/BroadTable.jsx";
 import { logoutAPI, addParameterAPI, deleteParameterAPI, getParametersAPI, evaluateWithCustomParameters, updateParameterAPI } from '../utils/api.jsx';
 import toast from "react-hot-toast";
@@ -49,7 +50,7 @@ const DetailedAnalysis = () => {
             name: param.name,
             description: param.description,
             weight: param.weight ? param.weight / 100 : 0.15, // Convert weight from 0-100 to 0-1
-            selected: Boolean(param.selected || false), // Ensure it's a Boolean
+            selected: true, // Set all parameters to selected by default
             _id: param._id // Keep the original _id from the server
           }));
           console.log("Formatted parameters:", formattedParams);
@@ -474,9 +475,7 @@ const DetailedAnalysis = () => {
                   onClick={fetchParameters}
                   className="flex items-center text-blue-600 hover:text-blue-800 focus:outline-none text-sm"
                 >
-                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
+                  <FaSync className="w-4 h-4 mr-1" />
                   Refresh Parameters
                 </button>
               </div>
@@ -550,7 +549,15 @@ const DetailedAnalysis = () => {
               <div className="mb-6">
                 {!showAddForm ? (
                   <button
-                    onClick={() => setShowAddForm(true)}
+                    onClick={() => {
+                      // Reset the new parameter to defaults when showing the form
+                      setNewParameter({
+                        name: '',
+                        description: '',
+                        weight: 0.15,
+                      });
+                      setShowAddForm(true);
+                    }}
                     className="flex items-center justify-center w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none"
                   >
                     <FaPlus className="mr-2" />
@@ -592,13 +599,14 @@ const DetailedAnalysis = () => {
                           type="range"
                           name="weight"
                           min="1" 
-                          max="50"
+                          max="100"
+                          defaultValue="15"
                           value={newParameter.weight * 100}
                           onChange={(e) => setNewParameter(prev => ({
                             ...prev,
                             weight: Number(e.target.value) / 100
                           }))}
-                          className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
                         />
                       </div>
                       <div className="flex justify-end space-x-2">
@@ -627,11 +635,11 @@ const DetailedAnalysis = () => {
             <div className="bg-white p-6 rounded-lg shadow-md">
               <h2 className="text-xl font-bold mb-4 text-gray-800">Selected Parameters</h2>
               <p className="text-sm mb-4 flex items-center">
-                <span className={`font-medium ${isWeightValid ? 'text-gray-600' : 'text-red-600'}`}>
-                  Total weight: {(totalWeight * 100).toFixed(0)}%
+                <span className={`font-medium ${isWeightValid ? 'text-green-600' : 'text-orange-600'}`}>
+                  Total weight: {(totalWeight * 100).toFixed(0)}% 
                 </span>
                 {!isWeightValid && (
-                  <span className="ml-2 text-red-600 text-xs">
+                  <span className="ml-2 text-orange-600 text-xs">
                     (Should equal 100%)
                   </span>
                 )}
@@ -654,7 +662,7 @@ const DetailedAnalysis = () => {
                         <input
                           type="range"
                           min="1"
-                          max="50"
+                          max="100"
                           value={param.weight * 100}
                           onChange={(e) => {
                             const newWeight = Number(e.target.value) / 100;

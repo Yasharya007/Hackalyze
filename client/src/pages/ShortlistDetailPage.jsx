@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate, useLocation, useParams } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
-import { logoutAPI, getShortlistedSubmissions, updateShortlistOrder, HackathonAPI } from "../utils/api.jsx";
+import { logoutAPI, getShortlistedSubmissions, updateShortlistOrder, HackathonAPI, sendShortlistToAdmin } from "../utils/api.jsx";
 import { FaChartBar, FaLaptopCode, FaCogs, FaClipboardList, FaTrophy, FaUserCog, FaArrowLeft, FaGripLines, FaFile, FaFileAlt, FaImage, FaVideo, FaMusic } from "react-icons/fa";
 import toast from "react-hot-toast";
 import { setHackathon as setHackathonAction } from "../slices/hackathonSlice.js";
@@ -383,6 +383,33 @@ const ShortlistDetailPage = () => {
         navigate("/teacher/shortlist");
     };
 
+    const handleSendToAdmin = async () => {
+        if (!hackathonId) {
+            toast.error("No hackathon selected");
+            return;
+        }
+        
+        try {
+            // First make sure order is saved
+            if (orderChanged) {
+                await handleSaveOrder();
+            }
+            
+            // Show loading toast
+            const loadingToast = toast.loading("Sending shortlist to admin...");
+            
+            // Call API to send to admin
+            await sendShortlistToAdmin(hackathonId);
+            
+            // Show success message
+            toast.dismiss(loadingToast);
+            toast.success("Shortlist sent to admin successfully");
+        } catch (error) {
+            console.error("Error sending shortlist to admin:", error);
+            toast.error("Failed to send shortlist to admin. Please try again.");
+        }
+    };
+
     return (
         <div className="flex w-full min-h-screen bg-gray-100">
             {/* Inject CSS styles for drag and drop */}
@@ -508,24 +535,38 @@ const ShortlistDetailPage = () => {
                                     <h3 className="text-lg font-medium">{shortlistedSubmissions.length} Shortlisted Submissions</h3>
                                     <p className="text-sm text-gray-500">Evaluated by Gemini AI and teacher review</p>
                                 </div>
-                                <button 
-                                    onClick={handleSaveOrder}
-                                    disabled={!orderChanged || saving}
-                                    className={`px-4 py-2 rounded-md ${
-                                        !orderChanged 
-                                            ? 'bg-gray-300 text-gray-600 cursor-not-allowed' 
-                                            : 'bg-blue-600 text-white hover:bg-blue-700'
-                                    }`}
-                                >
-                                    {saving ? 'Saving...' : 'Save Order'}
-                                </button>
+                                <div className="flex space-x-3">
+                                    <button 
+                                        onClick={handleSaveOrder}
+                                        disabled={!orderChanged || saving}
+                                        className={`px-4 py-2 rounded-md flex items-center ${
+                                            !orderChanged 
+                                                ? 'bg-gray-300 text-gray-600 cursor-not-allowed' 
+                                                : 'bg-blue-600 text-white hover:bg-blue-700'
+                                        }`}
+                                    >
+                                        <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                                        </svg>
+                                        {saving ? 'Saving...' : 'Save Order'}
+                                    </button>
+                                    <button 
+                                        onClick={handleSendToAdmin}
+                                        className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center"
+                                    >
+                                        <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                                        </svg>
+                                        Send to Admin
+                                    </button>
+                                </div>
                             </div>
 
                             {/* Shortlisted submissions list with better instructions */}
                             <div className="space-y-3 mt-4">
                                 <div className="text-center text-sm text-gray-600 mb-4 bg-blue-50 p-2 rounded-md border border-blue-100">
                                     <p className="font-medium">Drag and drop submissions to reorder them</p>
-                                    <p>Changes won't be saved until you click "Save New Order"</p>
+                                    <p>Changes won't be saved until you click "Save Order"</p>
                                 </div>
                                 
                                 {shortlistedSubmissions.map((submission, index) => (
@@ -583,7 +624,7 @@ const ShortlistDetailPage = () => {
                                                         {submission.manualScore !== undefined && (
                                                             <span className="text-sm font-medium bg-green-100 text-green-800 py-1 px-2 rounded flex items-center">
                                                                 <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                                                                 </svg>
                                                                 Manual: {submission.manualScore}
                                                             </span>
@@ -639,18 +680,6 @@ const ShortlistDetailPage = () => {
                                     </div>
                                 ))}
                             </div>
-                            
-                            {orderChanged && (
-                                <div className="mt-4 flex justify-end">
-                                    <button 
-                                        onClick={handleSaveOrder}
-                                        disabled={saving}
-                                        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-blue-300"
-                                    >
-                                        {saving ? 'Saving...' : 'Save Order'}
-                                    </button>
-                                </div>
-                            )}
                         </>
                     )}
                 </div>
