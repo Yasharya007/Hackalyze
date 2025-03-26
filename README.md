@@ -7,7 +7,25 @@ Hackalyze is designed to streamline the **hackathon management** process, making
 Evaluating student ideas at scale is challenging, especially when submissions are **unstructured and lack clarity**. 
 Teachers also struggle with conducting **personalized assessments** in classrooms, making it difficult to gauge student understanding and provide targeted feedback.
 
-## 📌 Features
+## 📌 Features  
+
+```mermaid
+graph TD;
+    A[Hackathon Creation & Management] --> B[Team Registration & Collaboration]
+    B --> C[Project Submission & Evaluation]
+    C --> D[Leaderboard & Performance Analytics]
+    D --> E[Mentorship & Support Integration]
+    E --> F[Automated Judging & Results Calculation]
+    F -->|Final Results| G[Winners & Recognition]
+    
+    subgraph AI  Integration
+      E --> AI[AI Chatbot & Mentor Support]
+      F --> ML[AI-Driven Evaluation]
+      C --> S3[Cloud Storage for Projects]
+      D --> DB[Leaderboard Data Storage]
+    end
+```
+
 - **Hackathon Creation & Management**
 - **Team Registration & Collaboration**
 - **Project Submission & Evaluation**
@@ -15,26 +33,27 @@ Teachers also struggle with conducting **personalized assessments** in classroom
 - **Mentorship & Support Integration**
 - **Automated Judging & Results Calculation**
 
----
 
-## 🛠 Tech Stack
-The project utilizes modern technologies to ensure scalability, performance, and security:
+## 🛠 Tech Stack & AI Integration
+The project leverages a modern tech stack along with AI capabilities for seamless performance and intelligent automation.
 
-### **Frontend:**
-- **React.js** – For an interactive UI
-- **Tailwind CSS** – For rapid styling
+## **Frontend:**
+- **React.js** – For building an interactive UI
+- **Tailwind CSS** – For rapid and responsive styling
 
-### **Backend:**
-- **Node.js & Express.js** – Server-side logic
-- **MongoDB** – NoSQL database for storing user and hackathon data
+## **Backend:**
+- **Node.js & Express.js** – Server-side logic for handling requests
+- **MongoDB** – NoSQL database for efficient data storage
 
-### **Authentication & Security:**
-- **JWT (JSON Web Token)** – Secure authentication
-- **Bcrypt.js** – Password encryption
+## **AI & OCR Integration:**
+- **Google Gemini** – AI-driven assistance for various tasks
+- **Tesseract OCR (Python)** – Optical character recognition for text extraction
 
-### **Deployment & Hosting:**
-- **Vercel / Netlify** – Frontend hosting
-- **AWS / DigitalOcean** – Backend & Database hosting
+## **Design & Media:**
+- **Canva and Figma** – For designing UI elements and media assets
+
+## **Development Workflow:**
+- **MERN Stack** – Full-stack development with MongoDB, Express.js, React.js, and Node.js
 
 ---
 
@@ -90,7 +109,7 @@ npm run dev
 ---
 
 ## 🎥 Demo & Screenshots
-_(Add video clips or images here)_
+![WhatsApp Image 2025-03-27 at 1 01 08 AM](https://github.com/user-attachments/assets/7ce67475-56c8-4d39-9956-14423753d343)
 
 ---
 
