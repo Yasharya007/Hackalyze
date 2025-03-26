@@ -124,6 +124,8 @@ GMAIL_PASS="your_gmail_app_password"  # Securely store and do not expose publicl
 GEMINI_API_KEY="your_google_gemini_api_key"
 GEMINI_MODEL="your_gemini_model_name"
 
+GOOGLE_APPLICATION_CREDENTIALS="path_to_your_configuration_json_file"
+
 # 🛑 Note: 
 # Never share your environment variables publicly.
 # Store sensitive values securely using a .env file or a vault service.
@@ -132,6 +134,9 @@ GEMINI_MODEL="your_gemini_model_name"
 ```sh
 npm run dev
 ```
+
+### Google Cloud Services Integration
+The guide in `CONFIG.md` will help you set up a cloud service required for running the AI features in this project
 
 ---
 
