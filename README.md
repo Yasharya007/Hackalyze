@@ -38,22 +38,22 @@ graph TD;
 ## 🛠 Tech Stack & AI Integration
 The project leverages a modern tech stack along with AI capabilities for seamless performance and intelligent automation.
 
-## **Frontend:**
+### **Frontend:**
 - **React.js** – For building an interactive UI
 - **Tailwind CSS** – For rapid and responsive styling
 
-## **Backend:**
+### **Backend:**
 - **Node.js & Express.js** – Server-side logic for handling requests
 - **MongoDB** – NoSQL database for efficient data storage
 
-## **AI & OCR Integration:**
+### **AI & OCR Integration:**
 - **Google Gemini** – AI-driven assistance for various tasks
 - **Tesseract OCR (Python)** – Optical character recognition for text extraction
 
-## **Design & Media:**
+### **Design & Media:**
 - **Canva and Figma** – For designing UI elements and media assets
 
-## **Development Workflow:**
+### **Development Workflow:**
 - **MERN Stack** – Full-stack development with MongoDB, Express.js, React.js, and Node.js
 
 ---
