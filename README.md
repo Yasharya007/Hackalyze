@@ -15,7 +15,7 @@ graph TD;
     A[Hackathon Creation & Management] --> B[Student Registration & Collaboration]
     B --> C[Project Submission & Evaluation]
     C --> D[Leaderboard & Performance Analytics]
-    D --> E[Manual and AI Evaluation]
+    D --> E[Set Manual Criteria]
     E --> F[Automated Judging & Results Calculation]
     F -->|Final Results| G[Winners & Recognition]
     
