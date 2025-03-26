@@ -71,8 +71,10 @@ Hackalyze follows a **microservices-based modular architecture**:
 ```mermaid
 graph TD;
     A[User Registration/Login] -->|JWT Authentication| B[Dashboard];
-    B --> C[Create Hackathon];
-    B --> D[Join Hackathon];
+    B --> C[Teacher Side];
+    C --> K[Create Hackathon];
+    B --> D[Student Side];
+    D --> L[Join Hackathon];
     D --> E[Submit Project];
     E --> F[Evaluation by Judges];
     F --> G[Leaderboard Generation];
