@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import ParameterSelector from "./ParameterSelector";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { getHackathonSubmissionsAPI ,shortlistStudents,updateSubmissionAPI} from "../utils/api.jsx";
@@ -147,7 +146,7 @@ const sortBytotalScore = () => {
 
   return (
     <div className="w-full  bg-white shadow-md rounded-lg p-6">
-        <ParameterSelector/>
+        {/* Removed ParameterSelector component */}
       <h2 className="text-xl font-bold text-gray-900 text-center mb-4">Student Submissions</h2>
       
       {/* <Controls/> */}
