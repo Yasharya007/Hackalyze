@@ -40,6 +40,10 @@ export const addParameter = async (req, res) => {
             // Recalculate total score
             submission.totalAIScore = submission.AIscores.reduce((sum, entry) => sum + entry.score, 0);
 
+            submission.scores.push({ parameter: name, score: aiScore });
+
+            submission.totalScore = submission.scores.reduce((sum, entry) => sum + entry.score, 0);
+
             await submission.save();
         }
 
@@ -82,6 +86,9 @@ export const deleteParameter = async (req, res) => {
             
             // Recalculate totalScore
             submission.totalAIScore = submission.AIscores.reduce((sum, entry) => sum + entry.score, 0);
+
+            submission.scores = submission.scores.filter(entry => entry.parameter !== parameterName);
+            submission.totalScore = submission.scores.reduce((sum, entry) => sum + entry.score, 0);
 
             await submission.save();
         }

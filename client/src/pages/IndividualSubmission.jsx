@@ -11,6 +11,11 @@ const StudentDetails = () => {
     const minutes = date.getMinutes().toString().padStart(2, "0");
     return `${hours}:${minutes}`;
 };
+const [scoreData, setScoreData] = useState([
+  { parameter: "Accuracy", score: 40, scoreManual: 45 },
+  { parameter: "Speed", score: 30, scoreManual: 35 },
+  { parameter: "Efficiency", score: 20, scoreManual: 25 },
+]);
 const statuses = [
   { label: "Pending 🔄", value: "Pending" },
   { label: "Shortlisted ✔️", value: "Shortlisted" },
@@ -77,7 +82,8 @@ const statuses = [
           console.log(res.data);
           setSubmission(res.data)
           setStudent(res.data.studentId)
-          console.log(res.data.studentId)
+          setScoreData(res.data.AIscores)
+          console.log(res.data)
         }).catch(()=>{})
       };
 
@@ -97,11 +103,7 @@ const statuses = [
   };
   const [comments, setComments] = useState("");
 
-  const [scoreData, setScoreData] = useState([
-    { parameter: "Accuracy", scoreAI: 40, scoreManual: 45 },
-    { parameter: "Speed", scoreAI: 30, scoreManual: 35 },
-    { parameter: "Efficiency", scoreAI: 20, scoreManual: 25 },
-  ]);
+  
   // const handleScoreChange = (index, field, value) => {
   //   const updatedScores = [...scoreData];
   //   updatedScores[index][field] = Number(value); // Convert input value to number
@@ -126,11 +128,11 @@ const statuses = [
   // const totalScore = totalAiScore + totalManualScore;
 
 // Calculate total AI Score (from AIscores)
-const totalAIScore = scoreData.reduce((sum, item) => sum + item.scoreAI, 0);
+const totalAIScore = scoreData.reduce((sum, item) => sum + item.score, 0);
 
 // Calculate total Manual Score (from scores)
-const totalManualScore = scoreData.reduce((sum, item) => sum + item.scoreManual, 0);
-
+// const totalManualScore = scoreData.reduce((sum, item) => sum + item.scoreManual, 0);
+const totalManualScore=0
 // Total Score (AI + Manual)
 const totalScore = totalAIScore + totalManualScore;
 
@@ -256,7 +258,7 @@ const totalScore = totalAIScore + totalManualScore;
               </td>
             </tr>
           ))} */}
-          {submission.scores.map((item, index) => (
+          {submission.AIscores.map((item, index) => (
   <tr key={index} className="text-center">
     <td className="border border-gray-300 px-2 py-1">{item.parameter}</td>
     

@@ -355,17 +355,30 @@ export const shortlistSubmission = async (req, res) => {
 };
 export const notifyStudents = async (req, res) => {
     try {
+        // console.log("hello")
         const { hackathonId, message } = req.body;
-        const students = await Student.find({ hackathonId });
+        // const students = await Student.find({ hackathonId });
         
-        const notifications = await Promise.all(
-            students.map(student => Notification.create({
-                studentId: student._id,
-                message,
-                typeofmessage: "Announcement"
-            }))
-        );
+        const hackathon = await Hackathon.findById(hackathonId).select("registeredStudents");
 
+        if (!hackathon) {
+            return res.status(404).json({ error: "Hackathon not found" });
+        }
+
+        if (hackathon.registeredStudents.length === 0) {
+            return res.status(400).json({ error: "No registered students found" });
+        }
+       
+        // Create notifications for each student
+        const notifications = await Promise.all(
+            hackathon.registeredStudents.map(studentId =>
+                Notification.create({
+                    studentId,
+                    message,
+                    typeofmessage: "Announcement"
+                })
+            )
+        );
         res.json({ 
             message: 'Notifications sent successfully', 
             notifications
