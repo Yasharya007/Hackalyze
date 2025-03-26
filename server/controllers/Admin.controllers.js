@@ -429,6 +429,29 @@ export const notifyStudents = async (req, res) => {
              });
     }
 };
+export const getNotificationsByStudentId = async (req, res) => {
+    try {
+        const { studentId } = req.params;
+
+        if (!studentId) {
+            return res.status(400).json({ message: "Student ID is required", success: false });
+        }
+
+        const notifications = await Notification.find({ studentId });
+
+        res.json({
+            message: "Notifications fetched successfully",
+            notifications,
+            success: true
+        });
+    } catch (error) {
+        res.status(500).json({ 
+            message: "Error fetching notifications",
+            error,
+            success: false
+        });
+    }
+};
 export const publishFinalResults = async (req, res) => {
     try {
         const { hackathonId } = req.body;

@@ -109,7 +109,7 @@ const StudentHackathonPage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const params = useParams();
-  
+
   const [showForm, setShowForm] = useState(false);
   const [selectedFormat, setSelectedFormat] = useState("");
   const [file, setFile] = useState(null);
@@ -150,7 +150,7 @@ const StudentHackathonPage = () => {
           );
           if (response.data.isRegistered) {
             setAlreadyRegistered(true);
-            setStatus(response.data.status);
+            setStatus(response.data.submission.status);
             // Store submission details for potential resubmission
             setSubmissionDetails(response.data.submission);
             if (response.data.submission && response.data.submission.files && response.data.submission.files.length > 0) {

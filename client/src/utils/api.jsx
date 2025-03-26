@@ -942,4 +942,12 @@ export const shortlistSubmissionsBulk = async (submissions) => {
     toast.dismiss(toastId);
   }
 };
-
+export const getNotifications = async (studentId) => {
+  try {
+      const response = await API.get(`api/student/notifications/${studentId}`);
+      return response.data; // Returns an array of notifications
+  } catch (error) {
+      console.error("Error fetching notifications:", error);
+      return []; // Return empty array in case of error
+  }
+};

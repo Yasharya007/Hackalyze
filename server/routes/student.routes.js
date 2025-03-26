@@ -2,6 +2,7 @@ import express from "express";
 import { submitHackathon,getSubmissionStatus,submitHackathonNew, getStudentProfile, updateStudentProfile, getEnrolledHackathons } from "../controllers/submission.controller.js";
 import { verifyUser } from "../middleware/auth.js";
 import { upload } from "../middleware/multer.middleware.js";
+import { getNotificationsByStudentId } from "../controllers/Admin.controllers.js";
 
 const router = express.Router();
 
@@ -12,6 +13,7 @@ router.post("/status",verifyUser,getSubmissionStatus)
 // New routes for student profile and enrolled hackathons
 router.get("/profile/:studentId", verifyUser, getStudentProfile);
 router.put("/update/:studentId", verifyUser, updateStudentProfile);
+router.get("/notifications/:studentId", verifyUser, getNotificationsByStudentId);
 router.get("/enrolled-hackathons/:studentId", verifyUser, getEnrolledHackathons);
 
 /**
