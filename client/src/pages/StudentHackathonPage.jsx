@@ -252,7 +252,7 @@ const StudentHackathonPage = () => {
   if (!hackathon) return null;
 
   return (
-    <div className="flex h-screen bg-gray-100 overflow-hidden">
+    <div className="flex h-screen w-screen bg-gray-100 overflow-hidden">
       {/* Sidebar */}
       <Sidebar />
 
