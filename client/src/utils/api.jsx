@@ -547,11 +547,11 @@ export const getSelectedCriteriaAPI = async (hackathonId) => {
 
 
 // add parameters
-export const addParameterAPI = async (hackathonId, name, description) => {
+export const addParameterAPI = async (hackathonId, name, description, weight = 100) => {
   const toastId = toast.loading("Adding parameter..."); // Show loading toast
   // console.log("hello",hackathonId,name,description)
   try {
-    const response = await API.post(`/api/teacher/hackathons/${hackathonId}/parameters`, { name, description });
+    const response = await API.post(`/api/teacher/hackathons/${hackathonId}/parameters`, { name, description, weight });
 
     toast.success("Parameter added successfully");
     return response.data;
@@ -623,6 +623,32 @@ export const deleteParameterAPI = async (hackathonId, parameterId) => {
     toast.dismiss(toastId);
   }
 };
+
+/**
+ * Update a parameter in a hackathon
+ * @param {string} hackathonId - Hackathon ID
+ * @param {string} parameterId - Parameter ID
+ * @param {Object} paramData - Parameter data to update
+ * @returns {Promise} - API response
+ */
+export const updateParameterAPI = async (hackathonId, parameterId, paramData) => {
+  const toastId = toast.loading("Updating parameter...");
+  try {
+    const response = await API.patch(
+      `/api/teacher/hackathons/${hackathonId}/parameters/${parameterId}`, 
+      paramData
+    );
+    
+    toast.success("Parameter updated successfully");
+    return response.data;
+  } catch (error) {
+    toast.error(`Failed to update parameter: ${error.response?.data?.message || error.message}`);
+    throw error;
+  } finally {
+    toast.dismiss(toastId);
+  }
+};
+
 // apply aii
 
 // show only sumbmisions to be reviewed

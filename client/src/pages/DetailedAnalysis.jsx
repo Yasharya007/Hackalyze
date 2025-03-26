@@ -4,7 +4,7 @@ import { useSelector } from 'react-redux';
 import { FaChartBar, FaLaptopCode, FaCogs, FaClipboardList, FaTrophy, FaUserCog, FaArrowLeft, 
          FaWeight, FaPercentage, FaCheck, FaPlus, FaMinus, FaInfoCircle, FaTimes, FaTrash, FaRobot } from 'react-icons/fa';
 import BroadTable from "../components/BroadTable.jsx";
-import { logoutAPI, addParameterAPI, deleteParameterAPI, getParametersAPI, evaluateWithCustomParameters } from '../utils/api.jsx';
+import { logoutAPI, addParameterAPI, deleteParameterAPI, getParametersAPI, evaluateWithCustomParameters, updateParameterAPI } from '../utils/api.jsx';
 import toast from "react-hot-toast";
 
 const DetailedAnalysis = () => {
@@ -48,8 +48,8 @@ const DetailedAnalysis = () => {
             id: param._id || `param-${index}`,
             name: param.name,
             description: param.description,
-            weight: param.weight || 0.15, // Default weight if not provided
-            selected: Boolean(param.selected || param.enabled || false), // Ensure it's a Boolean
+            weight: param.weight ? param.weight / 100 : 0.15, // Convert weight from 0-100 to 0-1
+            selected: Boolean(param.selected || false), // Ensure it's a Boolean
             _id: param._id // Keep the original _id from the server
           }));
           console.log("Formatted parameters:", formattedParams);
@@ -99,11 +99,35 @@ const DetailedAnalysis = () => {
     });
   };
 
-  // Adjust parameter weight
+  // Update parameter weight on server
+  const handleWeightUpdate = async (paramId, weight) => {
+    try {
+      // Convert weight from decimal (0-1) to percentage (0-100) for API
+      const weightForApi = Math.round(weight * 100);
+      
+      await updateParameterAPI(hackathon._id, paramId, { weight: weightForApi });
+      console.log(`Parameter ${paramId} weight updated to ${weightForApi}%`);
+    } catch (error) {
+      console.error("Failed to update parameter weight:", error);
+    }
+  };
+  
+  // Adjust parameter weight with debounced server update
   const adjustWeight = (id, amount) => {
-    setAllParameters(prev => prev.map(param => 
-      param.id === id ? { ...param, weight: Math.max(0.01, Math.min(0.5, param.weight + amount)) } : param
-    ));
+    setAllParameters(prev => {
+      const updated = prev.map(param => {
+        if (param.id === id || param._id === id) {
+          const newWeight = Math.max(0.01, Math.min(0.5, param.weight + amount));
+          
+          // Schedule weight update to server after changes settle
+          setTimeout(() => handleWeightUpdate(param._id, newWeight), 500);
+          
+          return { ...param, weight: newWeight };
+        }
+        return param;
+      });
+      return updated;
+    });
   };
   
   // Handle parameter form input change
@@ -124,10 +148,14 @@ const DetailedAnalysis = () => {
     }
     
     try {
+      // Convert weight from decimal (0-1) to percentage (0-100) for API
+      const weightForApi = Math.round(newParameter.weight * 100);
+      
       const response = await addParameterAPI(
         hackathon._id,
         newParameter.name,
-        newParameter.description
+        newParameter.description,
+        weightForApi
       );
       
       // Reset form
@@ -570,7 +598,7 @@ const DetailedAnalysis = () => {
                             ...prev,
                             weight: Number(e.target.value) / 100
                           }))}
-                          className="w-full h-2.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                          className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
                         />
                       </div>
                       <div className="flex justify-end space-x-2">

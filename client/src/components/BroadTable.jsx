@@ -17,23 +17,15 @@ const BroadTable = forwardRef(({ onSubmissionSelect }, ref) => {
   const submissionsPerPage = 50;
   const [showShortlistedOnly, setShowShortlistedOnly] = useState(false); // Filter state
 
-  // Notify parent of initial selections and when selections change
-  useEffect(() => {
-    if (onSubmissionSelect && selectedRows.length > 0) {
-      console.log("BroadTable: Notifying parent of selections:", selectedRows);
-      onSubmissionSelect(selectedRows);
-    }
-  }, [selectedRows, onSubmissionSelect]);
-
-  // Add toggle row selection function
+  // Toggle row selection with parent notification
   const toggleRowSelection = (submission) => {
     setSelectedRows(prev => {
       const isSelected = prev.some(row => row._id === submission._id);
       const newSelectedRows = isSelected
         ? prev.filter(row => row._id !== submission._id)
         : [...prev, submission];
-      
-      // If onSubmissionSelect is provided, call it with the updated selection
+
+      // Notify parent about selection changes
       if (onSubmissionSelect) {
         onSubmissionSelect(newSelectedRows);
       }
@@ -41,6 +33,13 @@ const BroadTable = forwardRef(({ onSubmissionSelect }, ref) => {
       return newSelectedRows;
     });
   };
+
+  // Notify parent about initial selection state or when selection changes
+  useEffect(() => {
+    if (onSubmissionSelect) {
+      onSubmissionSelect(selectedRows);
+    }
+  }, [selectedRows, onSubmissionSelect]);
 
   const fetchSubmissions = async () => {
     try {
