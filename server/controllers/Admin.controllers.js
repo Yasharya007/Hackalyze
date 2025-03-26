@@ -353,6 +353,44 @@ export const shortlistSubmission = async (req, res) => {
              });
     }
 };
+export const shortlistSubmissions = async (req, res) => {
+    try {
+        const { submissions } = req.body;
+        console.log(submissions)
+        if (!Array.isArray(submissions) || submissions.length === 0) {
+            return res.status(400).json({ 
+                message: 'Invalid request: submissions must be a non-empty array',
+                success: false
+            });
+        }
+
+        const bulkOperations = submissions.map(submission => ({
+            updateOne: {
+                filter: { _id: submission._id, status: "Shortlisted" },
+                update: { $set: { result: submission.status === "Shortlisted" ? "Shortlisted for the final" : "Rejected"  } }
+            }
+        }));
+
+        if (bulkOperations.length === 0) {
+            return res.json({ message: "No valid submissions to update", success: false });
+        }
+
+        const bulkWriteResult = await Submission.bulkWrite(bulkOperations);
+
+        res.json({
+            message: 'Submissions updated successfully',
+            modifiedCount: bulkWriteResult.modifiedCount,
+            success: true
+        });
+    } catch (error) {
+        res.status(500).json({ 
+            message: 'Error updating submissions',
+            error,
+            success: false
+        });
+    }
+};
+
 export const notifyStudents = async (req, res) => {
     try {
         // console.log("hello")

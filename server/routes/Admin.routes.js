@@ -14,7 +14,7 @@ import { getHackathonById } from "../controllers/Admin.controllers.js";
 import { notifyStudents } from "../controllers/Admin.controllers.js";
 import { publishFinalResults } from "../controllers/Admin.controllers.js";
 import { removeAssignedTeacher } from "../controllers/Admin.controllers.js";
-import { getActiveParticipantsCount } from "../controllers/Admin.controllers.js";
+import { getActiveParticipantsCount,shortlistSubmissions } from "../controllers/Admin.controllers.js";
 const router = express.Router();
 
 // Hackathon Management
@@ -38,7 +38,7 @@ router.get('/active-participants', getActiveParticipantsCount); // New endpoint 
 router.get('/submissions', getAllSubmissions);// swagger documented
 router.get('/submissions/:id', getSubmissionById);
 router.put('/submissions/:id/shortlist', shortlistSubmission);// swagger documented
-
+router.post('/submissions/shortlistBulk', shortlistSubmissions);
 // Notifications & Result Publishing Routes
 router.post('/notify-students', notifyStudents);
 router.post('/publish-results', publishFinalResults);

@@ -10,7 +10,9 @@ import {
     updateHackathonDeadlineAPI,
     getHackathonSubmissionsAPI,
     getShortlistedStudents,
-    notifyAllAPI
+    notifyAllAPI,
+    shortlistSubmissionsBulk,
+    shortlistStudents
 } from "../utils/api.jsx";
 import toast from "react-hot-toast";
 
@@ -169,14 +171,14 @@ const AdminHackathonPage = () => {
     };
 
     const handlePublishResults = async() => {
-        getShortlistedStudents(hackathon._id)
+        shortlistSubmissionsBulk(submissions)
         .then((res)=>{
-            const message=res.shortlistedStudents.map(({ name, email }) => ({ name, email }));
-            message=JSON.stringify(message)
+            console.log("shortlisted",res)
+            const message=`Result has been publish for hackathon ${hackathon.title}`
             const hackathonId=hackathon._id
-            // notifyAllAPI({hackathonId,message})
-            // .then((res)=>{console.log(res)})
-            // .catch(()=>{})
+            notifyAllAPI({hackathonId,message})
+            .then((res)=>{console.log("notification created",res)})
+            .catch(()=>{})
         }).catch(()=>{})
         // Logic to publish results
     };
@@ -382,7 +384,7 @@ const AdminHackathonPage = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 flex">
+        <div className="min-h-screen w-screen bg-gray-50 flex">
             {/* Sidebar */}
             <aside className="w-64 bg-white border-r h-screen sticky top-0 flex flex-col">
                 <div className="p-5 flex-grow">
@@ -729,7 +731,7 @@ const AdminHackathonPage = () => {
                         </button>
                         <button 
                             onClick={handlePublishResults}
-                            className="text-white bg-black px-4 py-1 rounded-lg flex items-center text-sm"
+                            className="text-white bg-black px-4 py-1 rounded-lg flex items-center text-sm hover:bg-gray-700"
                         >
                             Publish Results
                         </button>
@@ -899,7 +901,7 @@ const AdminHackathonPage = () => {
                                     <h2 className="text-lg font-semibold">Assigned Teachers</h2>
                                     <button 
                                         onClick={handleAssignTeacher}
-                                        className="bg-black text-white px-3 py-1 text-sm rounded-lg flex items-center"
+                                        className="bg-black text-white px-3 py-1 text-sm rounded-lg flex items-center hover:bg-gray-700"
                                     >
                                         <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V8a2 2 0 00-2-2h-1" />
@@ -1092,7 +1094,7 @@ const AdminHackathonPage = () => {
                                     <h2 className="text-lg font-semibold">Results</h2>
                                     <button 
                                         onClick={handlePublishResults}
-                                        className="bg-black text-white px-3 py-1 text-sm rounded-lg flex items-center"
+                                        className="bg-black text-white px-3 py-1 text-sm rounded-lg flex items-center hover:bg-gray-700"
                                     >
                                         <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
