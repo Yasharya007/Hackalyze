@@ -118,6 +118,9 @@ export const TeacherRegisterAPI = async (formData) => {
       
       // For getting all submissions to calculate participation stats
       const submissionsResponse = await API.get("/api/admin/submissions");
+
+      // Get active participants count from the new endpoint
+      const activeParticipantsResponse = await API.get("/api/admin/active-participants");
       
       // Calculate stats based on the responses
       const hackathons = hackathonsResponse.data.hackathons || [];
@@ -131,18 +134,21 @@ export const TeacherRegisterAPI = async (formData) => {
       
       // Calculate submission rate (if available)
       const totalSubmissions = submissions.length;
-      const totalParticipants = hackathons.reduce(
-        (sum, hackathon) => sum + (hackathon.students?.length || 0), 
-        0
-      );
       
-      const submissionRate = totalParticipants > 0 
-        ? Math.round((totalSubmissions / totalParticipants) * 100) 
+      // Get active participants count from the dedicated endpoint
+      const activeParticipants = activeParticipantsResponse.data.activeParticipantsCount || 0;
+      
+      // Calculate total possible submissions (active students * total hackathons)
+      const totalPossibleSubmissions = activeParticipants * hackathons.length;
+      
+      // Calculate submission rate as a percentage of actual submissions compared to total possible submissions
+      const submissionRate = totalPossibleSubmissions > 0 
+        ? Math.round((totalSubmissions / totalPossibleSubmissions) * 100) 
         : 0;
       
       return {
         totalHackathons: hackathons.length,
-        activeParticipants: totalParticipants,
+        activeParticipants: activeParticipants,
         upcomingEvents,
         submissionRate
       };
