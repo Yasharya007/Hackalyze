@@ -32,7 +32,7 @@ const AdminDashboard = () => {
             try {
                 setLoading(true);
                 setError(null);
-                
+
                 // Fetch stats
                 try {
                     const statsData = await getAdminDashboardStats();
@@ -41,7 +41,7 @@ const AdminDashboard = () => {
                     console.error("Error fetching stats:", statsError);
                     // Continue with other fetches even if this one fails
                 }
-                
+
                 // Fetch recent hackathons
                 try {
                     const hackathonsData = await getRecentHackathons(sortConfig);
@@ -50,18 +50,18 @@ const AdminDashboard = () => {
                     console.error("Error fetching hackathons:", hackathonsError);
                     // Continue with other fetches even if this one fails
                 }
-                
+
                 // Fetch teacher assignments
                 try {
                     const assignmentsData = await getTeacherAssignments();
-                    
+
                     // Sort teacher assignments
                     const sortedAssignments = [...assignmentsData].sort((a, b) => {
                         const field = teacherSortConfig.field;
-                        
+
                         // Handle different field types
                         let valueA, valueB;
-                        
+
                         if (field === 'startDate' || field === 'endDate') {
                             // Parse dates for comparison
                             valueA = new Date(a[field] || '').getTime() || 0;
@@ -71,7 +71,7 @@ const AdminDashboard = () => {
                             valueA = (a[field] || '').toLowerCase();
                             valueB = (b[field] || '').toLowerCase();
                         }
-                        
+
                         // Sort based on direction
                         if (teacherSortConfig.direction === 'asc') {
                             return valueA > valueB ? 1 : -1;
@@ -79,13 +79,13 @@ const AdminDashboard = () => {
                             return valueA < valueB ? 1 : -1;
                         }
                     });
-                    
+
                     setTeacherAssignments(sortedAssignments);
                 } catch (assignmentsError) {
                     console.error("Error fetching assignments:", assignmentsError);
                     // Continue with other fetches even if this one fails
                 }
-                
+
             } catch (err) {
                 console.error("Error fetching dashboard data:", err);
                 setError("Failed to load dashboard data. Please try again later.");
@@ -163,8 +163,8 @@ const AdminDashboard = () => {
                     <div className="text-red-600 text-5xl mb-4">⚠️</div>
                     <h1 className="text-2xl font-bold text-gray-800 mb-2">Error Loading Dashboard</h1>
                     <p className="text-gray-600 mb-4">{error}</p>
-                    <button 
-                        onClick={() => window.location.reload()} 
+                    <button
+                        onClick={() => window.location.reload()}
                         className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
                     >
                         Retry
@@ -180,7 +180,9 @@ const AdminDashboard = () => {
             <aside className="w-64 bg-white border-r h-screen sticky top-0 flex flex-col">
                 <div className="p-5 flex-grow">
                     <div className="flex items-center mb-6">
-                        <div className="w-10 h-10 bg-gray-200 rounded-full"></div>
+                        <div className="w-10 h-10 bg-gray-200 rounded-full overflow-hidden">
+                        <img src="/logo.png" alt="Profile" className="w-full h-full object-cover" />
+                        </div>
                         <h2 className="text-xl font-bold ml-2">Hackalyze</h2>
                     </div>
                     <nav>
@@ -296,12 +298,12 @@ const AdminDashboard = () => {
 
                             <div className="flex justify-between items-center mb-4 mt-8">
                                 <h2 className="text-xl font-semibold">Top Hackathons</h2>
-                                
+
                                 {/* Sorting Controls */}
                                 <div className="flex items-center space-x-4">
                                     <div className="flex items-center">
                                         <label htmlFor="overviewSortField" className="mr-2 text-sm text-gray-600">Sort by:</label>
-                                        <select 
+                                        <select
                                             id="overviewSortField"
                                             className="form-select rounded-md border-gray-300 shadow-sm text-sm"
                                             value={sortConfig.field}
@@ -312,10 +314,10 @@ const AdminDashboard = () => {
                                             <option value="endDate">End Date</option>
                                         </select>
                                     </div>
-                                    
-                                    <button 
+
+                                    <button
                                         onClick={() => setSortConfig(prev => ({
-                                            ...prev, 
+                                            ...prev,
                                             direction: prev.direction === 'asc' ? 'desc' : 'asc'
                                         }))}
                                         className="text-gray-500 hover:text-gray-700"
@@ -355,16 +357,15 @@ const AdminDashboard = () => {
                                                     <td className="px-4 py-4 whitespace-nowrap">{hackathon.name}</td>
                                                     <td className="px-4 py-4 whitespace-nowrap">{hackathon.date}</td>
                                                     <td className="px-4 py-4 whitespace-nowrap">
-                                                        <span className={`px-2 py-1 text-xs rounded-full font-medium ${
-                                                            hackathon.status === "Active" ? "bg-green-100 text-green-800" : 
-                                                            hackathon.status === "Upcoming" ? "bg-blue-100 text-blue-800" : 
-                                                            "bg-gray-100 text-gray-800"
-                                                        }`}>
+                                                        <span className={`px-2 py-1 text-xs rounded-full font-medium ${hackathon.status === "Active" ? "bg-green-100 text-green-800" :
+                                                                hackathon.status === "Upcoming" ? "bg-blue-100 text-blue-800" :
+                                                                    "bg-gray-100 text-gray-800"
+                                                            }`}>
                                                             {hackathon.status}
                                                         </span>
                                                     </td>
                                                     <td className="px-4 py-4 whitespace-nowrap">
-                                                        <Link 
+                                                        <Link
                                                             to={`/admin/hackathon/${hackathon.id}`}
                                                             className="text-blue-600 hover:text-blue-800"
                                                         >
@@ -385,12 +386,12 @@ const AdminDashboard = () => {
                         <div>
                             <div className="flex justify-between items-center mb-6">
                                 <h2 className="text-2xl font-semibold">Hackathons</h2>
-                                
+
                                 {/* Sorting Controls */}
                                 <div className="flex items-center space-x-4">
                                     <div className="flex items-center">
                                         <label htmlFor="sortField" className="mr-2 text-sm text-gray-600">Sort by:</label>
-                                        <select 
+                                        <select
                                             id="sortField"
                                             className="form-select rounded-md border-gray-300 shadow-sm text-sm"
                                             value={sortConfig.field}
@@ -401,10 +402,10 @@ const AdminDashboard = () => {
                                             <option value="endDate">End Date</option>
                                         </select>
                                     </div>
-                                    
-                                    <button 
+
+                                    <button
                                         onClick={() => setSortConfig(prev => ({
-                                            ...prev, 
+                                            ...prev,
                                             direction: prev.direction === 'asc' ? 'desc' : 'asc'
                                         }))}
                                         className="text-gray-500 hover:text-gray-700"
@@ -422,7 +423,7 @@ const AdminDashboard = () => {
                                     </button>
                                 </div>
                             </div>
-                            
+
                             {recentHackathons.length === 0 ? (
                                 <div className="bg-white rounded-lg p-8 text-center border shadow-sm">
                                     <p className="text-gray-500 mb-4">No hackathons found</p>
@@ -438,11 +439,10 @@ const AdminDashboard = () => {
                                                 <div>
                                                     <div className="flex items-center gap-2">
                                                         <h3 className="text-xl font-semibold">{hackathon.title || hackathon.name}</h3>
-                                                        <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                                                            hackathon.status === "Active" ? "bg-green-100 text-green-800" : 
-                                                            hackathon.status === "Upcoming" ? "bg-blue-100 text-blue-800" : 
-                                                            "bg-gray-100 text-gray-800"
-                                                        }`}>
+                                                        <span className={`text-xs px-2 py-1 rounded-full font-medium ${hackathon.status === "Active" ? "bg-green-100 text-green-800" :
+                                                                hackathon.status === "Upcoming" ? "bg-blue-100 text-blue-800" :
+                                                                    "bg-gray-100 text-gray-800"
+                                                            }`}>
                                                             {hackathon.status || "Completed"}
                                                         </span>
                                                     </div>
@@ -457,8 +457,8 @@ const AdminDashboard = () => {
                                                     <svg className="w-5 h-5 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                                                     </svg>
-                                                    <span>Duration: {hackathon.startDate && hackathon.endDate ? 
-                                                        `${new Date(hackathon.startDate).toLocaleDateString()} - ${new Date(hackathon.endDate).toLocaleDateString()}` : 
+                                                    <span>Duration: {hackathon.startDate && hackathon.endDate ?
+                                                        `${new Date(hackathon.startDate).toLocaleDateString()} - ${new Date(hackathon.endDate).toLocaleDateString()}` :
                                                         hackathon.date || "Not specified"}
                                                     </span>
                                                 </div>
@@ -477,21 +477,21 @@ const AdminDashboard = () => {
                                             </div>
 
                                             <div className="flex flex-wrap gap-2 mt-4">
-                                                <Link 
+                                                <Link
                                                     to={`/admin/hackathon/${hackathon._id || hackathon.id}`}
                                                     className="px-4 py-2 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
                                                 >
                                                     View Details
                                                 </Link>
-                                                <button 
+                                                <button
                                                     className="px-4 py-2 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
-                                                    onClick={() => window.location.href=`/admin/hackathon/${hackathon._id || hackathon.id}?tab=assignedTeachers`}
+                                                    onClick={() => window.location.href = `/admin/hackathon/${hackathon._id || hackathon.id}?tab=assignedTeachers`}
                                                 >
                                                     Assign Teachers
                                                 </button>
-                                                <button 
+                                                <button
                                                     className="px-4 py-2 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
-                                                    onClick={() => window.location.href=`/admin/hackathon/${hackathon._id || hackathon.id}?tab=registeredStudents`}
+                                                    onClick={() => window.location.href = `/admin/hackathon/${hackathon._id || hackathon.id}?tab=registeredStudents`}
                                                 >
                                                     View Participants
                                                 </button>
@@ -508,12 +508,12 @@ const AdminDashboard = () => {
                         <div>
                             <div className="flex justify-between items-center mb-6">
                                 <h2 className="text-xl font-semibold">Teacher Assignments</h2>
-                                
+
                                 {/* Sorting Controls for Teachers */}
                                 <div className="flex items-center space-x-4">
                                     <div className="flex items-center">
                                         <label htmlFor="teacherSortField" className="mr-2 text-sm text-gray-600">Sort by:</label>
-                                        <select 
+                                        <select
                                             id="teacherSortField"
                                             className="form-select rounded-md border-gray-300 shadow-sm text-sm"
                                             value={teacherSortConfig.field}
@@ -524,10 +524,10 @@ const AdminDashboard = () => {
                                             <option value="hackathon">Hackathon</option>
                                         </select>
                                     </div>
-                                    
-                                    <button 
+
+                                    <button
                                         onClick={() => setTeacherSortConfig(prev => ({
-                                            ...prev, 
+                                            ...prev,
                                             direction: prev.direction === 'asc' ? 'desc' : 'asc'
                                         }))}
                                         className="text-gray-500 hover:text-gray-700"
@@ -572,13 +572,13 @@ const AdminDashboard = () => {
                                                         {assignment.hackathon}
                                                     </td>
                                                     <td className="px-4 py-4">
-                                                        {assignment.startDate && assignment.endDate 
-                                                            ? `${assignment.startDate} - ${assignment.endDate}` 
+                                                        {assignment.startDate && assignment.endDate
+                                                            ? `${assignment.startDate} - ${assignment.endDate}`
                                                             : "N/A"}
                                                     </td>
                                                     <td className="px-4 py-4">
                                                         {assignment.hackathonId ? (
-                                                            <Link 
+                                                            <Link
                                                                 to={`/admin/hackathon/${assignment.hackathonId}`}
                                                                 className="text-blue-600 hover:text-blue-800"
                                                             >
