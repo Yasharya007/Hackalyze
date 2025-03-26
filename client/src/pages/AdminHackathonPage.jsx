@@ -7,7 +7,8 @@ import {
     deleteHackathonAPI,
     assignTeacherToHackathonAPI,
     updateHackathonMediaAPI,
-    updateHackathonDeadlineAPI
+    updateHackathonDeadlineAPI,
+    getHackathonSubmissionsAPI
 } from "../utils/api.jsx";
 import toast from "react-hot-toast";
 
@@ -50,7 +51,7 @@ const AdminHackathonPage = () => {
     const mediaTypeOptions = ["File", "Image", "Video", "Audio"];
     const [teacherDetails, setTeacherDetails] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
-
+    const [submissions,setSubmissions]=useState([]);
     // Function to enhance teacher data with full details
     const fetchTeacherDetails = async (teacherIds) => {
         try {
@@ -91,18 +92,19 @@ const AdminHackathonPage = () => {
                 if (response && response.hackathon) {
                     // Format the data for UI
                     const hackathonData = response.hackathon;
-                    
+                    // console.log("data",hackathonData)
                     // Calculate submission rate if needed
-                    const submissionRate = hackathonData.submissions && hackathonData.participants 
-                        ? Math.round((hackathonData.submissions / hackathonData.participants) * 100) + "%" 
+                    const submissionRate = hackathonData.submissions && hackathonData.registeredStudents
+                        ? Math.round((hackathonData.submissions.length / hackathonData.registeredStudents.length) * 100) + "%" 
                         : "0%";
+                    // console.log(submissionRate)
                     
                     setHackathon({
                         ...hackathonData,
                         submissionRate,
                         // Ensure these arrays exist
                         teachersAssigned: hackathonData.teachersAssigned || [],
-                        registeredStudents: hackathonData.registeredStudents || [],
+                        registeredStudents: hackathonData.registeredStudents.length || [],
                         allowedFormats: hackathonData.allowedFormats || [],
                         notifications: hackathonData.notifications || [],
                         results: hackathonData.results || []
@@ -119,6 +121,11 @@ const AdminHackathonPage = () => {
                             time: hackathonData.endTime || ''
                         });
                     }
+                    getHackathonSubmissionsAPI(id)
+                    .then((res)=>{
+                      console.log(res);
+                      setSubmissions(res)
+                    }).catch(()=>{})
                 }
                 setLoading(false);
             } catch (error) {
@@ -753,7 +760,7 @@ const AdminHackathonPage = () => {
                                 </svg>
                             </div>
                             <p className="mt-2 text-sm">
-                                {hackathon.participants || 0} registered
+                                {hackathon.registeredStudents || 0} registered
                             </p>
                         </div>
                         
@@ -766,7 +773,7 @@ const AdminHackathonPage = () => {
                                 </svg>
                             </div>
                             <div className="mt-2 flex items-center">
-                                <span className="text-sm">{hackathon.submissions || 0} ({hackathon.submissionRate || "0%"})</span>
+                                <span className="text-sm">{hackathon.submissions.length || 0} ({hackathon.submissionRate || "0%"})</span>
                             </div>
                         </div>
                     </div>
@@ -965,31 +972,31 @@ const AdminHackathonPage = () => {
                                             </tr>
                                         </thead>
                                         <tbody className="bg-white divide-y divide-gray-200">
-                                            {hackathon.registeredStudents && hackathon.registeredStudents.length === 0 ? (
+                                            {submissions.length===0 ? (
                                                 <tr>
                                                     <td colSpan="4" className="px-6 py-4 text-center text-sm text-gray-500">
                                                         No students registered yet
                                                     </td>
                                                 </tr>
                                             ) : (
-                                                hackathon.registeredStudents && hackathon.registeredStudents.map((student, index) => (
+                                                submissions && submissions.map((submission, index) => (
                                                     <tr key={index}>
                                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                                            {student.name}
+                                                            {submission.studentId.name}
                                                         </td>
                                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                            {student.email}
+                                                            {submission.studentId.email}
                                                         </td>
                                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                            {formatDate(student.registrationDate)}
+                                                            {formatDate(submission.submissionTime)}
                                                         </td>
                                                         <td className="px-6 py-4 whitespace-nowrap text-sm">
                                                             <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                                                                student.submissionStatus === "Submitted" 
+                                                                submission.status === "Submitted" 
                                                                     ? "bg-green-100 text-green-800" 
                                                                     : "bg-yellow-100 text-yellow-800"
                                                             }`}>
-                                                                {student.submissionStatus || "Not submitted"}
+                                                                {submission.status || "Not submitted"}
                                                             </span>
                                                         </td>
                                                     </tr>
