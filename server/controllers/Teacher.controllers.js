@@ -388,3 +388,99 @@ export const updateSubmission = async (req, res) => {
         return res.status(500).json({ message: "Internal server error" });
     }
 };
+
+/**
+ * Evaluate submissions with custom parameters
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Object} - Response with evaluation results
+ */
+export const evaluateWithParameters = async (req, res) => {
+  try {
+    const { hackathonId } = req.params;
+    const { submissionIds, parameters } = req.body;
+
+    // Validate input
+    if (!submissionIds || !submissionIds.length || !parameters || !parameters.length) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Submission IDs and parameters are required."
+      });
+    }
+
+    // Validate parameters total weight equals 100%
+    const totalWeight = parameters.reduce((sum, param) => sum + param.weight, 0);
+    if (totalWeight !== 100) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Total weight of parameters must equal 100%." 
+      });
+    }
+
+    // Find the hackathon
+    const hackathon = await Hackathon.findById(hackathonId);
+    if (!hackathon) {
+      return res.status(404).json({ 
+        success: false, 
+        message: "Hackathon not found." 
+      });
+    }
+
+    // Find the submissions
+    const submissions = await Submission.find({
+      _id: { $in: submissionIds },
+      hackathonId
+    }).populate('studentId');
+
+    if (submissions.length === 0) {
+      return res.status(404).json({ 
+        success: false, 
+        message: "No valid submissions found." 
+      });
+    }
+
+    // Import evaluation service
+    const evaluationService = (await import('../services/evaluationService.js')).default;
+
+    // Evaluate each submission with custom parameters
+    const results = [];
+    for (const submission of submissions) {
+      try {
+        const evaluationResult = await evaluationService.evaluateSubmissionWithParameters(
+          submission, 
+          parameters, 
+          hackathon.title
+        );
+        
+        results.push({
+          submissionId: submission._id,
+          studentName: submission.studentId.name,
+          scores: evaluationResult.scores,
+          totalScore: evaluationResult.totalScore
+        });
+        
+      } catch (evaluationError) {
+        console.error(`Error evaluating submission ${submission._id}:`, evaluationError);
+        results.push({
+          submissionId: submission._id,
+          studentName: submission.studentId?.name || 'Unknown',
+          error: "Failed to evaluate this submission"
+        });
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Evaluation completed",
+      results
+    });
+    
+  } catch (error) {
+    console.error("Error in evaluateWithParameters:", error);
+    return res.status(500).json({ 
+      success: false, 
+      message: "Internal server error", 
+      error: error.message 
+    });
+  }
+};

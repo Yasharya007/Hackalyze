@@ -9,7 +9,8 @@ import {
     updateSubmission,
     getShortlistedStudents,
     getTeacherProfile,
-    updateTeacherProfile
+    updateTeacherProfile,
+    evaluateWithParameters
 } from "../controllers/Teacher.controllers.js";
 import { verifyUser } from "../middleware/auth.js";
 
@@ -21,6 +22,9 @@ router.delete("/hackathons/:hackathonId/parameters/:parameterId", deleteParamete
 router.put("/hackathons/:hackathonId/selectedCriteria", saveSelectedCriteria); // Update selected criteria
 router.get("/hackathons/:hackathonId/selectedCriteria", getSelectedCriteria); // Get selected criteria
 router.get("/hackathons/:hackathonId/getParameters", getAllParameters); // Get all parameters for a hackathon
+
+// AI Evaluation with custom parameters
+router.post("/hackathons/:hackathonId/evaluate-with-parameters", evaluateWithParameters);
 
 // Shortlisting Students
 router.put("/hackathons/shortlist", shortlistStudents);

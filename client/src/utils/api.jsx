@@ -763,6 +763,31 @@ export const manualOverrideScores = async (submissionId, scores, totalScore, fee
   }
 };
 
+// Evaluate submissions with custom parameters
+export const evaluateWithCustomParameters = async (hackathonId, submissionIds, parameters) => {
+  const toastId = toast.loading("AI is evaluating submissions with custom parameters...");
+  try {
+    const parametersData = parameters.map(param => ({
+      name: param.name,
+      description: param.description,
+      weight: param.weight
+    }));
+    
+    const response = await API.post(`/api/teacher/hackathons/${hackathonId}/evaluate-with-parameters`, {
+      submissionIds,
+      parameters: parametersData
+    });
+    
+    toast.success("AI evaluation with custom parameters completed");
+    return response.data;
+  } catch (error) {
+    toast.error(error.response?.data?.message || "AI evaluation with custom parameters failed");
+    throw error.response?.data || "AI evaluation failed";
+  } finally {
+    toast.dismiss(toastId);
+  }
+};
+
 // Get evaluation history for a submission
 export const getEvaluationHistory = async (submissionId) => {
   const toastId = toast.loading("Loading evaluation history...");

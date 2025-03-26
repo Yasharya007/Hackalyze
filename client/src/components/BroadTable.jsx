@@ -1,52 +1,64 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { getHackathonSubmissionsAPI ,shortlistStudents,updateSubmissionAPI} from "../utils/api.jsx";
+import { getHackathonSubmissionsAPI, shortlistStudents, updateSubmissionAPI } from "../utils/api.jsx";
 import { useDispatch } from "react-redux";
 import { setSelectedSubmissionId } from "../slices/submissionSlice.js";
 import Controls from "./Controls";
-function Table() {
+
+const BroadTable = forwardRef(({ onSubmissionSelect }, ref) => {
   const hackathon = useSelector((state) => state.hackathon.selectedHackathon);
-  const navigate=useNavigate();
+  const navigate = useNavigate();
   const dispatch = useDispatch();
   const [numShortlist, setNumShortlist] = useState("");
   const [submissions, setSubmissions] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedRows, setSelectedRows] = useState([]);
   const submissionsPerPage = 50;
   const [showShortlistedOnly, setShowShortlistedOnly] = useState(false); // Filter state
 
+  // Notify parent of initial selections and when selections change
   useEffect(() => {
-    const fetchData = async () => {
-      getHackathonSubmissionsAPI(hackathon._id)
-      .then((res)=>{
-        console.log(res);
-        setSubmissions(res)
-      }).catch(()=>{})
-      // const tagsList = ["AI", "ML", "Web Dev", "Data Science", "Cybersecurity", "Blockchain"];
+    if (onSubmissionSelect && selectedRows.length > 0) {
+      console.log("BroadTable: Notifying parent of selections:", selectedRows);
+      onSubmissionSelect(selectedRows);
+    }
+  }, [selectedRows, onSubmissionSelect]);
 
-      // const data = Array.from({ length: 200 }, (_, index) => ({
-      //   id: `SUB${index + 1}`,
-      //   studentName: `Student ${index + 1}`,
-      //   file: `Submission ${index + 1}`,
-      //   aiScore: Math.floor(Math.random() * 100),
-      //   manualScore: Math.floor(Math.random() * 100),
-      //   reviewed: false,
-      //   shortlisted: false,
-      //   review: false,
-      //   view:`file`,
-      //   overview: `This is a summary of submission ${index + 1}.`,  // Overview data
-        
-      //   tags: [tagsList[index % tagsList.length]], // Assign random tags
-      // }));
-      // setSubmissions(data);
-    };
+  // Add toggle row selection function
+  const toggleRowSelection = (submission) => {
+    setSelectedRows(prev => {
+      const isSelected = prev.some(row => row._id === submission._id);
+      const newSelectedRows = isSelected
+        ? prev.filter(row => row._id !== submission._id)
+        : [...prev, submission];
+      
+      // If onSubmissionSelect is provided, call it with the updated selection
+      if (onSubmissionSelect) {
+        onSubmissionSelect(newSelectedRows);
+      }
+      
+      return newSelectedRows;
+    });
+  };
 
-    fetchData();
-  }, []);
+  const fetchSubmissions = async () => {
+    try {
+      const res = await getHackathonSubmissionsAPI(hackathon._id);
+      console.log(res);
+      setSubmissions(res);
+    } catch (error) {
+      console.error("Error fetching submissions:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchSubmissions();
+  }, [hackathon._id]);
 
   const indexOfLastSubmission = currentPage * submissionsPerPage;
   const indexOfFirstSubmission = indexOfLastSubmission - submissionsPerPage;
-  
+
   // Apply filtering if "Show Only Shortlisted" is active
   const filteredSubmissions = showShortlistedOnly 
       ? submissions.filter(sub => sub.status === "Shortlisted") 
@@ -144,126 +156,140 @@ const sortBytotalScore = () => {
     }
   };
 
+  // Expose refreshData method to parent using ref
+  useImperativeHandle(ref, () => ({
+    refreshData: fetchSubmissions,
+    getSelectedRows: () => selectedRows
+  }));
+
   return (
     <div className="w-full  bg-white shadow-md rounded-lg p-6">
-        {/* Removed ParameterSelector component */}
-      <h2 className="text-xl font-bold text-gray-900 text-center mb-4">Student Submissions</h2>
-      
-      {/* <Controls/> */}
-      <div className="w-full flex justify-between">
-      <div className="flex gap-2 mb-2">
-        <button
-          onClick={() => handleShortlistFilter()}
-          className="px-3 py-1 bg-gray-900 text-white rounded-md hover:bg-gray-700"
-        >
-          Show Only Shortlisted
-        </button>
-        <button
-          onClick={() => sortByAIScore()}
-          className="px-3 py-1 bg-gray-900 text-white rounded-md hover:bg-gray-700"
-        >
-          Sort by AI
-        </button>
-        <button
-          onClick={() => sortBytotalScore()}
-          className="px-3 py-1 bg-gray-900 text-white rounded-md hover:bg-gray-700"
-        >
-          Sort by Manual score
-        </button>
+      <div className="mb-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="flex items-center space-x-4">
+          <div className="flex gap-2 mb-2">
+            <button
+              onClick={() => handleShortlistFilter()}
+              className="px-3 py-1 bg-gray-900 text-white rounded-md hover:bg-gray-700"
+            >
+              Show Only Shortlisted
+            </button>
+            <button
+              onClick={() => sortByAIScore()}
+              className="px-3 py-1 bg-gray-900 text-white rounded-md hover:bg-gray-700"
+            >
+              Sort by AI
+            </button>
+            <button
+              onClick={() => sortBytotalScore()}
+              className="px-3 py-1 bg-gray-900 text-white rounded-md hover:bg-gray-700"
+            >
+              Sort by Manual score
+            </button>
+          </div>
+          <div className="flex items-center">
+            <input 
+              type="checkbox" 
+              id="shortlisted-filter"
+              checked={showShortlistedOnly}
+              onChange={() => setShowShortlistedOnly(!showShortlistedOnly)}
+              className="mr-2 accent-blue-600" 
+            />
+            <label htmlFor="shortlisted-filter" className="text-sm text-gray-700">Show only shortlisted</label>
+          </div>
+        </div>
+        
+        <div className="flex items-center space-x-2">
+          <span className="text-sm text-gray-700">{`${selectedRows.length} submissions selected`}</span>
         </div>
         <div className="flex gap-2 mb-2">
-        <div className="flex items-center gap-3">
-      <input
-        type="number"
-        value={numShortlist}
-        onChange={(e) => setNumShortlist(e.target.value)}
-        placeholder="Enter count"
-        min="1"
-        className="px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-600"
-      />
-      <button
-        onClick={handleSelectSubmissions}
-        className="px-3 py-1 bg-gray-900 text-white rounded-md hover:bg-gray-700"
-      >
-        Select Submissions
-      </button>
-    </div>
-        <button
-          onClick={updateSubmission}
-          className="px-3 py-1 bg-gray-900 text-white rounded-md hover:bg-gray-700"
-        >
-          Finalise Result
-        </button>
+          <div className="flex items-center gap-3">
+            <input
+              type="number"
+              value={numShortlist}
+              onChange={(e) => setNumShortlist(e.target.value)}
+              placeholder="Enter count"
+              min="1"
+              className="px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-600"
+            />
+            <button
+              onClick={handleSelectSubmissions}
+              className="px-3 py-1 bg-gray-900 text-white rounded-md hover:bg-gray-700"
+            >
+              Select Submissions
+            </button>
+          </div>
+          <button
+            onClick={updateSubmission}
+            className="px-3 py-1 bg-gray-900 text-white rounded-md hover:bg-gray-700"
+          >
+            Finalise Result
+          </button>
         </div>
       </div>
-      
-      {/* Table */}
-      <div className="overflow-x-auto">
-        <table className="w-full border-collapse border border-gray-300 text-gray-800 text-sm">
-          <thead className="bg-gray-200 text-gray-700">
-            <tr className="text-left">
-              <th className="p-2 border border-gray-300 text-center">ID</th>
-              <th className="p-2 border border-gray-300">Student</th>
-              <th className="p-2 border border-gray-300">File</th>
-              <th className="p-2 border border-gray-300 text-center">Overview</th>
-              <th className="p-2 border border-gray-300 text-center">Tags</th>
-              <th className="p-2 border border-gray-300 text-center">AI Score</th>
-              <th className="p-2 border border-gray-300 text-center">Manual Score</th>
-              {/* <th className="p-2 border border-gray-300 text-center">Reviewed</th> */}
-              <th className="p-2 border border-gray-300 text-center">Shortlisted</th>
-              <th className="p-2 border border-gray-300 text-center">Reviewed</th>
-              <th className="p-2 border border-gray-300 text-center">View More</th>
 
-
+      <div className="overflow-x-auto relative shadow-md sm:rounded-lg">
+        <table className="w-full text-sm text-left text-gray-500">
+          <thead className="text-xs text-gray-700 uppercase bg-gray-100">
+            <tr>
+              <th scope="col" className="p-4">
+                <span className="sr-only">Select</span>
+              </th>
+              <th scope="col" className="py-3 px-6">ID</th>
+              <th scope="col" className="py-3 px-6">Student</th>
+              <th scope="col" className="py-3 px-6">File</th>
+              <th scope="col" className="py-3 px-6">Overview</th>
+              <th scope="col" className="py-3 px-6">Tags</th>
+              <th scope="col" className="py-3 px-6">AI Score</th>
+              <th scope="col" className="py-3 px-6">Manual Score</th>
+              <th scope="col" className="py-3 px-6">Shortlisted</th>
+              <th scope="col" className="py-3 px-6">Reviewed</th>
+              <th scope="col" className="py-3 px-6">View More</th>
             </tr>
           </thead>
           <tbody>
-  {currentSubmissions.map((submission, index) => (
-    <tr key={submission._id} className={`border border-gray-200 ${index % 2 === 0 ? "bg-gray-50" : "bg-white"}`}>
-      <td className="p-2 border border-gray-300 text-center">{index+1}</td>
-      <td className="p-2 border border-gray-300">{submission.studentId.name}</td>
-      <td className="p-2 border border-gray-300">
-        <a href={submission.files[0].fileUrl} className="text-black hover:underline">file {index+1}</a>
-      </td>
-      <td className="p-2 border border-gray-300">{submission.description}</td>
-      <td className="p-2 border border-gray-300 text-center">
-        <span className="px-2 py-1 bg-gray-100 text-black rounded-full text-xs">{submission.tags}</span>
-      </td>
-      <td className="p-2 border border-gray-300 text-center">{submission.totalAIScore}</td>
-      <td className="p-2 border border-gray-300 text-center">{submission.totalScore}</td>
-
-      {/* Reviewed Checkbox */}
-      {/* <td className="p-2 border border-gray-300 text-center">{submission.reviewed}
-      </td> */}
-
-      {/* Shortlisted Checkbox */}
-      <td className="p-2 border border-gray-300 text-center">
-        <input
-          type="checkbox"
-          checked={submission.status === "Shortlisted"}
-          onChange={() => handleCheckboxChange(submission._id, "Shortlisted")}
-          className="cursor-pointer accent-green-600"
-        />
-      </td>
-
-      {/* Review Checkbox */}
-      <td className="p-2 border border-gray-300 text-center">
-        <input
-          type="checkbox"
-          checked={submission.review}
-          onChange={() => handleCheckboxChange(submission.id, "review")}
-          className="cursor-pointer accent-blue-600"
-        />
-      </td>
-
-      {/* View More Button (NOT a checkbox) */}
-      <td className="p-2 border border-gray-300 text-center">
-        <button className="text-blue-600 hover:underline" onClick={() => handleSelectSubmission(submission._id)} >review</button>
-      </td>
-    </tr>
-  ))}
-</tbody>
-
+            {currentSubmissions.map((submission, index) => (
+              <tr key={submission._id} className={`border-b hover:bg-gray-50 ${index % 2 === 0 ? "bg-gray-50" : "bg-white"}`}>
+                <td className="p-4 w-4">
+                  <input
+                    type="checkbox"
+                    checked={selectedRows.some(row => row._id === submission._id)}
+                    onChange={() => toggleRowSelection(submission)}
+                    className="cursor-pointer accent-blue-600"
+                  />
+                </td>
+                <td className="py-3 px-6">{index+1}</td>
+                <td className="py-3 px-6">{submission.studentId.name}</td>
+                <td className="py-3 px-6">
+                  <a href={submission.files[0].fileUrl} className="text-black hover:underline">file {index+1}</a>
+                </td>
+                <td className="py-3 px-6">{submission.description}</td>
+                <td className="py-3 px-6">
+                  <span className="px-2 py-1 bg-gray-100 text-black rounded-full text-xs">{submission.tags}</span>
+                </td>
+                <td className="py-3 px-6">{submission.totalAIScore}</td>
+                <td className="py-3 px-6">{submission.totalScore}</td>
+                <td className="py-3 px-6">
+                  <input
+                    type="checkbox"
+                    checked={submission.status === "Shortlisted"}
+                    onChange={() => handleCheckboxChange(submission._id)}
+                    className="cursor-pointer accent-green-600"
+                  />
+                </td>
+                <td className="py-3 px-6">
+                  <input
+                    type="checkbox"
+                    checked={submission.review}
+                    onChange={() => handleCheckboxChange(submission.id)}
+                    className="cursor-pointer accent-blue-600"
+                  />
+                </td>
+                <td className="py-3 px-6">
+                  <button className="text-blue-600 hover:underline" onClick={() => handleSelectSubmission(submission._id)} >review</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
         </table>
       </div>
 
@@ -279,6 +305,6 @@ const sortBytotalScore = () => {
       </div>
     </div>
   );
-}
+});
 
-export default Table;
+export default BroadTable;

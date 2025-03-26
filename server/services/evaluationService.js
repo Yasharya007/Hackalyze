@@ -117,6 +117,107 @@ class EvaluationService {
       throw error;
     }
   }
+
+  /**
+   * Evaluate a submission with custom parameters and their weights
+   * @param {Object} submission - The submission object to evaluate
+   * @param {Array} parameters - Array of parameters with weights
+   * @param {string} hackathonTitle - Title of the hackathon
+   * @returns {Promise<Object>} - Evaluation results with scores and weighted total
+   */
+  async evaluateSubmissionWithParameters(submission, parameters, hackathonTitle) {
+    try {
+      console.log(`Starting parameter-based evaluation for submission: ${submission._id}`);
+      
+      // Step 1: Extract text from all submission files
+      const extractedTexts = [];
+      console.log(`Processing ${submission.files.length} files for extraction`);
+      
+      for (const file of submission.files) {
+        try {
+          const { format, fileUrl } = file;
+          console.log(`Extracting text from ${format} file: ${fileUrl}`);
+          
+          const extractedText = await mediaProcessingService.extractTextFromMedia(fileUrl, format);
+          extractedTexts.push(extractedText);
+          console.log(`Successfully extracted ${extractedText.length} characters`);
+        } catch (error) {
+          console.error(`Error extracting text: ${error.message}`);
+          // Continue with other files if one fails
+        }
+      }
+      
+      // Step 2: Combine extracted text with submission description
+      const submissionText = [
+        submission.description || '',
+        ...extractedTexts
+      ].join('\n\n');
+      
+      console.log(`Combined text length: ${submissionText.length} characters`);
+      
+      // Step 3: Evaluate the content against each parameter
+      const scores = [];
+      let totalWeightedScore = 0;
+      
+      for (const param of parameters) {
+        try {
+          console.log(`Evaluating parameter: ${param.name} (weight: ${param.weight}%)`);
+          
+          const startTime = Date.now();
+          const result = await llmService.evaluateCriterion(submissionText, param.name, hackathonTitle);
+          const endTime = Date.now();
+          
+          // Calculate weighted score
+          const weightedScore = (result.score * param.weight) / 100;
+          totalWeightedScore += weightedScore;
+          
+          console.log(`Evaluation for "${param.name}" completed: Score ${result.score}, Weighted: ${weightedScore.toFixed(2)} (${(endTime - startTime) / 1000}s)`);
+          
+          scores.push({
+            parameter: param.name,
+            score: result.score,
+            weight: param.weight,
+            weightedScore: weightedScore
+          });
+        } catch (error) {
+          console.error(`Error evaluating parameter "${param.name}": ${error.message}`);
+          // Add a zero score with error message if evaluation fails
+          scores.push({
+            parameter: param.name,
+            score: 0,
+            weight: param.weight,
+            weightedScore: 0,
+            error: error.message
+          });
+        }
+      }
+      
+      // Step 4: Save the evaluation results in the database
+      const evaluationUpdate = {
+        AIscores: scores.map(score => ({
+          parameter: score.parameter,
+          score: score.score
+        })),
+        totalAIScore: Math.round(totalWeightedScore)
+      };
+      
+      await Submission.findByIdAndUpdate(
+        submission._id,
+        evaluationUpdate,
+        { new: false }
+      );
+      
+      // Return the evaluation results
+      return {
+        submissionId: submission._id,
+        scores,
+        totalScore: Math.round(totalWeightedScore)
+      };
+    } catch (error) {
+      console.error('Parameter-based evaluation error:', error);
+      throw error;
+    }
+  }
 }
 
 export default new EvaluationService();

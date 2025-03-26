@@ -2,7 +2,8 @@ import mongoose from "mongoose";
 
 const parameterSchema = new mongoose.Schema({
   name: { type: String, required: true },
-  description: { type: String, required: true }
+  description: { type: String, required: true },
+  weight: { type: Number, default:100,min:0,max:100 } 
 }, { _id: true });
 
 const hackathonSchema = new mongoose.Schema({

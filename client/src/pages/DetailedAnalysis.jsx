@@ -2,9 +2,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { FaChartBar, FaLaptopCode, FaCogs, FaClipboardList, FaTrophy, FaUserCog, FaArrowLeft, 
-         FaWeight, FaPercentage, FaCheck, FaPlus, FaMinus, FaInfoCircle, FaTimes, FaTrash } from 'react-icons/fa';
+         FaWeight, FaPercentage, FaCheck, FaPlus, FaMinus, FaInfoCircle, FaTimes, FaTrash, FaRobot } from 'react-icons/fa';
 import BroadTable from "../components/BroadTable.jsx";
-import { logoutAPI, addParameterAPI, deleteParameterAPI, getParametersAPI } from '../utils/api.jsx';
+import { logoutAPI, addParameterAPI, deleteParameterAPI, getParametersAPI, evaluateWithCustomParameters } from '../utils/api.jsx';
+import toast from "react-hot-toast";
 
 const DetailedAnalysis = () => {
   const navigate = useNavigate();
@@ -14,6 +15,7 @@ const DetailedAnalysis = () => {
   const [showInfoPanel, setShowInfoPanel] = useState(false);
   const infoPanelRef = useRef(null);
   const btnRef = useRef(null);
+  const broadTableRef = useRef(null);
   const [detailsLocked, setDetailsLocked] = useState(false);
   
   // Parameter states
@@ -27,9 +29,13 @@ const DetailedAnalysis = () => {
     name: '',
     description: '',
     weight: 0.15,
-    enabled: true
   });
   
+  // Selected submissions and AI evaluation state
+  const [selectedSubmissions, setSelectedSubmissions] = useState([]);
+  const [isEvaluating, setIsEvaluating] = useState(false);
+  const [evaluationResults, setEvaluationResults] = useState(null);
+
   // Fetch parameters from API
   const fetchParameters = async () => {
     if (hackathon?._id) {
@@ -39,13 +45,14 @@ const DetailedAnalysis = () => {
         if (response.parameters && Array.isArray(response.parameters)) {
           // Transform the API response to match our parameter format
           const formattedParams = response.parameters.map((param, index) => ({
-            id: param._id || index + 1,
+            id: param._id || `param-${index}`,
             name: param.name,
             description: param.description,
             weight: param.weight || 0.15, // Default weight if not provided
-            enabled: param.enabled || true, // Default enabled if not provided
+            selected: Boolean(param.selected || param.enabled || false), // Ensure it's a Boolean
             _id: param._id // Keep the original _id from the server
           }));
+          console.log("Formatted parameters:", formattedParams);
           setAllParameters(formattedParams);
         }
       } catch (err) {
@@ -66,8 +73,8 @@ const DetailedAnalysis = () => {
     return 'submissions'; // This page is part of the submissions flow
   };
   
-  // Get active parameters (enabled)
-  const activeParameters = allParameters.filter(param => param.enabled);
+  // Get active parameters (selected)
+  const activeParameters = allParameters.filter(param => param.selected);
   
   // Calculate total weight of active parameters
   const totalWeight = activeParameters.reduce((acc, param) => acc + param.weight, 0);
@@ -75,11 +82,21 @@ const DetailedAnalysis = () => {
   // Check if weight is exactly 100% (or close enough considering floating-point precision)
   const isWeightValid = Math.abs(totalWeight * 100 - 100) < 0.1;
   
-  // Toggle parameter enabled status
+  // Toggle parameter selected status
   const toggleParameter = (id) => {
-    setAllParameters(prev => prev.map(param => 
-      param.id === id ? { ...param, enabled: !param.enabled } : param
-    ));
+    console.log("Toggling parameter with ID:", id);
+    setAllParameters(prev => {
+      const updated = prev.map(param => {
+        // Check if this param matches the id (either internal id or _id from server)
+        if (param.id === id || param._id === id) {
+          console.log(`Toggling parameter: ${param.name} from ${param.selected} to ${!param.selected}`);
+          return { ...param, selected: !param.selected };
+        }
+        return param;
+      });
+      console.log("Updated parameters:", updated);
+      return updated;
+    });
   };
 
   // Adjust parameter weight
@@ -118,7 +135,6 @@ const DetailedAnalysis = () => {
         name: '',
         description: '',
         weight: 0.15,
-        enabled: true
       });
       setShowAddForm(false);
       
@@ -161,6 +177,69 @@ const DetailedAnalysis = () => {
     }
   };
   
+  // Handle AI evaluation with custom parameters
+  const handleAIEvaluation = async () => {
+    // Validate if we have selected submissions
+    if (!selectedSubmissions || selectedSubmissions.length === 0) {
+      toast.error("Please select at least one submission to evaluate");
+      return;
+    }
+
+    // Validate if parameters are properly set (total weight = 100%)
+    if (!isWeightValid) {
+      toast.error("Total parameter weight must equal 100%");
+      return;
+    }
+
+    // Get the selected parameters with weights
+    const selectedParameters = allParameters
+      .filter(param => param.selected)
+      .map(param => ({
+        name: param.name,
+        description: param.description,
+        weight: param.weight * 100 // Convert to percentage
+      }));
+
+    if (selectedParameters.length === 0) {
+      toast.error("Please select at least one parameter for evaluation");
+      return;
+    }
+
+    try {
+      setIsEvaluating(true);
+      
+      // Extract submission IDs
+      const submissionIds = selectedSubmissions.map(submission => submission._id);
+      
+      // Call the API for custom parameter evaluation
+      const result = await evaluateWithCustomParameters(
+        hackathon._id,
+        submissionIds,
+        selectedParameters
+      );
+      
+      setEvaluationResults(result.results);
+      
+      // Refresh the table to show updated scores
+      if (broadTableRef.current) {
+        broadTableRef.current.refreshData();
+      }
+      
+      toast.success(`Successfully evaluated ${submissionIds.length} submissions`);
+    } catch (error) {
+      console.error("Evaluation failed:", error);
+      toast.error("Failed to evaluate submissions: " + (error.message || "Unknown error"));
+    } finally {
+      setIsEvaluating(false);
+    }
+  };
+
+  // Handler for when submissions are selected in the BroadTable
+  const handleSubmissionsSelected = (submissions) => {
+    console.log("Submissions selected:", submissions);
+    setSelectedSubmissions(submissions);
+  };
+
   return (
     <div className="flex w-full min-h-screen bg-gray-100">
       {/* Sidebar */}
@@ -368,7 +447,7 @@ const DetailedAnalysis = () => {
                   className="flex items-center text-blue-600 hover:text-blue-800 focus:outline-none text-sm"
                 >
                   <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
                   Refresh Parameters
                 </button>
@@ -394,24 +473,24 @@ const DetailedAnalysis = () => {
                 ) : (
                   allParameters.map(param => (
                     <div 
-                      key={param.id}
+                      key={param.id || param._id}
                       className={`${
-                        param.enabled ? 'bg-blue-50 border-blue-200' : 'bg-gray-50 border-gray-200'
+                        param.selected ? 'bg-blue-50 border-blue-200' : 'bg-gray-50 border-gray-200'
                       } border p-4 rounded-lg cursor-pointer transition-all hover:shadow-md relative`}
                     >
                       <div className="flex justify-between items-start mb-1">
                         <h3 
-                          className={`font-bold ${param.enabled ? 'text-blue-700' : 'text-gray-700'}`}
-                          onClick={() => toggleParameter(param.id)}
+                          className={`font-bold ${param.selected ? 'text-blue-700' : 'text-gray-700'}`}
+                          onClick={() => toggleParameter(param.id || param._id)}
                         >
                           {param.name}
                         </h3>
                         <div className="flex items-center">
                           <span 
-                            className={`p-1 rounded-full ${param.enabled ? 'bg-blue-100 text-blue-700' : 'bg-gray-200 text-gray-600'} mr-2 border ${param.enabled ? 'border-blue-300' : 'border-gray-300'}`}
-                            onClick={() => toggleParameter(param.id)}
+                            className={`p-1 rounded-full ${param.selected ? 'bg-blue-100 text-blue-700' : 'bg-gray-200 text-gray-600'} mr-2 border ${param.selected ? 'border-blue-300' : 'border-gray-300'}`}
+                            onClick={() => toggleParameter(param.id || param._id)}
                           >
-                            {param.enabled ? <FaCheck size={12} /> : <div className="w-3 h-3"></div>}
+                            {param.selected ? <FaCheck size={12} /> : <div className="w-3 h-3"></div>}
                           </span>
                           <button
                             onClick={(e) => {
@@ -427,7 +506,7 @@ const DetailedAnalysis = () => {
                           </button>
                         </div>
                       </div>
-                      <div onClick={() => toggleParameter(param.id)}>
+                      <div onClick={() => toggleParameter(param.id || param._id)}>
                         <p className="text-sm text-gray-600 mb-2">{param.description}</p>
                         <div className="flex items-center text-sm">
                           <FaWeight className="mr-1 text-gray-500" size={14} />
@@ -564,18 +643,35 @@ const DetailedAnalysis = () => {
                   {/* AI Evaluation Button */}
                   <div className="mt-4">
                     <button
-                      className="w-full flex items-center justify-center px-4 py-2.5 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors shadow-sm"
-                      onClick={() => {
-                        // TODO: Implement AI evaluation
-                        alert('AI evaluation feature will be implemented soon');
-                      }}
+                      onClick={handleAIEvaluation}
+                      disabled={isEvaluating || !isWeightValid || !selectedSubmissions?.length}
+                      className={`flex items-center justify-center w-full py-2 px-4 rounded-md text-white ${
+                        isEvaluating || !isWeightValid || !selectedSubmissions?.length
+                          ? 'bg-gray-400 cursor-not-allowed'
+                          : 'bg-blue-600 hover:bg-blue-700'
+                      }`}
                     >
-                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
-                      </svg>
-                      Evaluate with AI
+                      {isEvaluating ? (
+                        <>
+                          <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Evaluating...
+                        </>
+                      ) : (
+                        <>
+                          <FaRobot className="mr-2" />
+                          Evaluate {selectedSubmissions?.length || 0} Submissions with AI
+                        </>
+                      )}
                     </button>
                   </div>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {!selectedSubmissions?.length 
+                      ? "Select submissions from the table below to evaluate" 
+                      : `${selectedSubmissions.length} submissions selected for evaluation`}
+                  </p>
                 </div>
               )}
             </div>
@@ -584,8 +680,49 @@ const DetailedAnalysis = () => {
         
         {/* BroadTable Component */}
         <div className="bg-white p-6 rounded-lg shadow-md">
-          <BroadTable />
+          <BroadTable 
+            ref={broadTableRef} 
+            hackathonId={hackathon?._id}
+            onSubmissionSelect={handleSubmissionsSelected} 
+          />
         </div>
+
+        {/* Evaluation Results Section - shows when results are available */}
+        {evaluationResults && evaluationResults.length > 0 && (
+          <div className="bg-white p-6 rounded-lg shadow-md mt-6">
+            <h2 className="text-xl font-bold mb-4 text-gray-800">Evaluation Results</h2>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Submission</th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student</th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Score</th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {evaluationResults.map((result, index) => (
+                    <tr key={result.submissionId} className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{result.submissionId}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{result.studentName}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {result.error ? 'Error' : `${result.totalScore}/100`}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {result.error ? (
+                          <span className="px-2 py-1 text-xs rounded-full bg-red-100 text-red-800">Failed</span>
+                        ) : (
+                          <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">Success</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );
