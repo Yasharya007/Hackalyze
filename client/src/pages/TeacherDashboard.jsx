@@ -115,10 +115,22 @@ const TeacherDashboard = () => {
 
                 {/* Hackathon Analysis & Scheduling */}
                 <div className="mt-6 grid grid-cols-2 gap-6">
-                    <div className="bg-white p-6 rounded-lg shadow">
+                    {/* <div className="bg-white p-6 rounded-lg shadow">
                         <h2 className="text-xl font-semibold">Hackathon Analysis</h2>
                         <Bar data={chartData} className="mt-4" />
+                    </div> */}
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <h2 class="text-xl font-semibold">Assigned Hackathons</h2>
+                        <div class="mt-4 space-y-4">
+                        {assignedHackathons.map((hackathon, index) => (
+                              <div key={index} className="p-3 bg-gray-50 rounded-lg">
+                                {hackathon.title} ({formatDate(hackathon.endDate)}) 
+                                <button className="ml-2 text-blue-600" onClick={() => handleClick(hackathon)}>View Details</button>
+                              </div>
+                            ))}
+                        </div>
                     </div>
+                    
                     <div className="bg-white p-6 rounded-lg shadow">
                         <h2 className="text-xl font-semibold">Scheduling Calendar</h2>
                         <p className="text-gray-500">Upcoming Hackathons and deadlines will be displayed here.</p>
@@ -139,6 +151,10 @@ const TeacherDashboard = () => {
                         </ul>
                     </div>
                 </div>
+                <div className="bg-white p-6 rounded-lg shadow">
+                        <h2 className="text-xl font-semibold">Hackathon Analysis</h2>
+                        <Bar data={chartData} className="mt-4" />
+                    </div>
             </main>
         </div>
     );
