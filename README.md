@@ -4,7 +4,7 @@
 ## 🚀 Project Overview
 Hackalyze is designed to streamline the **hackathon management** process, making it easier for organizers, participants, and judges to collaborate efficiently.
 
-## Problem Statement
+## ⚠️ Problem Statement
 Evaluating student ideas at scale is challenging, especially when submissions are **unstructured and lack clarity**. 
 Teachers also struggle with conducting **personalized assessments** in classrooms, making it difficult to gauge student understanding and provide targeted feedback.
 
