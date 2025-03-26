@@ -142,14 +142,16 @@ npm run dev
 
 ## 🎯 Future Enhancements
 
-- 🤖 **AI Evaluation** – Automated project assessment  
-- 🔗 **Blockchain Voting** – Secure and transparent voting system  
-- 💬 **Real-time Chat & Video** – Seamless mentoring and collaboration  
-- 🎓 **AI Student Assistance** – Smart guidance for participants  
+- 🎓 **Student Support Chatbot** –  AI-powered chatbot for instant student
+assistance.  
 - 📧 **Enhanced Email Support** – Faster and structured responses  
 - 📱 **Mobile Optimization** – Improved accessibility on all devices  
-- 📝 **AI Feedback Analysis** – Intelligent insights for better learning  
-- 📂 **Advanced File Management** – Efficient sharing and organization  
+- 📝 **Enchanced Feedback Analysis** –  Structured feedback with AI-driven
+insights. 
+- 📂 **URL Option for Docs & Links** – Easy access to documentation and
+resources.
+- 🛠 **Zip File Support** – Allow students to upload/download multiple files
+efficiently. 
 - 🔊 **Auto Problem Statement Summary** – AI-driven summarization & reading  
 
 ---
