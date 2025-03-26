@@ -1,10 +1,10 @@
 
-import BroadTable from "./BroadTable"
+import BroadTable from "../components/BroadTable.jsx"
 
 
 const DetailedAnalysis = () => {
   return (
-    <div>
+    <div className="w-screen">
       <BroadTable />
     </div>
   );

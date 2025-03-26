@@ -78,7 +78,7 @@ export const getSubmissionDetails = async (req, res) => {
         const { submissionId } = req.params; // Extract submission ID from request
 
         const submission = await Submission.findById(submissionId)
-            .populate("studentId", "name email") // Get student name & email
+            .populate("studentId", "name email mobileNumber schoolCollegeName grade gender state district") // Get student name & email
             .populate("hackathonId", "title") // Get hackathon title
             .populate("reviewerId", "name email") // Get reviewer (teacher) details
             .lean(); // Convert to plain JavaScript object
@@ -112,88 +112,6 @@ export const getTopSubmissions = async (req, res) => {
             .lean();
 
         res.json(submissions);
-    } catch (error) {
-        res.status(500).json({ message: "Server error", error: error.message });
-    }
-};
-
-// Add custom evaluation criteria to a hackathon
-export const addEvaluationCriteria = async (req, res) => {
-    try {
-        const { hackathonId } = req.params;
-        const { criteria } = req.body; // Criteria should be an array of strings
-
-        // Validate input
-        if (!Array.isArray(criteria) || criteria.length === 0) {
-            return res.status(400).json({ message: "Criteria must be a non-empty array" });
-        }
-
-        // Find hackathon and update criteria
-        const hackathon = await Hackathon.findByIdAndUpdate(
-            hackathonId,
-            { $addToSet: { criteria: { $each: criteria } } }, // Prevents duplicates
-            { new: true }
-        );
-
-        if (!hackathon) {
-            return res.status(404).json({ message: "Hackathon not found" });
-        }
-
-        res.status(200).json({ message: "Criteria added successfully", hackathon });
-    } catch (error) {
-        res.status(500).json({ message: "Server error", error: error.message });
-    }
-};
-
-// Get all criteraia
-export const getAllCriteria = async (req, res) => {
-    try {
-        const { hackathonId } = req.params;
-        const hackathon = await Hackathon.findById(hackathonId).select("criteria");
-
-        if (!hackathon) {
-            return res.status(404).json({ message: "Hackathon not found" });
-        }
-
-        res.status(200).json({ criteria: hackathon.criteria });
-    } catch (error) {
-        res.status(500).json({ message: "Server error", error: error.message });
-    }
-};
-
-// 2Get only selected criteria (Used for evaluation)
-export const getSelectedEvaluationCriteria = async (req, res) => {
-    try {
-        const { hackathonId } = req.params;
-        const hackathon = await Hackathon.findById(hackathonId).select("selectedCriteria");
-
-        if (!hackathon) {
-            return res.status(404).json({ message: "Hackathon not found" });
-        }
-
-        res.status(200).json({ selectedCriteria: hackathon.selectedCriteria });
-    } catch (error) {
-        res.status(500).json({ message: "Server error", error: error.message });
-    }
-};
-
-// Update selected criteria (Teacher selects ticked parameters)
-export const updateSelectedCriteria = async (req, res) => {
-    try {
-        const { hackathonId } = req.params;
-        const { selectedCriteria } = req.body; // Expect an array of selected criteria
-
-        // Ensure the hackathon exists
-        const hackathon = await Hackathon.findById(hackathonId);
-        if (!hackathon) {
-            return res.status(404).json({ message: "Hackathon not found" });
-        }
-
-        // Update selected criteria
-        hackathon.selectedCriteria = selectedCriteria;
-        await hackathon.save();
-
-        res.status(200).json({ message: "Selected criteria updated successfully", selectedCriteria });
     } catch (error) {
         res.status(500).json({ message: "Server error", error: error.message });
     }

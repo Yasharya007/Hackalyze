@@ -18,21 +18,21 @@ const TeacherDashboard = () => {
     const [assignedHackathons, setassignedHackathons] = useState([]);
 
     useEffect(() => {
-        const fetchHackathons = async () => {
-            HackathonByTeacherAPI(teacherId)
-                .then((res) => {
-                    setassignedHackathons(res);
-                })
-                .catch(() => { });
-        };
-        fetchHackathons();
-    }, []);
-
+            const fetchHackathons = async () => {
+              HackathonByTeacherAPI(teacherId)
+              .then((res)=>{
+                // console.log(hackathons.length);
+                setassignedHackathons(res);
+                // console.log("hello");
+              }).catch(()=>{})
+            };
+        
+            fetchHackathons();
+          }, []);
     const handleClick = (hackathon) => {
-        dispatch(setHackathon(hackathon));
-        navigate("/teacher/hackathon");
-    };
-
+            dispatch(setHackathon(hackathon));
+            navigate("/teacher/hackathon");
+          };
     const chartData = {
         labels: ["Hackathon 1", "Hackathon 2", "Hackathon 3"],
         datasets: [

@@ -1,7 +1,94 @@
 
-import { useState } from "react";
-import ParameterSelector from "./ParameterSelector";
+import { useState,useEffect } from "react";
+import ParameterSelector from "../components/ParameterSelector.jsx";
+import { getSubmissionDetailsAPI } from "../utils/api.jsx";
+import { useSelector } from "react-redux";
 const StudentDetails = () => {
+  const formatDate = (isoString) => isoString.split("T")[0];
+  const formatTime = (isoString) => {
+    const date = new Date(isoString);
+    const hours = date.getHours().toString().padStart(2, "0");
+    const minutes = date.getMinutes().toString().padStart(2, "0");
+    return `${hours}:${minutes}`;
+};
+const [scoreData, setScoreData] = useState([
+  { parameter: "Accuracy", score: 40, scoreManual: 45 },
+  { parameter: "Speed", score: 30, scoreManual: 35 },
+  { parameter: "Efficiency", score: 20, scoreManual: 25 },
+]);
+const statuses = [
+  { label: "Pending 🔄", value: "Pending" },
+  { label: "Shortlisted ✔️", value: "Shortlisted" },
+  { label: "Reviewed 👀", value: "Reviewed" },
+  { label: "Rejected ❌", value: "Rejected" },
+];
+  const submissionId = useSelector(state => state.submission.selectedSubmissionId);
+  const [submission, setSubmission] =useState(
+    {
+      _id: "67e24f02e531a6dcded25f43",
+      studentId: {
+          _id: "67e24b1b1491ff6a226b6db6",
+          name: "Nikhil Kumar",
+          email: "nikhil20233202@gmail.com",
+          mobileNumber: "7856342323",
+          schoolCollegeName: "MNNIT",
+          grade: "UG",
+          gender: "Male",
+          state: "UP",
+          district: "Gorakhpur"
+      },
+      hackathonId: {
+          _id: "67e1c48a4003d364ea2e137f",
+          title: "Morgan Stanley Code To Give"
+      },
+      files: [
+          {
+              format: "File",
+              fileUrl: "https://res.cloudinary.com/dq16hq377/image/upload/v1742884610/q1xmtxr0bngw6brqxawq.pdf",
+              _id: "67e24f02e531a6dcded25f44"
+          }
+      ],
+      description: "",
+      totalScore: 0,
+      totalAIScore: 0,
+      grade: "Low",
+      result: "Rejected",
+      status: "Shortlisted",
+      scores: [],
+      AIscores: [],
+      submissionTime: "2025-03-25T06:36:50.739Z",
+      createdAt: "2025-03-25T06:36:50.741Z",
+      updatedAt: "2025-03-25T08:01:06.114Z",
+      __v: 0
+  }
+  
+  )
+  const [studentd, setStudent] = useState( {
+    _id: "67e24b1b1491ff6a226b6db6",
+    name: "Nikhil Kumar",
+    email: "nikhil20233202@gmail.com",
+    mobileNumber: "7856342323",
+    schoolCollegeName: "MNNIT",
+    grade: "UG",
+    gender: "Male",
+    state: "UP",
+    district: "Gorakhpur"
+});
+  console.log(submissionId)
+  useEffect(() => {
+      const fetchData = async () => {
+        getSubmissionDetailsAPI(submissionId)
+        .then((res)=>{
+          console.log(res.data);
+          setSubmission(res.data)
+          setStudent(res.data.studentId)
+          setScoreData(res.data.AIscores)
+          console.log(res.data)
+        }).catch(()=>{})
+      };
+
+      fetchData();
+    }, []);
   const student = {
     _id: "12345",
     name: "Akriti Gaur",
@@ -16,32 +103,50 @@ const StudentDetails = () => {
   };
   const [comments, setComments] = useState("");
 
-  const [scoreData, setScoreData] = useState([
-    { parameter: "Accuracy", aiScore: 40, manualScore: 45 },
-    { parameter: "Speed", aiScore: 30, manualScore: 35 },
-    { parameter: "Efficiency", aiScore: 20, manualScore: 25 },
-  ]);
-  const handleScoreChange = (index, field, value) => {
-    const updatedScores = [...scoreData];
-    updatedScores[index][field] = Number(value); // Convert input value to number
-    setScoreData(updatedScores);
+  
+  // const handleScoreChange = (index, field, value) => {
+  //   const updatedScores = [...scoreData];
+  //   updatedScores[index][field] = Number(value); // Convert input value to number
+  //   setScoreData(updatedScores);
+  // };
+  const handleScoreChange = (index, type, value) => {
+    setSubmission((prevSubmission) => {
+      let updatedScores = [...prevSubmission[type]]; // Either scores or AIscores
+  
+      updatedScores[index] = {
+        ...updatedScores[index],
+        score: Number(value)
+      };
+  
+      return { ...prevSubmission, [type]: updatedScores };
+    });
   };
+  
   // Calculate total scores
-  const totalAiScore = scoreData.reduce((sum, item) => sum + item.aiScore, 0);
-  const totalManualScore = scoreData.reduce((sum, item) => sum + item.manualScore, 0);
-  const totalScore = totalAiScore + totalManualScore;
+  // const totalAiScore = scoreData.reduce((sum, item) => sum + item.aiScore, 0);
+  // const totalManualScore = scoreData.reduce((sum, item) => sum + item.manualScore, 0);
+  // const totalScore = totalAiScore + totalManualScore;
+
+// Calculate total AI Score (from AIscores)
+const totalAIScore = scoreData.reduce((sum, item) => sum + item.score, 0);
+
+// Calculate total Manual Score (from scores)
+// const totalManualScore = scoreData.reduce((sum, item) => sum + item.scoreManual, 0);
+const totalManualScore=0
+// Total Score (AI + Manual)
+const totalScore = totalAIScore + totalManualScore;
 
   // Determine grade & result
   const grade = totalScore >= 90 ? "A+" : totalScore >= 75 ? "A" : totalScore >= 60 ? "B" : "C";
   const result = totalScore >= 60 ? "Shortlisted" : "Not Shortlisted";
 
   return (
-    <div className="max-w-5xl ml-auto mr-0 bg-white p-6 rounded-lg shadow-md mt-5">
+    <div className="w-screen ml-auto mr-0 bg-white p-6 rounded-lg shadow-md mt-5">
          <div className="flex items-center justify-between">
   {/* Left: Name and ID stacked vertically */}
   <div>
-    <h1 className="text-2xl font-bold">{student.name}</h1>
-    <p className="text-gray-500">ID: {student._id}</p>
+    <h1 className="text-2xl font-bold">{studentd.name}</h1>
+    <p className="text-gray-500">ID: {studentd._id}</p>
   </div>
 
   {/* Right: Profile Image */}
@@ -57,33 +162,37 @@ const StudentDetails = () => {
 
       <div className="grid grid-cols-2 gap-4 mt-4">
         <div className="border p-3 rounded">
-          <p className="font-semibold">Email: {student.email}</p>
-          <p className="font-semibold">Submiited on: {student.mobileNumber}</p>
-          <p className="font-semibold">Submitted At: {student.district}</p>
+          <p className="font-semibold">Email: {studentd.email}</p>
+          <p className="font-semibold">Submiited on: {submission._id?formatDate(submission.submissionTime):"loading"}</p>
+          <p className="font-semibold">Submitted At: {student._id?formatTime(submission.submissionTime):"loading"}</p>
         </div>
         <div className="border p-3 rounded">
-          <p className="font-semibold">College: {student.schoolCollegeName}</p>
-          <p className="font-semibold">Gender: {student.gender}</p>
-          <p className="font-semibold">Final Status: {student.grade}</p>
+          <p className="font-semibold">College: {studentd.schoolCollegeName}</p>
+          <p className="font-semibold">Gender: {studentd.gender}</p>
+          <p className="font-semibold">Final Status: {studentd.grade}</p>
         </div>
       </div>
       <div className="max-w-5xl bg-white shadow-md rounded-lg p-6 mt-5">
   <h2 className="text-2xl font-bold mb-4">Application Status</h2>
 
   <div className="grid grid-cols-4 gap-4">
-    <div className="p-2 border rounded-lg text-center shadow-md bg-gray-100 min-w-[100px]">
-      <p className="text-gray-700 text-xl font-semibold">Pending 🔄</p>
+      {statuses.map((item) => (
+        <div
+          key={item.value}
+          className={`p-2 border rounded-lg text-center shadow-md bg-gray-100 min-w-[100px] ${
+            submission.status === item.value ? "bg-blue-200" : ""
+          }`}
+        >
+          <p
+            className={`text-gray-700 text-xl ${
+              submission.status === item.value ? "font-bold" : "font-semibold"
+            }`}
+          >
+            {item.label}
+          </p>
+        </div>
+      ))}
     </div>
-    <div className="p-2 border rounded-lg text-center shadow-md bg-gray-100 min-w-[100px]">
-      <p className="text-gray-700 text-xl font-semibold">Shortlisted ✔️</p>
-    </div>
-    <div className="p-2 border rounded-lg text-center shadow-md bg-gray-100 min-w-[100px]">
-      <p className="text-gray-700 text-xl font-semibold">Reviewed 👀</p>
-    </div>
-    <div className="p-2 border rounded-lg text-center shadow-md bg-gray-100 min-w-[100px]">
-      <p className="text-gray-700 text-xl font-semibold">Rejected ❌</p>
-    </div>
-  </div>
 </div>
 
       <div className="flex gap-4 mt-2">
@@ -91,7 +200,7 @@ const StudentDetails = () => {
           <div className="border border-gray-300 rounded-lg p-4 shadow-md w-60 text-center">
             <h3 className="font-semibold text-gray-700">Original File</h3>
             <a
-              href={""}
+              href={submission.files[0].fileUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="text-blue-500 underline block mt-2"
@@ -128,7 +237,7 @@ const StudentDetails = () => {
           </tr>
         </thead>
         <tbody>
-        {scoreData.map((item, index) => (
+        {/* {submission.scores.map((item, index) => (
             <tr key={index} className="text-center">
               <td className="border border-gray-300 px-2 py-1">{item.parameter}</td>
               <td className="border border-gray-300 px-2 py-1">
@@ -148,7 +257,38 @@ const StudentDetails = () => {
                 />
               </td>
             </tr>
-          ))}
+          ))} */}
+          {submission.AIscores.map((item, index) => (
+  <tr key={index} className="text-center">
+    <td className="border border-gray-300 px-2 py-1">{item.parameter}</td>
+    
+    {/* AI Score Input (Stored in AIscores) */}
+    <td className="border border-gray-300 px-2 py-1">
+      <input
+        type="number"
+        className="w-16 text-center border rounded p-1"
+        value={
+          submission.AIscores.find(ai => ai.parameter === item.parameter)?.score || 0
+        }
+        onChange={(e) =>
+          handleScoreChange(index, "AIscores", e.target.value)
+        }
+      />
+    </td>
+
+    {/* Manual Score Input (Stored in scores) */}
+    <td className="border border-gray-300 px-2 py-1">
+      <input
+        type="number"
+        className="w-16 text-center border rounded p-1"
+        value={item.score || 0}
+        onChange={(e) =>
+          handleScoreChange(index, "scores", e.target.value)
+        }
+      />
+    </td>
+  </tr>
+))}
         </tbody>
       </table>
 
@@ -156,7 +296,7 @@ const StudentDetails = () => {
       <div className="mt-4">
         <div className="flex justify-between text-sm font-semibold">
           <span>Total AI Score:</span>
-          <span>{totalAiScore}</span>
+          <span>{totalAIScore }</span>
         </div>
         <div className="flex justify-between text-sm font-semibold">
           <span>Total Manual Score:</span>

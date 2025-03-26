@@ -2,12 +2,12 @@ import express from "express";
 import { 
     addParameter, 
     deleteParameter, 
-    updateSelectedCriteria, 
-    getSelectedCriteria, 
-    getSubmissionsForEvaluation, 
-    evaluateSubmission, 
+    saveSelectedCriteria, 
+    getSelectedCriteria,
+    getAllParameters,
     shortlistStudents, 
-    getShortlistedStudents 
+    updateSubmission,
+    getShortlistedStudents
 } from "../controllers/Teacher.controllers.js";
 
 const router = express.Router();
@@ -15,15 +15,13 @@ const router = express.Router();
 // Setting Parameters
 router.post("/hackathons/:hackathonId/parameters", addParameter); // Add parameter to a hackathon
 router.delete("/hackathons/:hackathonId/parameters/:parameterId", deleteParameter); // Delete a parameter
-router.put("/hackathons/:hackathonId/selectedCriteria", updateSelectedCriteria); // Update selected criteria
+router.put("/hackathons/:hackathonId/selectedCriteria", saveSelectedCriteria); // Update selected criteria
 router.get("/hackathons/:hackathonId/selectedCriteria", getSelectedCriteria); // Get selected criteria
-
-// Reviewing Submissions
-router.get("/:teacherId/hackathons/:hackathonId/submissions", getSubmissionsForEvaluation);
-router.post("/:teacherId/hackathons/:hackathonId/submissions/:submissionId", evaluateSubmission);
+router.get("/hackathons/:hackathonId/getParameters", getAllParameters); // Get all parameters for a hackathon
 
 // Shortlisting Students
-router.put("/:teacherId/hackathons/:hackathonId/shortlist", shortlistStudents);
-router.get("/:teacherId/hackathons/:hackathonId/shortlisted", getShortlistedStudents);
+router.put("/hackathons/shortlist", shortlistStudents);
+router.put("/hackathons/updateSubmission",updateSubmission)
+router.get("/hackathons/:hackathonId/shortlisted", getShortlistedStudents);
 
 export default router;
