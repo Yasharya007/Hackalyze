@@ -3,7 +3,7 @@ import { Link,useNavigate } from "react-router-dom";
 import { Bar } from "react-chartjs-2";
 import { useDispatch,useSelector } from "react-redux";
 import "chart.js/auto";
-import { HackathonByTeacherAPI } from "../utils/api.jsx";
+import { HackathonByTeacherAPI,logoutAPI } from "../utils/api.jsx";
 import { useState,useEffect } from "react";
 import { setHackathon } from "../slices/hackathonSlice.js";
 import axios from "axios";
@@ -72,7 +72,11 @@ const TeacherDashboard = () => {
                         </li>
                     </ul>
                 </nav>
-                <button className="mt-10 w-full py-2 bg-gray-200 rounded-lg">Logout</button>
+                <button className="mt-10 w-full py-2 bg-gray-200 rounded-lg hover:bg-gray-400" onClick={() => {
+                                            logoutAPI().then(() => {
+                                                window.location.href = "/";
+                                            });
+                                        }}>Logout</button>
             </aside>
 
             {/* Main Content */}

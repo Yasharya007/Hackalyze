@@ -314,6 +314,22 @@ export const TeacherRegisterAPI = async (formData) => {
     }
   };
 
+  // Get Hackathon by ID API
+  export const notifyAllAPI = async ({hackathonId,message}) => {
+    // const toastId = toast.loading("Loading hackathon details...");
+    try {
+      // console.log("hi")
+      const response = await API.post(`/api/admin/notify-students`,{hackathonId,message});
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching hackathon:", error);
+      toast.error("Failed to publish");
+      throw error.response?.data || "Failed to publish";
+    } finally {
+      // toast.dismiss(toastId);
+    }
+  };
+
   // Update Hackathon API
   export const updateHackathonAPI = async (hackathonId, hackathonData) => {
     const toastId = toast.loading("Updating hackathon...");
@@ -469,9 +485,9 @@ export const updateSubmissionAPI = async (submissions) => {
   }
 };
 // Get all shortlisted students
-export const getShortlistedStudents = async (teacherId, hackathonId) => {
+export const getShortlistedStudents = async (hackathonId) => {
     try {
-        const response = await API.get(`/api/teacher/${teacherId}/hackathons/${hackathonId}/shortlisted`);
+        const response = await API.get(`/api/teacher/hackathons/${hackathonId}/shortlisted`);
         return response.data;
     } catch (error) {
         console.error("Error fetching shortlisted students:", error);

@@ -8,7 +8,9 @@ import {
     assignTeacherToHackathonAPI,
     updateHackathonMediaAPI,
     updateHackathonDeadlineAPI,
-    getHackathonSubmissionsAPI
+    getHackathonSubmissionsAPI,
+    getShortlistedStudents,
+    notifyAllAPI
 } from "../utils/api.jsx";
 import toast from "react-hot-toast";
 
@@ -166,8 +168,16 @@ const AdminHackathonPage = () => {
         navigate(`/admin/edit-hackathon/${hackathon._id}`);
     };
 
-    const handlePublishResults = () => {
-        console.log("Publishing results for hackathon:", hackathon._id);
+    const handlePublishResults = async() => {
+        getShortlistedStudents(hackathon._id)
+        .then((res)=>{
+            const message=res.shortlistedStudents.map(({ name, email }) => ({ name, email }));
+            message=JSON.stringify(message)
+            const hackathonId=hackathon._id
+            // notifyAllAPI({hackathonId,message})
+            // .then((res)=>{console.log(res)})
+            // .catch(()=>{})
+        }).catch(()=>{})
         // Logic to publish results
     };
 
