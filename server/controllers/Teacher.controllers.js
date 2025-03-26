@@ -554,7 +554,8 @@ export const getShortlist = async (req, res) => {
                 manualScore: submission.totalScore || 0,
                 status: submission.status,
                 rank: submission.rank || 999, // Default high rank if not set
-                submittedAt: submission.createdAt
+                submittedAt: submission.createdAt,
+                files: submission.files // Include files array in the response
             };
         });
         
