@@ -79,11 +79,11 @@ const statuses = [
       const fetchData = async () => {
         getSubmissionDetailsAPI(submissionId)
         .then((res)=>{
-          console.log(res.data);
+          console.log(res);
           setSubmission(res.data)
           setStudent(res.data.studentId)
           setScoreData(res.data.AIscores)
-          console.log(res.data)
+          // console.log("data",res.data)
         }).catch(()=>{})
       };
 

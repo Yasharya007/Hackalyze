@@ -76,7 +76,7 @@ export const getHackathonStudents = async (req, res) => {
 export const getSubmissionDetails = async (req, res) => {
     try {
         const { submissionId } = req.params; // Extract submission ID from request
-
+        // console.log("hello")
         const submission = await Submission.findById(submissionId)
             .populate("studentId", "name email mobileNumber schoolCollegeName grade gender state district") // Get student name & email
             .populate("hackathonId", "title") // Get hackathon title
@@ -86,8 +86,8 @@ export const getSubmissionDetails = async (req, res) => {
         if (!submission) {
             return res.status(404).json({ message: "Submission not found" });
         }
-
-        res.json(submission); // Send full submission details
+        // console.log(submission)
+        res.status(200).json({submission}); // Send full submission details
     } catch (error) {
         res.status(500).json({ message: "Server error", error: error.message });
     }
