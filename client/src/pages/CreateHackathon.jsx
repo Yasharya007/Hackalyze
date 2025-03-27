@@ -241,13 +241,12 @@ const CreateHackathon = () => {
     <div className="min-h-screen bg-gray-100 flex w-full">
       {/* Sidebar - same as AdminDashboard */}
       <aside className="w-64 bg-white border-r h-screen sticky top-0 flex flex-col">
-      <div className="p-5 flex-grow">
-                    <div className="flex items-center mb-6">
-                        <div className="w-10 h-10 bg-gray-200 rounded-full overflow-hidden">
-                        <img src="/logo.png" alt="Profile" className="w-full h-full object-cover" />
-                        </div>
-                        <h2 className="text-xl font-bold ml-2">Hackalyze</h2>
-                    </div>
+        <div className="p-5 flex-grow">
+          <div className="flex items-center mb-6">
+            <img src="/logo.png" alt="Hackalyze Logo" className="h-8 mr-2" />
+            <h2 className="text-xl font-bold">Hackalyze</h2>
+          </div>
+
           <nav>
             <ul className="space-y-2">
               <li>

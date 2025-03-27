@@ -387,14 +387,14 @@ const AdminHackathonPage = () => {
             <aside className="w-64 bg-white border-r h-screen sticky top-0 flex flex-col">
                 <div className="p-5 flex-grow">
                     <div className="flex items-center mb-6">
-                        <div className="w-10 h-10 bg-gray-200 rounded-full"></div>
+                        <img src="/logo.png" alt="Hackalyze Logo" className="h-8 mr-2" />
                         <h2 className="text-xl font-bold ml-2">Hackalyze</h2>
                     </div>
                     <nav>
                         <ul className="space-y-2">
                             <li>
                                 <Link
-                                    to="/admin/dashboard"
+                                    to="/admin/dashboard#overview"
                                     className="flex items-center p-2 rounded-md hover:bg-gray-100"
                                 >
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -404,26 +404,26 @@ const AdminHackathonPage = () => {
                                 </Link>
                             </li>
                             <li>
-                                <a
-                                    href="/admin/dashboard"
+                                <Link
+                                    to="/admin/dashboard#hackathons"
                                     className="flex items-center p-2 rounded-md bg-black text-white"
                                 >
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                                     </svg>
                                     <span>Hackathons</span>
-                                </a>
+                                </Link>
                             </li>
                             <li>
-                                <a
-                                    href="/admin/dashboard"
+                                <Link
+                                    to="/admin/dashboard#teachers"
                                     className="flex items-center p-2 rounded-md hover:bg-gray-100"
                                 >
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                                     </svg>
                                     <span>Teachers</span>
-                                </a>
+                                </Link>
                             </li>
                             <li>
                                 <Link
