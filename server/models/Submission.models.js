@@ -65,8 +65,8 @@ const SubmissionSchema = new mongoose.Schema(
 
         result: {
             type: String,
-            enum: ["Rejected", "Revisit to check its potential", "Shortlisted for the final","Pending"],
-            default: "Pending"
+            enum: ["Rejected", "Revisit to check its potential", "Shortlisted for the final"],
+            default: "Rejected"
         }, // Determines result based on total score
 
         reviewerId: {

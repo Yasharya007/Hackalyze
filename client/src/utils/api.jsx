@@ -926,28 +926,3 @@ export const sendShortlistToAdmin = async (hackathonId) => {
   }
 };
 
-export const shortlistSubmissionsBulk = async (submissions) => {
-  const toastId = toast.loading("Publishing result...");
-  try {
-      const response = await API.post('/api/admin/submissions/shortlistBulk', { submissions });
-      toast.success("Published");
-      return response.data;
-  } catch (error) {
-      return {
-          message: 'Error in Publishing',
-          error: error.response ? error.response.data : error.message,
-          success: false
-      };
-  } finally{
-    toast.dismiss(toastId);
-  }
-};
-export const getNotifications = async (studentId) => {
-  try {
-      const response = await API.get(`api/student/notifications/${studentId}`);
-      return response.data; // Returns an array of notifications
-  } catch (error) {
-      console.error("Error fetching notifications:", error);
-      return []; // Return empty array in case of error
-  }
-};

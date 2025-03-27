@@ -2,11 +2,10 @@ import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, Link } from "react-router-dom";
 import { setHackathon } from "../slices/hackathonSlice.js";
-import { AllHackathonAPI, logoutAPI,getNotifications } from "../utils/api.jsx";
+import { AllHackathonAPI, logoutAPI } from "../utils/api.jsx";
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+
 const StudentDashboard = () => {
-    const [notifications,setNotifications]=useState([{"message":""}])
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const [hackathons, setHackathons] = useState([]);
@@ -44,10 +43,6 @@ const StudentDashboard = () => {
                     setHackathons(res);
                     // console.log("hello");
                 }).catch(() => { })
-                getNotifications(studentId)
-                .then((res)=>{
-                  setNotifications(res.notifications)
-                }).catch(()=>{})
         };
 
         fetchHackathons();
@@ -121,21 +116,7 @@ const StudentDashboard = () => {
                         </nav>
                     </div>
                 </div>
-                      {/* Scrolling Notifications */}
-                      <div className="mb-0 text-center">Notifications</div>
-                      <div className="overflow-hidden h-80 mt-4">
-                          <motion.div
-                            className="space-y-2"
-                            animate={{ y: ["0%", "-100%"] }}
-                            transition={{ repeat: Infinity, duration: 5, ease: "linear" }}
-                          >
-                            {notifications.map((notification, index) => (
-                              <div key={index} className="p-2 bg-blue-100 rounded-md text-sm">
-                                {notification.message}
-                              </div>
-                            ))}
-                          </motion.div>
-                        </div>
+                
                 {/* Logout Button */}
                 <div className="mb-6 px-4">
                     <button
