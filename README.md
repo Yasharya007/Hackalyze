@@ -8,6 +8,10 @@ Hackalyze is designed to streamline the **hackathon management** process, making
 Evaluating student ideas at scale is challenging, especially when submissions are **unstructured and lack clarity**. 
 Teachers also struggle with conducting **personalized assessments** in classrooms, making it difficult to gauge student understanding and provide targeted feedback.
 
+## 📹 Watch Demo Video  
+[![Watch the video](https://img.youtube.com/vi/0dIvRWsbvkE/0.jpg)](https://youtu.be/0dIvRWsbvkE)  
+
+Click the image or [this link](https://youtu.be/0dIvRWsbvkE) to watch the demo video.
 ## 📌 Features  
 
 ```mermaid
