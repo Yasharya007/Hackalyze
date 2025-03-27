@@ -246,6 +246,7 @@ const CreateHackathon = () => {
             <img src="/logo.png" alt="Hackalyze Logo" className="h-8 mr-2" />
             <h2 className="text-xl font-bold">Hackalyze</h2>
           </div>
+
           <nav>
             <ul className="space-y-2">
               <li>
