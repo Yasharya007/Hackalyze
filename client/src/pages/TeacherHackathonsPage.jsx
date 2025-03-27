@@ -163,7 +163,10 @@ const TeacherHackathonsPage = () => {
       {/* Sidebar */}
       <aside className="w-64 bg-white shadow-lg flex flex-col h-screen sticky top-0">
         <div className="p-6">
-          <h2 className="text-2xl font-bold">Teacher Portal</h2>
+          <div className="flex items-center">
+            <img src="/logo.png" alt="Hackalyze Logo" className="h-8 mr-2" />
+            <h2 className="text-2xl font-bold">Hackalyze</h2>
+          </div>
         </div>
         <nav className="flex-grow px-4">
           <ul className="space-y-2">

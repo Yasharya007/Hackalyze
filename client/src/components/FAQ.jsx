@@ -31,14 +31,15 @@ export default function FAQ({ setIsModalOpen }) {
   return (
     <div className="min-h-screen bg-gray-100">
       <nav className="w-[75%] bg-white shadow-md py-3 px-8 flex justify-between items-center fixed top-6 left-1/2 transform -translate-x-1/2 rounded-xl">
-        <h1 className="text-lg font-semibold">Hackalyze</h1>
-        <div className="space-x-6">
-          <span onClick={() => navigate("/leaderboard")} className="text-gray-600 hover:text-gray-900 hover:cursor-pointer">Leaderboard</span>
-          {/* <span onClick={() => navigate("/Rules")} className="text-gray-600 hover:text-gray-900 hover:cursor-pointer">Hackathon Rules</span> */}
+        <div className="flex items-center">
+          <img src="/logo.png" alt="Hackalyze Logo" className="h-8 mr-2" />
+          <h1 className="text-lg font-semibold">Hackalyze</h1>
+        </div>
+        <div className="space-x-7">
           <span onClick={() => navigate("/faq")} className="text-gray-600 hover:text-gray-900 hover:cursor-pointer font-semibold">FAQ</span>
           <span onClick={() => navigate("/announcements")} className="text-gray-600 hover:text-gray-900 hover:cursor-pointer">Announcements</span>
         </div>
-        <button className="bg-indigo-500 text-white px-4 py-2 rounded-md hover:bg-indigo-600 hover:cursor-pointer" onClick={() => setIsModalOpen(true)}>
+        <button className="bg-black text-white px-4 py-2 rounded-md hover:bg-gray-800 hover:cursor-pointer" onClick={() => setIsModalOpen(true)}>
           Contact Support
         </button>
       </nav>

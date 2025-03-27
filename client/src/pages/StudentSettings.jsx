@@ -108,7 +108,10 @@ const StudentSettings = () => {
                 <div>
                     {/* Header/Logo Section */}
                     <div className="p-6">
-                        <h1 className="text-2xl font-bold">Hackalyze</h1>
+                        <div className="flex items-center">
+                            <img src="/logo.png" alt="Hackalyze Logo" className="h-8 mr-2" />
+                            <h1 className="text-2xl font-bold">Hackalyze</h1>
+                        </div>
                     </div>
 
                     {/* Navigation */}
