@@ -204,7 +204,10 @@ const ViewShortlistPage = () => {
             {/* Sidebar */}
             <aside className="w-64 bg-white shadow-lg flex flex-col h-screen sticky top-0">
                 <div className="p-6">
-                    <h2 className="text-2xl font-bold">Teacher Portal</h2>
+                    <div className="flex items-center">
+                        <img src="/logo.png" alt="Hackalyze Logo" className="h-8 mr-2" />
+                        <h2 className="text-2xl font-bold">Hackalyze</h2>
+                    </div>
                 </div>
                 <nav className="flex-grow px-4">
                     <ul className="space-y-2">
@@ -297,7 +300,7 @@ const ViewShortlistPage = () => {
                             <div className="bg-white rounded-lg shadow-md p-6">
                                 <h2 className="text-xl font-semibold mb-4">Total Submissions</h2>
                                 <div className="flex items-center justify-center">
-                                    <div className="text-5xl font-bold text-blue-600">{submissionStats.totalSubmissions}</div>
+                                    <div className="text-9xl font-bold text-blue-600">{submissionStats.totalSubmissions}</div>
                                 </div>
                             </div>
 

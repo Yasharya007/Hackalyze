@@ -189,7 +189,7 @@ const AdminDashboard = () => {
                         <ul className="space-y-2">
                             <li>
                                 <a
-                                    href="#"
+                                    href="/admin/dashboard#overview"
                                     className={`flex items-center p-2 rounded-md ${activeTab === "overview" ? "bg-black text-white" : "hover:bg-gray-100"}`}
                                     onClick={() => handleTabChange("overview")}
                                 >
@@ -201,7 +201,7 @@ const AdminDashboard = () => {
                             </li>
                             <li>
                                 <a
-                                    href="#"
+                                    href="/admin/dashboard#hackathons"
                                     className={`flex items-center p-2 rounded-md ${activeTab === "hackathons" ? "bg-black text-white" : "hover:bg-gray-100"}`}
                                     onClick={() => handleTabChange("hackathons")}
                                 >
@@ -213,7 +213,7 @@ const AdminDashboard = () => {
                             </li>
                             <li>
                                 <a
-                                    href="#"
+                                    href="/admin/dashboard#teachers"
                                     className={`flex items-center p-2 rounded-md ${activeTab === "teachers" ? "bg-black text-white" : "hover:bg-gray-100"}`}
                                     onClick={() => handleTabChange("teachers")}
                                 >
